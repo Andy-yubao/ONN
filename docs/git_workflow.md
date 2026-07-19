@@ -38,6 +38,44 @@ git push
 - **每天至少推送 1 次** → 保证 AI 工具能读到最新版本
 - **实验前后各推送 1 次** → 记录实验起点和结果
 
+## 代理配置
+
+本机环境需要代理才能访问 GitHub，配置方式如下：
+
+### Git Bash（本终端）
+
+```bash
+export HTTP_PROXY="http://127.0.0.1:10809"
+export HTTPS_PROXY="http://127.0.0.1:10809"
+git push
+```
+
+### PowerShell
+
+```powershell
+$env:HTTP_PROXY="http://127.0.0.1:10809"
+$env:HTTPS_PROXY="http://127.0.0.1:10809"
+git push
+```
+
+### 持久化配置（推荐）
+
+设置 Git 全局代理，一次配置永久生效：
+
+```bash
+git config --global http.proxy http://127.0.0.1:10809
+git config --global https.proxy http://127.0.0.1:10809
+```
+
+取消代理：
+
+```bash
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+```
+
+> 注：如果代理端口后续变化，将 `10809` 替换为实际端口即可。
+
 ## 常用命令速查
 
 ```bash
