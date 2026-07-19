@@ -1,0 +1,121 @@
+# ---------------------------
+# 神经网络模型
+# ---------------------------
+*.pth
+*.pt
+*.onnx
+*.h5
+*.ckpt
+checkpoints/
+lightning_logs/
+runs/
+wandb/
+
+# ---------------------------
+# 数据集
+# ---------------------------
+data/
+datasets/
+*.csv
+*.npz
+
+# ---------------------------
+# FPGA 工程自动生成
+# ---------------------------
+*.rpt
+*.jou
+*.log
+*.bak
+*.dmp
+*.hw
+*.swo
+*.swf
+*.qws
+*.db/
+*.rdf
+*.summary
+*.done
+*.msg
+*.jdi
+
+# Vivado（如未来使用）
+*.xdc.bak
+.vivado/
+NAV/
+webtalk*
+
+# Quartus 生成
+db/
+incremental_db/
+*.qdf
+*.qarlog
+*.sof
+*.pof
+*.jam
+*.jic
+*.sld
+output_files/
+
+# ModelSim
+transcript
+vsim.wlf
+*.vcd
+*.vcd.gz
+*.vpd
+work/
+*.vstf
+modelsim.ini
+
+# ---------------------------
+# PCB 工程缓存
+# ---------------------------
+*.bak
+*.BackupOf.*
+__Previews/
+Log/
+FreeRouting/
+**/cache/
+*.lck
+
+# ---------------------------
+# 实验输出
+# ---------------------------
+outputs/
+*.tmp
+
+# ---------------------------
+# Python / 环境
+# ---------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# ---------------------------
+# 工具
+# ---------------------------
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# ---------------------------
+# 静态文件
+# ---------------------------
+essay/
+
+# ---------------------------
+# 大文件提醒（不上传但保留注释）
+# ---------------------------
+# 大型数据集和模型检查点请用 Git LFS 或网盘分发
