@@ -21,3 +21,4 @@
 - [004-当前不要求端到端集成](004-no-current-end-to-end-integration.md)
 - [005-外围采集系统支持多档可配置采样率](005-configurable-multirate-acquisition.md)
 - [006-FPGA 实现 28×28 数字 CNN 推理](006-28x28-digital-cnn-on-fpga.md)
+- [007-双路线架构与边界定义](007-dual-track-architecture-and-boundaries.md)
