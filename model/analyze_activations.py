@@ -5,6 +5,12 @@ Usage:
     python model/analyze_activations.py \\
         --config model/configs/tiny_resnet.json \\
         --checkpoint model/runs/TinyResNet/20250101_120000/best.pt
+
+    # Debug: analyse raw Conv2d outputs (pre-activation) instead of post-activation
+    python model/analyze_activations.py \\
+        --config model/configs/tiny_resnet.json \\
+        --checkpoint .../best.pt \\
+        --debug-raw-conv
 """
 
 import argparse
@@ -18,7 +24,9 @@ import torch
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Analyze channel activations of a trained model")
+    parser = argparse.ArgumentParser(
+        description="Analyze channel activations of a trained model"
+    )
     parser.add_argument(
         "--config",
         type=str,
@@ -32,7 +40,20 @@ def parse_args() -> argparse.Namespace:
         help="Path to best.pt / last.pt checkpoint",
     )
     parser.add_argument("--device", type=str, default=None)
-    parser.add_argument("--output", type=str, default=None, help="Save activity JSON")
+    parser.add_argument(
+        "--output", type=str, default=None, help="Save activity JSON"
+    )
+    parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=1e-6,
+        help="Threshold for near-zero detection (default: 1e-6)",
+    )
+    parser.add_argument(
+        "--debug-raw-conv",
+        action="store_true",
+        help="Hook raw Conv2d outputs instead of post-activation targets",
+    )
     return parser.parse_args()
 
 
@@ -50,6 +71,7 @@ def main() -> None:
 
     # Load model
     from onn_model.engine import _get_model
+
     ckpt = torch.load(args.checkpoint, map_location=device, weights_only=False)
     model_name = ckpt.get("model_name", config.get("model", "BaselineCNN"))
     model = _get_model(model_name).to(device)
@@ -59,6 +81,7 @@ def main() -> None:
 
     # Validation loader
     from onn_model.data import get_train_val_loaders
+
     _, val_loader, _ = get_train_val_loaders(
         root=config.get("data_root", "model/data"),
         batch_size=config.get("batch_size", 128),
@@ -67,7 +90,16 @@ def main() -> None:
 
     # Analysis
     from onn_model.activity import analyze_activations, summarize_activity
-    results = analyze_activations(model, val_loader, device)
+
+    target_desc = "raw Conv2d" if args.debug_raw_conv else "post-activation"
+    print(f"Activity target: {target_desc}  (epsilon={args.epsilon:.0e})")
+    results = analyze_activations(
+        model,
+        val_loader,
+        device,
+        epsilon=args.epsilon,
+        debug_raw_conv=args.debug_raw_conv,
+    )
 
     summary = summarize_activity(results)
     print(summary)

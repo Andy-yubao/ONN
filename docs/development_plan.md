@@ -151,6 +151,25 @@ M0：项目架构与边界定义（✅ 已完成）
 
 **依赖**：无（可立即启动）
 
+### M1-B.1：基线实验审计与可复现性加固
+
+**目标**：修复 M1-B 基线中的实验与工具问题，使训练框架可作为后续类脑学习规则实验的可信基础。（完成状态：✅ **M1-B.1 已完成**，详见 [实验结果](../experiments/model_baselines/m1_baseline_audit/README.md)。）
+
+| 交付物 | 验收标准 | 状态 |
+|-------|---------|:---:|
+| 活动分析改为模块最终输出（post-activation） | ReLU/BasicBlock 最终输出，非 Conv 原始输出 | ✅ |
+| 活动统计字段名修正 | active_ratio / near_zero_ratio，非 nonzero_ratio / zero_ratio | ✅ |
+| sample_count 和 batch_count 正确 | 样本级而非 batch 级计数，不完整 batch 加权 | ✅ |
+| Smoke test 真正限制 batch 数 | 最多2个训练batch + 2个验证batch | ✅ |
+| pytest 不依赖 MNIST 下载 | 合成数据注入，网络不可用时仍可测试 | ✅ |
+| Deterministic 模式开关 | config 中 deterministic 字段，影响 cudNN 和 RNG | ✅ |
+| 断点续训完整状态恢复 | 含 scheduler、scaler、RNG、history | ✅ |
+| 旧检查点兼容 | Tiny-ResNet 重构后仍可 strict 加载旧权重 | ✅ |
+| 多种子基线（seeds 42/43/44） | mean±std 准确率报告 | ✅ |
+| 文档修正 | FPGA 表述、活动结论、损失表述 | ✅ |
+
+**依赖**：M1-B
+
 ### M2-B：类脑更新规则最小实验
 
 **目标**：在基线之上实现至少一种候选类脑更新规则，形成对照结果。

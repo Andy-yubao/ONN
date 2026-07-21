@@ -1,5 +1,6 @@
 """Training engine — single-epoch loops, checkpoint I/O, experiment runner."""
 
+import csv
 import json
 import os
 import shutil
@@ -15,7 +16,14 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 
 from onn_model.metrics import accuracy, finite_loss, count_parameters, count_trainable_parameters
-from onn_model.reproducibility import set_seed, capture_environment
+from onn_model.reproducibility import (
+    set_seed,
+    capture_environment,
+    capture_rng_state,
+    load_rng_state,
+    seed_worker,
+    make_worker_generator,
+)
 
 
 @dataclass
@@ -36,6 +44,20 @@ class ExperimentState:
     best_epoch: int = -1
 
 
+@dataclass
+class DataBundle:
+    """Container for pre-created data loaders (used by tests to inject synthetic data).
+
+    When passed to :func:`run_experiment`, the experiment uses these loaders
+    instead of creating MNIST-based loaders.  This allows tests to run without
+    downloading MNIST.
+    """
+
+    train_loader: DataLoader
+    val_loader: DataLoader
+    test_loader: Optional[DataLoader] = None
+
+
 def _resolve_device(device_str: str) -> torch.device:
     """Resolve ``auto`` to CUDA or CPU."""
     if device_str == "auto":
@@ -47,9 +69,11 @@ def _get_model(model_name: str, num_classes: int = 10) -> nn.Module:
     """Factory: return a model instance by name."""
     if model_name == "BaselineCNN":
         from onn_model.models.baseline_cnn import BaselineCNN
+
         return BaselineCNN(num_classes=num_classes)
     elif model_name == "TinyResNet":
         from onn_model.models.tiny_resnet import TinyResNet
+
         return TinyResNet(num_classes=num_classes)
     else:
         raise ValueError(f"Unknown model: {model_name}")
@@ -91,20 +115,28 @@ def _save_checkpoint(
     path: Path,
     model: nn.Module,
     optimizer: optim.Optimizer,
+    scheduler: Optional[object],
+    scaler: Optional[torch.cuda.amp.GradScaler],
     epoch: int,
     state: ExperimentState,
     is_best: bool,
 ) -> None:
-    """Save a training checkpoint."""
-    checkpoint = {
+    """Save a full training checkpoint including all resumable state."""
+    checkpoint: Dict[str, Any] = {
         "model_name": type(model).__name__,
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
+        "scheduler_state_dict": scheduler.state_dict() if scheduler is not None else None,
         "config": state.config,
         "epoch": epoch,
         "best_val_acc": state.best_val_acc,
         "best_val_loss": state.best_val_loss,
+        "best_epoch": state.best_epoch,
+        "history": {k: v[:] for k, v in state.history.items()},
+        "rng_state": capture_rng_state(),
     }
+    if scaler is not None:
+        checkpoint["scaler_state_dict"] = scaler.state_dict()
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint, path)
     if is_best:
@@ -112,13 +144,13 @@ def _save_checkpoint(
         shutil.copy2(path, best_path)
 
 
-def _save_run_artifacts(run_dir: Path, state: ExperimentState) -> None:
+def _save_run_artifacts(run_dir: Path, state: ExperimentState, config: Dict[str, Any]) -> None:
     """Save config, environment, history, and metrics to disk."""
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # Config snapshot
     with open(run_dir / "config.json", "w", encoding="utf-8") as f:
-        json.dump(state.config, f, indent=2, ensure_ascii=False)
+        json.dump(config, f, indent=2, ensure_ascii=False)
 
     # Environment snapshot
     with open(run_dir / "environment.json", "w", encoding="utf-8") as f:
@@ -127,7 +159,6 @@ def _save_run_artifacts(run_dir: Path, state: ExperimentState) -> None:
     # Training history as CSV
     csv_path = run_dir / "history.csv"
     with open(csv_path, "w", encoding="utf-8", newline="") as f:
-        import csv
         writer = csv.writer(f)
         writer.writerow(["epoch", "train_loss", "train_acc", "val_loss", "val_acc"])
         for i in range(len(state.history["epoch"])):
@@ -140,11 +171,12 @@ def _save_run_artifacts(run_dir: Path, state: ExperimentState) -> None:
             ])
 
     # Summary metrics
+    total_params = count_parameters(_get_model(config.get("model", "BaselineCNN")))
     metrics_dict = {
         "best_val_acc": state.best_val_acc,
         "best_val_loss": state.best_val_loss,
         "best_epoch": state.best_epoch,
-        "total_params": count_parameters(_get_model(state.config.get("model", "BaselineCNN"))),
+        "total_params": total_params,
         "best_checkpoint": str(run_dir / "best.pt"),
     }
     with open(run_dir / "metrics.json", "w", encoding="utf-8") as f:
@@ -158,8 +190,14 @@ def train_one_epoch(
     optimizer: optim.Optimizer,
     device: torch.device,
     scaler: Optional[torch.cuda.amp.GradScaler] = None,
+    max_batches: Optional[int] = None,
 ) -> Tuple[float, float]:
     """Run one training epoch.
+
+    Parameters
+    ----------
+    max_batches : int or None
+        If set, only process this many batches per epoch (for smoke tests).
 
     Returns
     -------
@@ -170,7 +208,10 @@ def train_one_epoch(
     total_correct = 0
     total_samples = 0
 
-    for images, labels in loader:
+    for batch_index, (images, labels) in enumerate(loader):
+        if max_batches is not None and batch_index >= max_batches:
+            break
+
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
 
@@ -191,8 +232,8 @@ def train_one_epoch(
         total_correct += accuracy(outputs, labels) * images.size(0)
         total_samples += images.size(0)
 
-    avg_loss = total_loss / total_samples
-    avg_acc = total_correct / total_samples
+    avg_loss = total_loss / total_samples if total_samples > 0 else 0.0
+    avg_acc = total_correct / total_samples if total_samples > 0 else 0.0
     return avg_loss, avg_acc
 
 
@@ -202,8 +243,14 @@ def validate_one_epoch(
     loader: DataLoader,
     criterion: nn.Module,
     device: torch.device,
+    max_batches: Optional[int] = None,
 ) -> Tuple[float, float]:
     """Run one validation epoch.
+
+    Parameters
+    ----------
+    max_batches : int or None
+        If set, only process this many batches (for smoke tests).
 
     Returns
     -------
@@ -214,7 +261,10 @@ def validate_one_epoch(
     total_correct = 0
     total_samples = 0
 
-    for images, labels in loader:
+    for batch_index, (images, labels) in enumerate(loader):
+        if max_batches is not None and batch_index >= max_batches:
+            break
+
         images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         loss = criterion(outputs, labels)
@@ -223,8 +273,8 @@ def validate_one_epoch(
         total_correct += accuracy(outputs, labels) * images.size(0)
         total_samples += images.size(0)
 
-    avg_loss = total_loss / total_samples
-    avg_acc = total_correct / total_samples
+    avg_loss = total_loss / total_samples if total_samples > 0 else 0.0
+    avg_acc = total_correct / total_samples if total_samples > 0 else 0.0
     return avg_loss, avg_acc
 
 
@@ -235,6 +285,7 @@ def run_experiment(
     resume_checkpoint: Optional[Path] = None,
     eval_only: bool = False,
     override_kwargs: Optional[Dict[str, Any]] = None,
+    data_bundle: Optional[DataBundle] = None,
 ) -> ExperimentState:
     """Run a full training experiment.
 
@@ -245,13 +296,18 @@ def run_experiment(
     run_dir : Path or None
         Output directory (auto-generated if ``None``).
     smoke_test : bool
-        If ``True``, run only 2 batches per epoch for quick verification.
+        If ``True``, run at most 2 training batches + 2 validation batches
+        per epoch, for at most 2 epochs.
     resume_checkpoint : Path or None
-        Path to a ``.pt`` checkpoint to resume from.
+        Path to a ``.pt`` checkpoint to resume from.  The checkpoint must
+        have been saved by ``_save_checkpoint`` (full state).
     eval_only : bool
         If ``True``, only evaluate the model at ``resume_checkpoint``.
     override_kwargs : dict or None
         Per-key overrides applied to ``config`` before running.
+    data_bundle : DataBundle or None
+        Pre-created loaders for injecting synthetic data (tests).  When
+        provided, MNIST-based loaders are **not** created.
 
     Returns
     -------
@@ -260,38 +316,44 @@ def run_experiment(
     if override_kwargs:
         config = {**config, **override_kwargs}
 
-    # Seeding
+    # Seeding (must happen before any DataLoader creation)
     seed = config.get("seed", 42)
-    set_seed(seed)
+    deterministic = config.get("deterministic", False)
+    set_seed(seed, deterministic=deterministic)
 
     # Device
     device = _resolve_device(config.get("device", "auto"))
 
     # Data
-    from onn_model.data import get_train_val_loaders, get_test_loader
-    data_root = config.get("data_root", "model/data")
-    try:
-        train_loader, val_loader, _ = get_train_val_loaders(
-            root=data_root,
-            batch_size=config.get("batch_size", 128),
-            seed=seed,
-        )
-        if smoke_test:
-            # Limit to 2 batches for smoke test
-            train_loader = torch.utils.data.DataLoader(
-                train_loader.dataset,
-                batch_size=train_loader.batch_size,
-                shuffle=False,
-                num_workers=0,
+    if data_bundle is not None:
+        train_loader = data_bundle.train_loader
+        val_loader = data_bundle.val_loader
+        test_loader = data_bundle.test_loader
+    else:
+        from onn_model.data import get_train_val_loaders, get_test_loader
+
+        data_root = config.get("data_root", "model/data")
+        try:
+            train_loader, val_loader, _ = get_train_val_loaders(
+                root=data_root,
+                batch_size=config.get("batch_size", 128),
+                seed=seed,
+                num_workers=config.get("num_workers", 0),
             )
-            val_loader = torch.utils.data.DataLoader(
-                val_loader.dataset,
-                batch_size=val_loader.batch_size,
-                shuffle=False,
-                num_workers=0,
+            test_loader = get_test_loader(
+                root=data_root,
+                batch_size=config.get("batch_size", 128),
+                num_workers=config.get("num_workers", 0),
             )
-    except Exception as e:
-        raise RuntimeError(f"Failed to create data loaders: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to create data loaders: {e}")
+
+    # Smoke-test limits
+    max_train_batches: Optional[int] = None
+    max_val_batches: Optional[int] = None
+    if smoke_test:
+        max_train_batches = 2
+        max_val_batches = 2
 
     # Model
     model = _get_model(config.get("model", "BaselineCNN")).to(device)
@@ -300,31 +362,70 @@ def run_experiment(
     scheduler = _get_scheduler(optimizer, config, len(train_loader))
     scaler = torch.amp.GradScaler("cuda") if device.type == "cuda" else None
 
-    # Checkpoint resume
+    # State
+    state = ExperimentState(config=config)
+
+    # Checkpoint resume — must happen before run_dir creation so we can
+    # reuse the original run directory
     start_epoch = 0
+    resume_run_dir: Optional[Path] = None
     if resume_checkpoint and resume_checkpoint.exists():
         ckpt = torch.load(resume_checkpoint, map_location=device, weights_only=False)
         model.load_state_dict(ckpt["model_state_dict"])
         optimizer.load_state_dict(ckpt["optimizer_state_dict"])
-        start_epoch = ckpt["epoch"] + 1
-        print(f"Resumed from epoch {ckpt['epoch']} at {resume_checkpoint}")
 
-    # State
-    state = ExperimentState(config=config)
-    state.environment = capture_environment()
+        # Restore scheduler
+        if scheduler is not None and ckpt.get("scheduler_state_dict") is not None:
+            try:
+                scheduler.load_state_dict(ckpt["scheduler_state_dict"])
+            except Exception:
+                pass  # benign if scheduler type changed
+
+        # Restore scaler
+        if scaler is not None and ckpt.get("scaler_state_dict") is not None:
+            try:
+                scaler.load_state_dict(ckpt["scaler_state_dict"])
+            except Exception:
+                pass
+
+        # Restore training state
+        start_epoch = ckpt.get("epoch", -1) + 1
+        state.best_val_acc = ckpt.get("best_val_acc", 0.0)
+        state.best_val_loss = ckpt.get("best_val_loss", float("inf"))
+        state.best_epoch = ckpt.get("best_epoch", -1)
+        state.history = ckpt.get(
+            "history",
+            {"epoch": [], "train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []},
+        )
+
+        # Restore RNG state
+        if "rng_state" in ckpt:
+            load_rng_state(ckpt["rng_state"])
+
+        # Reuse the checkpoint's run directory by default
+        resume_run_dir = resume_checkpoint.parent
+        print(
+            f"Resumed from epoch {ckpt.get('epoch', '?')} at {resume_checkpoint}  "
+            f"(best_val_acc={state.best_val_acc:.4f})"
+        )
+
+    # Environment capture (after seeding so deterministic flag is set)
+    state.environment = capture_environment(deterministic=deterministic)
     state.environment["seed_set"] = seed
 
-    # Run directory
+    # Run directory: reuse resume dir by default unless user specified --run-dir
     if run_dir is None:
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        model_name = config.get("model", "model")
-        run_dir = Path("model/runs") / model_name / ts
+        if resume_run_dir is not None:
+            run_dir = resume_run_dir
+        else:
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            model_name = config.get("model", "model")
+            run_dir = Path("model/runs") / model_name / ts
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # Eval-only mode
     if eval_only:
         print("Eval-only mode: computing test metrics...")
-        test_loader = get_test_loader(data_root)
         test_loss, test_acc = validate_one_epoch(model, test_loader, criterion, device)
         print(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}")
         return state
@@ -334,11 +435,27 @@ def run_experiment(
     if smoke_test:
         epochs = min(epochs, 2)
 
+    print(f"Training for {epochs} epoch(s), starting from epoch {start_epoch + 1}")
+    if max_train_batches is not None:
+        print(f"  max_train_batches={max_train_batches}  max_val_batches={max_val_batches}")
+
     for epoch in range(start_epoch, epochs):
         train_loss, train_acc = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, scaler
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            device,
+            scaler,
+            max_batches=max_train_batches,
         )
-        val_loss, val_acc = validate_one_epoch(model, val_loader, criterion, device)
+        val_loss, val_acc = validate_one_epoch(
+            model,
+            val_loader,
+            criterion,
+            device,
+            max_batches=max_val_batches,
+        )
 
         if scheduler is not None:
             scheduler.step()
@@ -366,16 +483,21 @@ def run_experiment(
             f"{'*' if improved else ' '}"
         )
 
-        # Save checkpoints
+        # Save checkpoints (full state including scheduler, scaler, history, RNG)
         last_path = run_dir / "last.pt"
-        _save_checkpoint(last_path, model, optimizer, epoch, state, is_best=improved)
-
-        if smoke_test:
-            # Only one iteration of smoke test
-            pass
+        _save_checkpoint(
+            last_path,
+            model,
+            optimizer,
+            scheduler,
+            scaler,
+            epoch,
+            state,
+            is_best=improved,
+        )
 
     # Finalize
-    _save_run_artifacts(run_dir, state)
+    _save_run_artifacts(run_dir, state, config)
     print(f"\nResults saved to {run_dir}")
     print(f"Best Val Acc: {state.best_val_acc:.4f} (epoch {state.best_epoch})")
 
@@ -406,8 +528,13 @@ def evaluate_checkpoint(
         device = _resolve_device(config.get("device", "auto"))
 
     from onn_model.data import get_test_loader
+
     data_root = config.get("data_root", "model/data")
-    test_loader = get_test_loader(data_root)
+    test_loader = get_test_loader(
+        root=data_root,
+        batch_size=config.get("batch_size", 128),
+        num_workers=config.get("num_workers", 0),
+    )
 
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model_name = ckpt.get("model_name", config.get("model", "BaselineCNN"))

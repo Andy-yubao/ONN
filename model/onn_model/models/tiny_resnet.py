@@ -35,7 +35,9 @@ class BasicBlock(nn.Module):
             in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False
         )
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
+        # Separate ReLU modules so hooks can target the block's final output
+        # without also capturing the internal post-conv1 activation.
+        self.relu1 = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(
             out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False
         )
@@ -51,18 +53,20 @@ class BasicBlock(nn.Module):
         else:
             self.shortcut = nn.Identity()
 
+        self.relu_out = nn.ReLU(inplace=True)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = self.shortcut(x)
 
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.relu(out)
+        out = self.relu1(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
 
         out += identity
-        out = self.relu(out)
+        out = self.relu_out(out)
         return out
 
 
@@ -110,6 +114,20 @@ class TinyResNet(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
+
+    def get_activity_targets(self) -> dict[str, nn.Module]:
+        """Return named modules whose outputs should be analysed for channel activity.
+
+        Returns a dict mapping human-readable display names to the module whose
+        *output* is the post-activation value of each functional stage.
+        """
+        return {
+            "stem_output": self.stem[-1],           # ReLU after stem Conv
+            "stage1.block0.output": self.stage1[0].relu_out,
+            "stage1.block1.output": self.stage1[1].relu_out,
+            "stage2.block0.output": self.stage2[0].relu_out,
+            "stage2.block1.output": self.stage2[1].relu_out,
+        }
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.stem(x)         # [N, 16, 28, 28]

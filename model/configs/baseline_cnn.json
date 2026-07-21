@@ -1,6 +1,7 @@
 {
   "model": "BaselineCNN",
   "seed": 42,
+  "deterministic": true,
   "batch_size": 128,
   "num_workers": 0,
   "epochs": 15,

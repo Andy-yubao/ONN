@@ -1,0 +1,88 @@
+{
+  "config": {
+    "deterministic": true,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "scheduler": "CosineAnnealingLR"
+  },
+  "per_seed_results": [
+    {
+      "model": "BaselineCNN",
+      "seed": 42,
+      "best_val_acc": 0.9818,
+      "best_val_loss": 0.059958,
+      "best_epoch": 14,
+      "test_acc": 0.9809,
+      "test_loss": 0.063676
+    },
+    {
+      "model": "BaselineCNN",
+      "seed": 43,
+      "best_val_acc": 0.9854,
+      "best_val_loss": 0.050457,
+      "best_epoch": 15,
+      "test_acc": 0.9848,
+      "test_loss": 0.049625
+    },
+    {
+      "model": "BaselineCNN",
+      "seed": 44,
+      "best_val_acc": 0.9868,
+      "best_val_loss": 0.050996,
+      "best_epoch": 15,
+      "test_acc": 0.982,
+      "test_loss": 0.058094
+    },
+    {
+      "model": "TinyResNet",
+      "seed": 42,
+      "best_val_acc": 0.9946,
+      "best_val_loss": 0.018941,
+      "best_epoch": 20,
+      "test_acc": 0.9795,
+      "test_loss": 0.066144
+    },
+    {
+      "model": "TinyResNet",
+      "seed": 43,
+      "best_val_acc": 0.9934,
+      "best_val_loss": 0.021795,
+      "best_epoch": 19,
+      "test_acc": 0.994,
+      "test_loss": 0.018314
+    },
+    {
+      "model": "TinyResNet",
+      "seed": 44,
+      "best_val_acc": 0.9946,
+      "best_val_loss": 0.018884,
+      "best_epoch": 13,
+      "test_acc": 0.9933,
+      "test_loss": 0.021045
+    }
+  ],
+  "summary": {
+    "BaselineCNN": {
+      "val_acc_mean": 0.984667,
+      "val_acc_std": 0.002579,
+      "test_acc_mean": 0.982567,
+      "test_acc_std": 0.002011,
+      "best_epoch_mean": 14.67,
+      "best_epoch_std": 0.58
+    },
+    "TinyResNet": {
+      "val_acc_mean": 0.9942,
+      "val_acc_std": 0.000693,
+      "test_acc_mean": 0.988933,
+      "test_acc_std": 0.008177,
+      "best_epoch_mean": 17.33,
+      "best_epoch_std": 3.79
+    }
+  }
+}

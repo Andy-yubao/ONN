@@ -93,7 +93,8 @@ conda env update -f environment.yml
 |------|------|:----:|
 | **M0** | 项目架构与边界定义 | ✅ 架构层面已完成 |
 | **M1-A** | 器件测量方案和前端采集原型 | 📋 待启动 |
-| **M1-B** | MNIST 软件基线与 Tiny-ResNet 基线 | ✅ **已完成** |
+| **M1-B** | MNIST 软件基线与 Tiny-ResNet 基线 | ✅ **基线已完成** |
+| **M1-B.1** | 基线实验审计与可复现性加固 | ✅ **审计已完成** |
 
 详见 [docs/development_plan.md](docs/development_plan.md)。
 

@@ -43,6 +43,18 @@ class BaselineCNN(nn.Module):
         self.pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Linear(32, num_classes)
 
+    def get_activity_targets(self) -> dict[str, nn.Module]:
+        """Return named modules whose outputs should be analysed for channel activity.
+
+        Targets are the *post-activation* output of each Conv-BN-ReLU functional
+        block (i.e. the ReLU output), *not* the raw convolution output.
+        """
+        return {
+            "stem_output": self.stem[-1],   # ReLU after stem Conv
+            "conv2_output": self.conv2[-1], # ReLU after conv2
+            "conv3_output": self.conv3[-1], # ReLU after conv3
+        }
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.stem(x)       # [N, 16, 28, 28]
         x = self.pool1(x)      # [N, 16, 14, 14]

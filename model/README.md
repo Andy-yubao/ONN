@@ -115,7 +115,7 @@ last.pt              # 最后一个 epoch 检查点
 | `ModuleNotFoundError: No module named 'onn_model'` | 确保在项目根目录运行命令 |
 | MNIST 下载失败 | 检查代理：`set HTTP_PROXY=http://127.0.0.1:10809` |
 | `CUDA out of memory` | 减小 batch-size，或使用 `--device cpu` |
-| 训练结果无法复现 | 确认 `config.json` 中 `seed=42` |
+| 训练结果无法完全复现 | 确认 `config.json` 中 `"deterministic": true`。固定随机种子可提高可重复性，但非确定性 CUDA 算法仍可能产生小幅差异。严格对照实验应启用 deterministic 模式；日常快速实验可关闭确定性以提高性能。 |
 
 ## 工作流程
 

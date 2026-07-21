@@ -1,0 +1,7 @@
+model,seed,best_val_acc,best_val_loss,best_epoch,test_acc,test_loss
+BaselineCNN,42,0.9818,0.059958,14,0.9809,0.063676
+BaselineCNN,43,0.9854,0.050457,15,0.9848,0.049625
+BaselineCNN,44,0.9868,0.050996,15,0.982,0.058094
+TinyResNet,42,0.9946,0.018941,20,0.9795,0.066144
+TinyResNet,43,0.9934,0.021795,19,0.994,0.018314
+TinyResNet,44,0.9946,0.018884,13,0.9933,0.021045
