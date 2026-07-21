@@ -1,0 +1,198 @@
+{
+  "model_name": "TinyResNet",
+  "total_params": 42938,
+  "trainable_params": 42938,
+  "total_macs": 13761088,
+  "max_intermediate_elements": 12544,
+  "input_shape": [
+    1,
+    1,
+    28,
+    28
+  ],
+  "layer_details": [
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "params": 144,
+      "macs": 112896
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "params": 2304,
+      "macs": 1806336
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "params": 2304,
+      "macs": 1806336
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "params": 2304,
+      "macs": 1806336
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "params": 2304,
+      "macs": 1806336
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "params": 512,
+      "macs": 100352
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        16,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "params": 4608,
+      "macs": 903168
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "params": 9216,
+      "macs": 1806336
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "params": 9216,
+      "macs": 1806336
+    },
+    {
+      "layer": "Conv2d",
+      "input_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        32,
+        14,
+        14
+      ],
+      "params": 9216,
+      "macs": 1806336
+    },
+    {
+      "layer": "Linear",
+      "input_shape": [
+        1,
+        32
+      ],
+      "output_shape": [
+        1,
+        10
+      ],
+      "params": 330,
+      "macs": 320
+    }
+  ]
+}

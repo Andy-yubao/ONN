@@ -16,7 +16,8 @@ wandb/
 # ---------------------------
 data/
 datasets/
-*.csv
+data/**/*.csv
+datasets/**/*.csv
 *.npz
 
 # ---------------------------
@@ -97,6 +98,10 @@ build/
 .venv/
 venv/
 env/
+.pytest_cache/
+model/data/
+model/runs/
+model/profiles/
 
 # ---------------------------
 # 工具

@@ -1,0 +1,43 @@
+# ONN 模型训练 Conda 环境
+#
+# 使用方式：
+#   conda env create -f environment.yml
+#   conda activate onn
+#
+# 更新环境：
+#   conda env update -f environment.yml
+#
+# 导出当前环境：
+#   conda env export > environment.yml
+
+name: onn
+
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+
+dependencies:
+  # 核心运行时
+  - python >=3.10,<3.13
+  - pip
+
+  # 深度学习框架
+  - pytorch >=2.0
+  - torchvision
+
+  # 科学计算与数据处理
+  - numpy >=1.24
+  - scipy
+
+  # 可视化
+  - matplotlib >=3.7
+
+  # 开发与调试工具
+  - ipython
+  - jupyter
+  - pytest
+
+  # 通过 pip 安装的额外依赖
+  - pip:
+    - tensorboard

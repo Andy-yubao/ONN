@@ -1,0 +1,7 @@
+{
+  "best_val_acc": 0.982,
+  "best_val_loss": 0.058925747665762904,
+  "best_epoch": 14,
+  "total_params": 14458,
+  "best_checkpoint": "model\\runs\\BaselineCNN\\20260721_113731\\best.pt"
+}

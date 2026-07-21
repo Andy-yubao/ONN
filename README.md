@@ -62,9 +62,26 @@ MNIST 28×28 灰度图
 | 器件阵列 | 4×4 光电突触阵列（16 单元），当前尚无可用实物 |
 | FPGA 平台 | 小梅哥 AC620（Cyclone IV，具体型号待核实） |
 | 开发工具 | Quartus II + ModelSim/Questa |
-| 训练框架 | Python（PyTorch） |
+| 训练框架 | Python（PyTorch），通过 Conda 管理环境 |
 
 > ⚠ **安全提示**：在获得官方 pinout 和安全电气规格前，**禁止通电**。详见 [docs/device_bringup_checklist.md](docs/device_bringup_checklist.md)。
+
+## 环境配置（模型训练）
+
+本项目使用 Conda 管理模型训练环境。环境配置文件位于项目根目录：
+
+```bash
+# 创建环境
+conda env create -f environment.yml
+
+# 激活环境
+conda activate onn
+
+# 更新环境（依赖变更后）
+conda env update -f environment.yml
+```
+
+详见 [`environment.yml`](environment.yml) 和 [`model/README.md`](model/README.md)。
 
 ---
 
@@ -73,10 +90,10 @@ MNIST 28×28 灰度图
 > 项目架构与边界定义已在架构层面完成。器件参数和工程选型仍有未知项，但已具有明确的实验验证路径，不阻塞下一阶段工作。
 
 | 阶段 | 说明 | 状态 |
-|------|------|------|
+|------|------|:----:|
 | **M0** | 项目架构与边界定义 | ✅ 架构层面已完成 |
 | **M1-A** | 器件测量方案和前端采集原型 | 📋 待启动 |
-| **M1-B** | MNIST 软件基线与 Tiny-ResNet 基线 | 📋 待启动 |
+| **M1-B** | MNIST 软件基线与 Tiny-ResNet 基线 | ✅ **已完成** |
 
 详见 [docs/development_plan.md](docs/development_plan.md)。
 
@@ -87,6 +104,7 @@ MNIST 28×28 灰度图
 ```
 ONN/
 ├── README.md                          ← 从这里开始
+├── environment.yml                    ← 🌿 Conda 环境配置（模型训练）
 ├── docs/
 │   ├── project_overview.md            ← ⭐ 双路线背景与目标（先读此）
 │   ├── project_scope.md               ← 项目范围基线
@@ -106,7 +124,7 @@ ONN/
 ├── hardware/components/
 │   └── optical_array.md               ← 4×4 光学阵列说明
 ├── fpga/                              ← FPGA 工程（RTL/仿真）
-├── model/                             ← 训练模型
+├── model/                             ← 训练模型（Conda 环境）
 ├── experiments/templates/
 │   └── device_characterization.md     ← 实验记录模板
 ├── tools/                             ← 辅助工具脚本

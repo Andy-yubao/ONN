@@ -1,0 +1,7 @@
+{
+  "best_val_acc": 0.994,
+  "best_val_loss": 0.01933299786467105,
+  "best_epoch": 20,
+  "total_params": 42938,
+  "best_checkpoint": "model\\runs\\TinyResNet\\20260721_114337\\best.pt"
+}
