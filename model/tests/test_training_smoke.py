@@ -412,6 +412,21 @@ class TestSmokeTest:
             f"Smoke test ran {len(state.history['epoch'])} epochs, expected ≤2"
         )
 
+    @pytest.mark.parametrize("model_name,cls", [
+        ("MicroCNNSmall", "MicroCNNSmall"),
+        ("MicroCNNExtraSmall", "MicroCNNExtraSmall"),
+        ("DepthwiseMicroCNN", "DepthwiseMicroCNN"),
+    ])
+    def test_compact_model_smoke(self, model_name, cls):
+        """Smoke test should work for all compact models."""
+        config = self._make_config(cls)
+        bundle = self._make_data_bundle(n_samples=32, batch_size=8)
+
+        state = run_experiment(config, smoke_test=True, data_bundle=bundle)
+        assert len(state.history["epoch"]) > 0, f"{model_name}: No training history"
+        assert state.best_val_acc >= 0.0, f"{model_name}: Invalid best val acc"
+        assert state.best_epoch >= 1, f"{model_name}: Best epoch not recorded"
+
 
 # ============================================================================
 #  Determinism Tests

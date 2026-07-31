@@ -75,6 +75,18 @@ def _get_model(model_name: str, num_classes: int = 10) -> nn.Module:
         from onn_model.models.tiny_resnet import TinyResNet
 
         return TinyResNet(num_classes=num_classes)
+    elif model_name in ("MicroCNN-S", "MicroCNNSmall"):
+        from onn_model.models.compact_cnn import MicroCNNSmall
+
+        return MicroCNNSmall(num_classes=num_classes)
+    elif model_name in ("MicroCNN-XS", "MicroCNNExtraSmall"):
+        from onn_model.models.compact_cnn import MicroCNNExtraSmall
+
+        return MicroCNNExtraSmall(num_classes=num_classes)
+    elif model_name in ("DS-MicroCNN", "DepthwiseMicroCNN"):
+        from onn_model.models.compact_cnn import DepthwiseMicroCNN
+
+        return DepthwiseMicroCNN(num_classes=num_classes)
     else:
         raise ValueError(f"Unknown model: {model_name}")
 
@@ -170,8 +182,11 @@ def _save_run_artifacts(run_dir: Path, state: ExperimentState, config: Dict[str,
                 state.history["val_acc"][i],
             ])
 
-    # Summary metrics
-    total_params = count_parameters(_get_model(config.get("model", "BaselineCNN")))
+    # Summary metrics (use the config's model name, but don't require import success)
+    try:
+        total_params = count_parameters(_get_model(config.get("model", "BaselineCNN")))
+    except Exception:
+        total_params = 0
     metrics_dict = {
         "best_val_acc": state.best_val_acc,
         "best_val_loss": state.best_val_loss,
@@ -316,11 +331,14 @@ def run_experiment(
     if override_kwargs:
         config = {**config, **override_kwargs}
 
-    # Seeding (must happen before any DataLoader creation)
-    seed = config.get("seed", 42)
+    # Seeding: split_seed controls data split, run_seed controls training randomness
+    # New preferred API: split_seed / run_seed.  Fall back to legacy seed.
+    split_seed = config.get("split_seed", config.get("seed", 42))
+    run_seed = config.get("run_seed", config.get("seed", 42))
     deterministic = config.get("deterministic", False)
-    set_seed(seed, deterministic=deterministic)
 
+    # Data loaders are created BEFORE set_seed(run_seed) because data splitting
+    # uses split_seed independently of training randomness.
     # Device
     device = _resolve_device(config.get("device", "auto"))
 
@@ -331,14 +349,16 @@ def run_experiment(
         test_loader = data_bundle.test_loader
     else:
         from onn_model.data import get_train_val_loaders, get_test_loader
+        from onn_model.reproducibility import make_worker_generator
 
         data_root = config.get("data_root", "model/data")
         try:
             train_loader, val_loader, _ = get_train_val_loaders(
                 root=data_root,
                 batch_size=config.get("batch_size", 128),
-                seed=seed,
                 num_workers=config.get("num_workers", 0),
+                split_seed=split_seed,
+                run_seed=run_seed,
             )
             test_loader = get_test_loader(
                 root=data_root,
@@ -347,6 +367,9 @@ def run_experiment(
             )
         except Exception as e:
             raise RuntimeError(f"Failed to create data loaders: {e}")
+
+    # Set run_seed AFTER data loaders so split_seed independently controls the split
+    set_seed(run_seed, deterministic=deterministic)
 
     # Smoke-test limits
     max_train_batches: Optional[int] = None
@@ -411,7 +434,9 @@ def run_experiment(
 
     # Environment capture (after seeding so deterministic flag is set)
     state.environment = capture_environment(deterministic=deterministic)
-    state.environment["seed_set"] = seed
+    state.environment["split_seed"] = split_seed
+    state.environment["run_seed"] = run_seed
+    state.environment["seed_set"] = run_seed  # legacy compat
 
     # Run directory: reuse resume dir by default unless user specified --run-dir
     if run_dir is None:

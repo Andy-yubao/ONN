@@ -1,0 +1,62 @@
+[
+  {
+    "model": "MicroCNNSmall",
+    "run_seed": 42,
+    "best_val_acc": 0.9742,
+    "best_val_loss": 0.09224025192260742,
+    "best_epoch": 18,
+    "test_acc": 0.9724,
+    "test_loss": 0.08905722198486328,
+    "run_dir": "model/runs/MicroCNNSmall\\20260722_112550"
+  },
+  {
+    "model": "MicroCNNSmall",
+    "run_seed": 43,
+    "best_val_acc": 0.9762,
+    "best_val_loss": 0.08954595416784286,
+    "best_epoch": 19,
+    "test_acc": 0.9741,
+    "test_loss": 0.08723545426130294,
+    "run_dir": "model/runs/MicroCNNSmall\\20260722_113008"
+  },
+  {
+    "model": "MicroCNNSmall",
+    "run_seed": 44,
+    "best_val_acc": 0.9706,
+    "best_val_loss": 0.10275859847068787,
+    "best_epoch": 18,
+    "test_acc": 0.9704,
+    "test_loss": 0.0915147968441248,
+    "run_dir": "model/runs/MicroCNNSmall\\20260722_113355"
+  },
+  {
+    "model": "DepthwiseMicroCNN",
+    "run_seed": 42,
+    "best_val_acc": 0.9484,
+    "best_val_loss": 0.1785914430141449,
+    "best_epoch": 19,
+    "test_acc": 0.9498,
+    "test_loss": 0.16810049895644189,
+    "run_dir": "model/runs/DepthwiseMicroCNN\\20260722_112047"
+  },
+  {
+    "model": "DepthwiseMicroCNN",
+    "run_seed": 43,
+    "best_val_acc": 0.9518,
+    "best_val_loss": 0.16986473550796508,
+    "best_epoch": 16,
+    "test_acc": 0.9531,
+    "test_loss": 0.1634375732064247,
+    "run_dir": "model/runs/DepthwiseMicroCNN\\20260722_114045"
+  },
+  {
+    "model": "DepthwiseMicroCNN",
+    "run_seed": 44,
+    "best_val_acc": 0.948,
+    "best_val_loss": 0.1809466693878174,
+    "best_epoch": 18,
+    "test_acc": 0.9526,
+    "test_loss": 0.1652878820538521,
+    "run_dir": "model/runs/DepthwiseMicroCNN\\20260722_114607"
+  }
+]

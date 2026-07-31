@@ -100,6 +100,10 @@ def get_train_val_loaders(
     download: bool = True,
     add_augment: bool = False,
     pin_memory: bool = True,
+    *,
+    split_seed: Optional[int] = None,
+    run_seed: Optional[int] = None,
+    worker_generator: Optional[torch.Generator] = None,
 ) -> Tuple[DataLoader, DataLoader, Dataset]:
     """Create training and validation DataLoaders.
 
@@ -110,17 +114,32 @@ def get_train_val_loaders(
     batch_size : int
     num_workers : int
     seed : int
+        Legacy: sets both split_seed and run_seed when split_seed/run_seed
+        are not provided.  Deprecated — use split_seed and run_seed instead.
     download : bool
     add_augment : bool
     pin_memory : bool
+    split_seed : int or None
+        Controls train/val split reproducibility (new preferred API).
+        When provided, ``seed`` is ignored for splitting.
+    run_seed : int or None
+        Controls DataLoader shuffle randomness (new preferred API).
+        When provided, ``seed`` is ignored for DataLoader shuffle.
+    worker_generator : torch.Generator or None
+        Generator for DataLoader shuffle, created from ``run_seed`` if not provided.
 
     Returns
     -------
     (train_loader, val_loader, full_train_dataset)
-        The full dataset is returned so callers can inspect or re-split.
     """
+    # Determine split_seed and run_seed (new API takes precedence)
+    effective_split_seed = split_seed if split_seed is not None else seed
+    effective_run_seed = run_seed if run_seed is not None else seed
+
     full_train = get_mnist_dataset(root, train=True, download=download, add_augment=add_augment)
-    train_subset, val_subset = split_train_val(full_train, seed=seed)
+    train_subset, val_subset = split_train_val(full_train, seed=effective_split_seed)
+
+    g = worker_generator if worker_generator is not None else torch.Generator().manual_seed(effective_run_seed)
 
     train_loader = DataLoader(
         train_subset,
@@ -128,6 +147,7 @@ def get_train_val_loaders(
         shuffle=True,
         num_workers=num_workers,
         pin_memory=pin_memory,
+        generator=g,
     )
     val_loader = DataLoader(
         val_subset,

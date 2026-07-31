@@ -1,0 +1,688 @@
+{
+  "profiles": {
+    "BaselineCNN": {
+      "model_name": "BaselineCNN",
+      "total_params": 14458,
+      "trainable_params": 14458,
+      "total_macs": 1467968,
+      "max_intermediate_elements": 12544,
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "layer_details": [
+        {
+          "layer": "Conv2d",
+          "name": "stem.0",
+          "input_shape": [
+            1,
+            1,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "params": 144,
+          "macs": 112896
+        },
+        {
+          "layer": "Conv2d",
+          "name": "conv2.0",
+          "input_shape": [
+            1,
+            16,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "params": 4608,
+          "macs": 903168
+        },
+        {
+          "layer": "Conv2d",
+          "name": "conv3.0",
+          "input_shape": [
+            1,
+            32,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            32,
+            7,
+            7
+          ],
+          "params": 9216,
+          "macs": 451584
+        },
+        {
+          "layer": "Linear",
+          "name": "fc",
+          "input_shape": [
+            1,
+            32
+          ],
+          "output_shape": [
+            1,
+            10
+          ],
+          "params": 330,
+          "macs": 320
+        }
+      ],
+      "fpga_proxy": {
+        "conv_params": 13968,
+        "linear_params": 330,
+        "total_weight_bytes_int8": 14298,
+        "total_weight_bytes_int16": 28596,
+        "total_weight_bytes_fp32": 57192,
+        "peak_activation_elements": 12544,
+        "peak_activation_bytes_int8": 12544,
+        "peak_activation_bytes_int16": 25088,
+        "peak_activation_bytes_fp32": 50176,
+        "estimated_ping_pong_activation_bytes_int8": 13328
+      }
+    },
+    "TinyResNet": {
+      "model_name": "TinyResNet",
+      "total_params": 42938,
+      "trainable_params": 42938,
+      "total_macs": 13761088,
+      "max_intermediate_elements": 12544,
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "layer_details": [
+        {
+          "layer": "Conv2d",
+          "name": "stem.0",
+          "input_shape": [
+            1,
+            1,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "params": 144,
+          "macs": 112896
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage1.0.conv1",
+          "input_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "params": 2304,
+          "macs": 1806336
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage1.0.conv2",
+          "input_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "params": 2304,
+          "macs": 1806336
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage1.1.conv1",
+          "input_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "params": 2304,
+          "macs": 1806336
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage1.1.conv2",
+          "input_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "params": 2304,
+          "macs": 1806336
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage2.0.shortcut.0",
+          "input_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "params": 512,
+          "macs": 100352
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage2.0.conv1",
+          "input_shape": [
+            1,
+            16,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "params": 4608,
+          "macs": 903168
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage2.0.conv2",
+          "input_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "params": 9216,
+          "macs": 1806336
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage2.1.conv1",
+          "input_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "params": 9216,
+          "macs": 1806336
+        },
+        {
+          "layer": "Conv2d",
+          "name": "stage2.1.conv2",
+          "input_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            32,
+            14,
+            14
+          ],
+          "params": 9216,
+          "macs": 1806336
+        },
+        {
+          "layer": "Linear",
+          "name": "fc",
+          "input_shape": [
+            1,
+            32
+          ],
+          "output_shape": [
+            1,
+            10
+          ],
+          "params": 330,
+          "macs": 320
+        }
+      ],
+      "fpga_proxy": {
+        "conv_params": 42128,
+        "linear_params": 330,
+        "total_weight_bytes_int8": 42458,
+        "total_weight_bytes_int16": 84916,
+        "total_weight_bytes_fp32": 169832,
+        "peak_activation_elements": 12544,
+        "peak_activation_bytes_int8": 12544,
+        "peak_activation_bytes_int16": 25088,
+        "peak_activation_bytes_fp32": 50176,
+        "estimated_ping_pong_activation_bytes_int8": 25088
+      }
+    },
+    "MicroCNNSmall": {
+      "model_name": "MicroCNNSmall",
+      "total_params": 3778,
+      "trainable_params": 3778,
+      "total_macs": 395296,
+      "max_intermediate_elements": 6272,
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "layer_details": [
+        {
+          "layer": "Conv2d",
+          "name": "stem.0",
+          "input_shape": [
+            1,
+            1,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            8,
+            28,
+            28
+          ],
+          "params": 72,
+          "macs": 56448
+        },
+        {
+          "layer": "Conv2d",
+          "name": "conv2.0",
+          "input_shape": [
+            1,
+            8,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            16,
+            14,
+            14
+          ],
+          "params": 1152,
+          "macs": 225792
+        },
+        {
+          "layer": "Conv2d",
+          "name": "conv3.0",
+          "input_shape": [
+            1,
+            16,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            16,
+            7,
+            7
+          ],
+          "params": 2304,
+          "macs": 112896
+        },
+        {
+          "layer": "Linear",
+          "name": "fc",
+          "input_shape": [
+            1,
+            16
+          ],
+          "output_shape": [
+            1,
+            10
+          ],
+          "params": 170,
+          "macs": 160
+        }
+      ],
+      "fpga_proxy": {
+        "conv_params": 3528,
+        "linear_params": 170,
+        "total_weight_bytes_int8": 3698,
+        "total_weight_bytes_int16": 7396,
+        "total_weight_bytes_fp32": 14792,
+        "peak_activation_elements": 6272,
+        "peak_activation_bytes_int8": 6272,
+        "peak_activation_bytes_int16": 12544,
+        "peak_activation_bytes_fp32": 25088,
+        "estimated_ping_pong_activation_bytes_int8": 7056
+      }
+    },
+    "MicroCNNExtraSmall": {
+      "model_name": "MicroCNNExtraSmall",
+      "total_params": 1030,
+      "trainable_params": 1030,
+      "total_macs": 112976,
+      "max_intermediate_elements": 3136,
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "layer_details": [
+        {
+          "layer": "Conv2d",
+          "name": "stem.0",
+          "input_shape": [
+            1,
+            1,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            4,
+            28,
+            28
+          ],
+          "params": 36,
+          "macs": 28224
+        },
+        {
+          "layer": "Conv2d",
+          "name": "conv2.0",
+          "input_shape": [
+            1,
+            4,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            8,
+            14,
+            14
+          ],
+          "params": 288,
+          "macs": 56448
+        },
+        {
+          "layer": "Conv2d",
+          "name": "conv3.0",
+          "input_shape": [
+            1,
+            8,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            8,
+            7,
+            7
+          ],
+          "params": 576,
+          "macs": 28224
+        },
+        {
+          "layer": "Linear",
+          "name": "fc",
+          "input_shape": [
+            1,
+            8
+          ],
+          "output_shape": [
+            1,
+            10
+          ],
+          "params": 90,
+          "macs": 80
+        }
+      ],
+      "fpga_proxy": {
+        "conv_params": 900,
+        "linear_params": 90,
+        "total_weight_bytes_int8": 990,
+        "total_weight_bytes_int16": 1980,
+        "total_weight_bytes_fp32": 3960,
+        "peak_activation_elements": 3136,
+        "peak_activation_bytes_int8": 3136,
+        "peak_activation_bytes_int16": 6272,
+        "peak_activation_bytes_fp32": 12544,
+        "estimated_ping_pong_activation_bytes_int8": 3920
+      }
+    },
+    "DepthwiseMicroCNN": {
+      "model_name": "DepthwiseMicroCNN",
+      "total_params": 970,
+      "trainable_params": 970,
+      "total_macs": 115408,
+      "max_intermediate_elements": 6272,
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "layer_details": [
+        {
+          "layer": "Conv2d",
+          "name": "stem.0",
+          "input_shape": [
+            1,
+            1,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            8,
+            28,
+            28
+          ],
+          "params": 72,
+          "macs": 56448
+        },
+        {
+          "layer": "Conv2d",
+          "name": "ds_block1.depthwise",
+          "input_shape": [
+            1,
+            8,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            8,
+            14,
+            14
+          ],
+          "params": 72,
+          "macs": 14112
+        },
+        {
+          "layer": "Conv2d",
+          "name": "ds_block1.pointwise",
+          "input_shape": [
+            1,
+            8,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            16,
+            14,
+            14
+          ],
+          "params": 128,
+          "macs": 25088
+        },
+        {
+          "layer": "Conv2d",
+          "name": "ds_block2.depthwise",
+          "input_shape": [
+            1,
+            16,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            16,
+            7,
+            7
+          ],
+          "params": 144,
+          "macs": 7056
+        },
+        {
+          "layer": "Conv2d",
+          "name": "ds_block2.pointwise",
+          "input_shape": [
+            1,
+            16,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            16,
+            7,
+            7
+          ],
+          "params": 256,
+          "macs": 12544
+        },
+        {
+          "layer": "Linear",
+          "name": "fc",
+          "input_shape": [
+            1,
+            16
+          ],
+          "output_shape": [
+            1,
+            10
+          ],
+          "params": 170,
+          "macs": 160
+        }
+      ],
+      "fpga_proxy": {
+        "conv_params": 672,
+        "linear_params": 170,
+        "total_weight_bytes_int8": 842,
+        "total_weight_bytes_int16": 1684,
+        "total_weight_bytes_fp32": 3368,
+        "peak_activation_elements": 6272,
+        "peak_activation_bytes_int8": 6272,
+        "peak_activation_bytes_int16": 12544,
+        "peak_activation_bytes_fp32": 25088,
+        "estimated_ping_pong_activation_bytes_int8": 7056
+      }
+    }
+  },
+  "summary_table": {
+    "BaselineCNN": {
+      "params": 14458,
+      "trainable": 14458,
+      "macs": 1467968,
+      "w8_bytes": 14298,
+      "w16_bytes": 28596,
+      "a8_peak": 12544,
+      "a8_pingpong": 13328
+    },
+    "TinyResNet": {
+      "params": 42938,
+      "trainable": 42938,
+      "macs": 13761088,
+      "w8_bytes": 42458,
+      "w16_bytes": 84916,
+      "a8_peak": 12544,
+      "a8_pingpong": 25088
+    },
+    "MicroCNNSmall": {
+      "params": 3778,
+      "trainable": 3778,
+      "macs": 395296,
+      "w8_bytes": 3698,
+      "w16_bytes": 7396,
+      "a8_peak": 6272,
+      "a8_pingpong": 7056
+    },
+    "MicroCNNExtraSmall": {
+      "params": 1030,
+      "trainable": 1030,
+      "macs": 112976,
+      "w8_bytes": 990,
+      "w16_bytes": 1980,
+      "a8_peak": 3136,
+      "a8_pingpong": 3920
+    },
+    "DepthwiseMicroCNN": {
+      "params": 970,
+      "trainable": 970,
+      "macs": 115408,
+      "w8_bytes": 842,
+      "w16_bytes": 1684,
+      "a8_peak": 6272,
+      "a8_pingpong": 7056
+    }
+  }
+}
