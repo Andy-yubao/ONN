@@ -19,7 +19,7 @@
 #
 # Quartus Prime
 # Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
-# Date created = 22:38:12  August 01, 2026
+# Date created = 23:05:39  August 01, 2026
 #
 # -------------------------------------------------------------------------- #
 #
@@ -41,7 +41,7 @@ set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE10F17C8
 set_global_assignment -name TOP_LEVEL_ENTITY stem_conv_smoke_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 25.1STD.0
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "22:38:12  AUGUST 01, 2026"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "23:05:39  AUGUST 01, 2026"
 set_global_assignment -name LAST_QUARTUS_VERSION "25.1std.0 Lite Edition"
 set_global_assignment -name VERILOG_INPUT_VERSION VERILOG_2001
 set_global_assignment -name VERILOG_FILE ../rtl/requantize_u8.v

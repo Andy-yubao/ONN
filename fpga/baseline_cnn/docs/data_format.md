@@ -3,11 +3,15 @@
 > 适用对象：`fpga/baseline_cnn/` 参数包、ModelSim 黄金测试向量与 RTL。
 > 唯一数值标准：冻结的 `Int8Reference`（`model/onn_model/int8_reference.py`）及其
 > `candidate_quant_config.json`（方案 A，per-tensor 权重）。本文件不推导任何量化公式。
-> 当前 RTL 状态：算术 smoke、stem 卷积引擎与流式 MaxPool 阶段已落地——
+> 当前 RTL 状态：算术 smoke、stem 卷积引擎、流式 MaxPool 与 stem+pool1 集成
+> 阶段已落地——
 > `requantize_u8.v` / `gap_div49.v` 通过 Questa 黄金向量验证；`stem_conv_serial.v`
 > （单 MAC 串行 stem 卷积，冻结设计见 `docs/rtl_microarchitecture.md`）通过 digit8
-> 黄金 trace 全量验证并在 EP4CE10F17C8 上完成综合/Fitter；`maxpool2x2_stream.v`
+> 黄金 trace 全量验证并在 EP4CE10F17C8 上完成综合/Fitter（新增 `STORE_OUTPUT_RAM`
+> 参数，`=0` 时集成工程不实例化完整 stem 输出 RAM）；`maxpool2x2_stream.v`
 > （流式 2×2 MaxPool，§9）通过 `pool1_q` 两遍 golden 验证（连续/空拍）并在
+> EP4CE10F17C8 上完成综合/Fitter；`stem_pool1_pipeline.v`（§10 集成核心）实现
+> `input_q → stem → requant → 流式 MaxPool → pool1 RAM`，两遍推理逐位一致并在
 > EP4CE10F17C8 上完成综合/Fitter（无 UART，无 conv2/conv3）。
 
 ## 1. 整数类型与补码表示

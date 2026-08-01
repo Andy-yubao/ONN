@@ -5,12 +5,23 @@
 //     -> stem Conv2d 1->16, 3x3, stride 1, padding 1
 //     -> + INT32 bias (sign-extended)
 //     -> saturate INT32  ->  conv1_acc (debug stream)
-//     -> requantize_u8(0x7A999012, 38)  ->  stem_q (debug stream + output RAM)
+//     -> requantize_u8(0x7A999012, 38)  ->  stem_q (debug stream [+ output RAM])
 //
 // Design decisions are frozen in docs/rtl_microarchitecture.md.  This is the
 // first correctness-first version: 1 MAC lane, oc->y->x output order,
 // ic->ky->kx convolution order, fixed 9 taps per output.  Out-of-bounds taps
 // contribute 0 and never generate an illegal RAM address.
+//
+// STORE_OUTPUT_RAM (default 1) controls the complete 12544x8 output feature-map
+// RAM:
+//   =1: instantiate it (phase-1 standalone verification; the standalone
+//       testbenches and the stem_conv_smoke Quartus project rely on readback
+//       through output_raddr/output_rdata).
+//   =0: do NOT instantiate it (integration: the q_valid/q_addr/q_value stream
+//       feeds the next stage directly, and only pool1_q is stored).  output_rdata
+//       is tied to 0 and output_raddr is unused.  The selection is a Verilog
+//       generate - never rely on the synthesizer to infer and then delete a RAM
+//       that a synthesis tool might still consider readable.
 //
 // Timing contract for the synchronous memories (sync_ram_u8 / sync_rom_*):
 // every read has ONE cycle of latency - the address is presented, the memory
@@ -29,7 +40,10 @@ module stem_conv_serial #(
     // root).  The Quartus smoke wrapper overrides them with paths that resolve
     // from the project directory.  No absolute paths.
     parameter WEIGHT_MEM_FILE = "fpga/baseline_cnn/params/weights/stem_weight.mem",
-    parameter BIAS_MEM_FILE   = "fpga/baseline_cnn/params/biases/stem_bias.mem"
+    parameter BIAS_MEM_FILE   = "fpga/baseline_cnn/params/biases/stem_bias.mem",
+    // 1 = instantiate the complete 12544x8 output RAM (phase-1 verification);
+    // 0 = no output RAM, output_rdata tied to 0, keep the q_valid stream.
+    parameter STORE_OUTPUT_RAM = 1
 ) (
     // ---- clock / reset ----
     input  wire              clk,
@@ -179,15 +193,25 @@ module stem_conv_serial #(
     sync_rom_s32 #(.DEPTH(BIAS_DEPTH), .ADDR_W(BIAS_ADDR_W), .FILE(BIAS_MEM_FILE))
         u_bias_rom (.clk(clk), .addr(bias_raddr), .rdata(bias_rdata));
 
-    // output RAM: write port from the engine, read port from outside.
-    sync_ram_u8 #(.DEPTH(OUT_DEPTH), .ADDR_W(OUT_ADDR_W)) u_output_ram (
-        .clk   (clk),
-        .we    (out_we),
-        .waddr (out_waddr),
-        .wdata (out_wdata),
-        .raddr (output_raddr),
-        .rdata (output_rdata)
-    );
+    // output RAM: write port from the engine, read port from outside.  Only
+    // instantiated when STORE_OUTPUT_RAM=1 (generate - never let the synthesizer
+    // decide to delete a RAM it could still consider readable).  When disabled
+    // output_rdata is tied to 0 and the q_valid/q_addr/q_value stream is the
+    // only output path.
+    generate
+        if (STORE_OUTPUT_RAM == 1) begin : gen_output_ram
+            sync_ram_u8 #(.DEPTH(OUT_DEPTH), .ADDR_W(OUT_ADDR_W)) u_output_ram (
+                .clk   (clk),
+                .we    (out_we),
+                .waddr (out_waddr),
+                .wdata (out_wdata),
+                .raddr (output_raddr),
+                .rdata (output_rdata)
+            );
+        end else begin : gen_no_output_ram
+            assign output_rdata = 8'd0;
+        end
+    endgenerate
 
     // ================= debug streams / control outputs =================
     always @* begin

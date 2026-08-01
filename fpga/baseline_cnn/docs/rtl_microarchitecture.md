@@ -210,16 +210,150 @@ module maxpool2x2_stream (
 （由 `run_all.ps1` 步骤 8 实测，详见最终报告。）该原始模块为**纯逻辑**：
 row_buffer 为寄存器实现，**无** M9K、**无**嵌入式乘法器、**无**除法器。
 
-### 9.6 与下一阶段（stem+MaxPool 集成）的接口变化
+### 9.6 集成接口的三处冻结语义（勘误后的准确结论）
 
-集成时需改动：
+集成（§10）涉及的三个接口点**必须以本节的冻结语义为准**，此前文档中的
+相关表述（"MaxPool start 由 stem done 触发"、"busy 可作为 stem 背压"、
+"pool1 约 1 块 M9K"）均已删除/更正：
 
-1. **stem 侧**：移除输出 RAM 写端口与 `output_raddr/rdata` 读端口；
-   `q_valid/q_value` 从"调试流"升级为"下游流水信号"；
-2. **MaxPool 侧**：`in_valid/in_q` 改接 stem 的 `q_valid/q_value`；`start` 由
-   stem 的 done（或上游控制器）触发；`busy` 可作为 stem 的背压（当前 stem 为
-   固定节拍输出，两者天然同步）；
-3. **存储**：删除 16 块 M9K 的 stem 输出 RAM，仅保留 MaxPool 的 pool1_q 存储
-   （16×14×14=3136×8 ≈ 1 块 M9K）；
-4. stem 输出节拍为每 12 周期一个结果、MaxPool 每 2 周期消费一个结果，吞吐
-   由 stem 决定，无需额外同步。
+1. **MaxPool 启动时机**：**同一个 `controller_start` 同时启动 stem 和
+   MaxPool**。MaxPool 必须在第一项 `stem_q_valid` 到达之前进入 RUN。
+   **`stem_done` 不能用于启动 MaxPool**——它发生在全部 `stem_q` 已发送之后，
+   用它启动会丢掉整个流。当前接口下，`start` 和第一项 `in_valid` **不允许在
+   同一个采样沿出现**；当前集成天然满足（stem 第一项输出在 start 后约 12 周期，
+   远晚于 start），仿真中必须断言这一间隔。
+2. **busy 语义**：`maxpool_busy` **只是状态信号，不是 backpressure**。当前
+   接口没有 ready/stall，**stem 不能被 MaxPool 暂停**。不需要背压的原因：
+   MaxPool 每周期可接受一个输入，而 stem 每 12 周期才产生一个输入，前者吞吐
+   始终大于后者。仿真必须断言 `stem_q_valid` 时 `maxpool_busy=1`。
+3. **pool1 RAM 资源估算**：`pool1_q = 3136 × 8 = 25088 bit`。按容量理论下限
+   为 **3 块 M9K**（3×9216=27648 ≥ 25088）；考虑 1024×9 等实际配置，可能映射
+   为 **4 块**。**最终数字以 Quartus Fitter 报告为准**，不再写"约 1 块"。
+
+## 10. stem+MaxPool 集成流水线（stem_pool1_pipeline，2026-08-01）
+
+### 10.1 集成拓扑
+
+```text
+input RAM (784×S8)
+→ stem_conv_serial  STORE_OUTPUT_RAM=0   (无完整 stem 输出 RAM)
+→ q_valid/q_value 流
+→ maxpool2x2_stream                      (流式 2×2 stride-2 MaxPool)
+→ pool1 RAM (3136×UINT8, CHW, oc→pool_y→pool_x)
+```
+
+集成核心模块为 `rtl/stem_pool1_pipeline.v`。**本阶段保留独立 MaxPool 原始模块
+与 stem 独立回归路径**（`tb_stem_conv_serial` / `tb_stem_conv_padding` 通过
+`STORE_OUTPUT_RAM=1` 默认参数继续读回完整输出 RAM），只是集成工程不再实例化
+完整的 stem 输出 RAM。
+
+### 10.2 STORE_OUTPUT_RAM 参数
+
+`stem_conv_serial` 新增 `parameter STORE_OUTPUT_RAM = 1`（Verilog generate）：
+
+| 值 | 行为 |
+|---|---|
+| `1`（默认） | 实例化完整 12544×8 输出 RAM，`output_rdata` 读回有效；原有 testbench 与 Quartus `stem_conv_smoke` 结果不变 |
+| `0` | **不实例化**输出 RAM（generate，不依赖综合器自动删除仍可能被读取的 RAM）；保留 `q_valid/q_addr/q_value` 输出流；`output_rdata` 固定为 0、`output_raddr` 不使用 |
+
+`stem_pool1_pipeline` 内部以 `.STORE_OUTPUT_RAM(0)` 实例化 stem。
+
+### 10.3 接口与连接（冻结）
+
+```verilog
+module stem_pool1_pipeline #(
+    parameter WEIGHT_MEM_FILE = ".../stem_weight.mem",
+    parameter BIAS_MEM_FILE   = ".../stem_bias.mem"
+) (
+    input  wire        clk, rst_n,
+    input  wire        input_we, input_waddr[9:0], input_wdata(S8),
+    input  wire        start,
+    output wire        busy, done,
+    output wire        pool_valid, pool_addr[11:0], pool_value[7:0],
+    input  wire        pool_raddr[11:0], output wire pool_rdata[7:0],
+    // 观察口（仅仿真/调试，不影响运行）
+    output wire        stem_busy, maxpool_busy, stem_done, maxpool_done,
+                       stem_q_valid, stem_q_value[7:0]
+);
+```
+
+连接（内部固定）：
+
+```text
+start              → stem.start
+start              → maxpool.start            # 同一个 controller_start 同启
+stem.q_valid       → maxpool.in_valid
+stem.q_value       → maxpool.in_q
+maxpool.out_valid  → pool1_ram.we
+maxpool.out_addr   → pool1_ram.waddr
+maxpool.out_q      → pool1_ram.wdata
+```
+
+顶层：
+
+```text
+busy = stem_busy || maxpool_busy
+done = maxpool_done              # 完成条件以 maxpool_done 为准
+```
+
+### 10.4 启动 / busy / done 语义
+
+- **启动**：单个 `start` 拍同时启动 stem 与 MaxPool。MaxPool 在 start 拍进入
+  RUN，第一项 `stem_q_valid` 在其后约 12 周期才到达，故 MaxPool 必已在 RUN。
+  `start` 与第一项 `in_valid` 不在同一采样沿（集成天然满足，仿真断言 ≥2 周期）。
+- **busy**：状态信号，非背压。`busy = stem_busy || maxpool_busy`；
+  `maxpool_busy` 在 `stem_q_valid` 期间必须恒为 1（仿真断言）。
+- **done**：`done = maxpool_done`。实测 `stem_done` 与 `maxpool_done` **同周期**
+  触发（stem 的 S_DONE 紧跟最后一个 S_REQ，MaxPool 的 S_DONE 紧跟最后一个
+  输入消费），但完成条件以 `maxpool_done` 为准。最后一个 pool1 写入在
+  `maxpool_done` 前一周期完成，故 done 后可安全读回全部 3136 项。
+- **busy 期间额外 start 被忽略**（stem 与 MaxPool 的 FSM 均只在 IDLE 响应 start）。
+
+### 10.5 周期预算（digit8，实测）
+
+| 度量 | 周期 |
+|---|---|
+| start → 第一项 stem_q | 11 |
+| start → 第一项 pool1_q | 360 |
+| start → 最终 done | 150529 |
+| busy 总周期 | 150528 |
+| stem_done 与 maxpool_done | 同周期（均落在 start+150529） |
+
+`150528 = 12544 × 12`（stem 每输出 12 周期），pool 输出由 stem 节拍驱动。
+
+### 10.6 验证（tb_stem_pool1_pipeline，digit8 / test index 61）
+
+两遍推理（第二遍 reset 后重跑，结果与第一遍完全相同）：
+
+- stem `q_valid = 12544`；stem_q 与 conv1_acc 流 **12544/12544 逐位一致**，
+  `acc_addr/q_addr` 严格 0..12543；
+- pool `out_valid = 3136`；pool1 流 **3136/3136 逐位一致**，`pool_addr` 严格
+  连续 0..3135；
+- pool1 RAM 读回 **3136/3136 一致**；`done_count=1`、`stem_done_count=1`；
+- 无 X/Z、无超时（watchdog）；
+- 冻结断言全部通过：`stem_q_valid ⇒ maxpool_busy`（0 违例）、done 前恰好
+  12544 个 stem_q 与 3136 个 pool1_q、start 与首项 in_valid 间隔 ≥2 周期、
+  stem_done 与 maxpool_done 同周期、busy 期间额外 start 被忽略、两遍结果逐位
+  相同。
+
+### 10.7 综合资源（stem_pool1_smoke，EP4CE10F17C8，2026-08-01 Fitter 实测）
+
+集成工程 `stem_pool1_smoke`（由 `run_all.ps1` 步骤 10 编译）：Flow Successful，
+LE 1401、寄存器 507、9-bit 乘法器 9、**M9K 6 块（13%）**、块内存位 32,512/423,936
+（8%）、无锁存器、无截断、无意外 signed 问题、物理引脚 0、虚拟引脚 84。
+
+M9K 分项（Fitter RAM Summary，最终数字以此为准）：
+
+| 存储 | 模板 | 容量 | M9K | 位置 |
+|---|---|---|---|---|
+| input RAM | `sync_ram_u8` | 784×8 = 6272 bit | **1** | M9K_X15_Y16_N0 |
+| stem weight ROM | `sync_rom_s8` | 144×8 = 1152 bit | **1** | M9K_X15_Y13_N0 |
+| pool1 RAM | `sync_ram_u8` | 3136×8 = 25088 bit | **4** | X27_Y13..Y16 |
+| bias ROM | `sync_rom_s32` | 16×32 = 512 bit | **0（落入逻辑）** | 12 LC / 12 reg |
+
+- **pool1 RAM 实际为 4 块 M9K**（对应 §9.6.3 的"可能映射为 4 块"分支），
+  块内存位 25088 = 4×6272（每块 1024×8 配置）；
+- 总内存位 32,512 = 6272 + 1152 + 25088，**无完整 stem 输出 RAM 实例**
+  （其 100352 bit 不在其中）；
+- `STORE_OUTPUT_RAM=0` 使 stem 的 `out_we/out_waddr/out_wdata` 未使用，综合器
+  报告 3 条 Warning 10036（对象被赋值但从不读取），属预期、非错误。

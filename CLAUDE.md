@@ -87,8 +87,32 @@
   由 `scripts/create_maxpool_project.tcl` 创建，`run_quartus_smoke.ps1
   -ProjectName maxpool_smoke -CreateScript create_maxpool_project.tcl` 编译（纯逻辑，无 M9K/乘法器/除法器）
 - Python 契约测试：`model/tests/test_maxpool_rtl_contract.py`（元素数/CHW 池地址映射/窗口抽查/UINT8 范围/全量 3136 重算），已并入 `run_all.ps1`
-- `run_all.ps1` 现为 9 步：工具链 → 器件 → Questa（requant/GAP/stem/padding/maxpool）→ 算术 smoke → stem smoke → Python 契约 → stem 契约 → maxpool smoke → maxpool 契约
-- stem 输出 RAM 现阶段**保留**（仅用于第一阶段验证）；最终集成改为 stem `q_valid` 直接进 MaxPool、只保存 `pool1_q`
+- `run_all.ps1` 现为 10 步：工具链 → 器件 → Questa（requant/GAP/stem/padding/maxpool/集成）→ 算术 smoke → stem smoke → Python 契约 → stem 契约 → maxpool smoke → maxpool 契约 → 集成 smoke
+- stem 输出 RAM 通过 `STORE_OUTPUT_RAM` 参数控制（默认 1 保留历史回归；集成工程用 0 不实例化）
+
+### 集成流水线流程（stem_pool1_pipeline，2026-08-01 落地）
+
+- 集成核心：`rtl/stem_pool1_pipeline.v`，实现 `input_q RAM → stem_conv_serial
+  (STORE_OUTPUT_RAM=0) → 流式 MaxPool → pool1 RAM（3136×UINT8）`；冻结设计见
+  `docs/rtl_microarchitecture.md` §10
+- **同一个 `start` 同时启动 stem 与 MaxPool**；`stem_done` 不用于启动 MaxPool
+  （它发生在全部 stem_q 发送之后）；`start` 与第一项 `in_valid` 不在同一采样沿
+- **`busy = stem_busy || maxpool_busy` 是状态信号、非背压**；无 ready/stall，
+  stem 不被 MaxPool 暂停；`done = maxpool_done`（实测与 stem_done 同周期）
+- `stem_conv_serial` 新增 `STORE_OUTPUT_RAM` 参数（Verilog generate）：默认 1
+  保留完整 12544×8 输出 RAM（原 testbench / `stem_conv_smoke` 回归不变）；0 时
+  不实例化、`output_rdata` 固定 0、保留 `q_valid` 流
+- Questa 验证：`tb/tb_stem_pool1_pipeline.v`（digit8，两遍推理逐位一致，第二遍
+  reset 后重跑结果相同）：stem_q/conv1_acc 流 12544/12544、pool1 流 3136/3136、
+  pool1 RAM 读回 3136/3136；`stem_q_valid ⇒ maxpool_busy`、pool 地址连续 0..3135、
+  done 前恰好 12544 个 stem_q 与 3136 个 pool1_q、busy 期间额外 start 被忽略、
+  无 X/Z，已并入 `run_questa.ps1`
+- Quartus smoke 工程：`stem_pool1_smoke`（`quartus/stem_pool1_smoke.{qpf,qsf}`
+  提交）；由 `scripts/create_stem_pool1_project.tcl` 创建，`run_quartus_smoke.ps1
+  -ProjectName stem_pool1_smoke -CreateScript create_stem_pool1_project.tcl` 编译
+- 集成工程 M9K 分项（Fitter 实测）：input RAM 1 + weight ROM 1 + **pool1 RAM 4**
+  + bias 落入逻辑（12 LC/12 reg）；**完整 stem 输出 RAM 已从集成工程消失**
+  （Memory bits 32,512 = 6272 + 1152 + 25088）
 
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 

@@ -92,10 +92,42 @@
 - 顶层 `maxpool_smoke_top` 为寄存器包装 + 全部 VIRTUAL_PIN，另带
   `dbg_incnt/dbg_outcnt`（16-bit 计数）作为完成观测量；**不是最终板级顶层**。
 
-> 本阶段**保留** stem 完整 output RAM（仅用于第一阶段验证）；最终集成方案为
+> 本阶段**保留** stem 完整 output RAM（仅用于第一阶段验证，通过
+> `STORE_OUTPUT_RAM=1` 默认参数保持历史回归路径）；真正的集成在 §7 完成——
 > stem 的 `q_valid` 流直接进入 MaxPool、只保存 `pool1_q`（详见
-> `docs/rtl_microarchitecture.md` §9.1 / §9.6）。
+> `docs/rtl_microarchitecture.md` §9.6 / §10）。
 
-下一步：进入共享卷积引擎（三卷积分时复用）或 stem+MaxPool 集成前，仍需以下
-板级资料（见 §2 尚待冻结）：板载主时钟频率与引脚、复位引脚与有效电平、
-UART RX/TX 引脚、调试 LED 引脚。
+## 7. stem+MaxPool 集成阶段（已完成，2026-08-01）
+
+在独立验证的 stem 引擎与流式 MaxPool 之上落地**集成核心**
+`rtl/stem_pool1_pipeline.v`（冻结设计见 `docs/rtl_microarchitecture.md` §10）：
+
+```text
+input RAM → stem_conv_serial (STORE_OUTPUT_RAM=0) → 流式 MaxPool → pool1 RAM
+```
+
+- **同一 `controller_start` 同时启动 stem 与 MaxPool**；`stem_done` 不用于启动
+  MaxPool（它发生在全部 stem_q 发送之后）；`start` 与第一项 `in_valid` 不在
+  同一采样沿（stem 首项输出在 start 后约 11 周期，天然满足）；
+- **`busy = stem_busy || maxpool_busy` 只是状态信号，不是背压**：当前接口无
+  ready/stall，stem 不被 MaxPool 暂停（MaxPool 每周期可收一个输入，stem 每
+  12 周期才产一个输入，无需背压）；
+- **`done = maxpool_done`**；实测 stem_done 与 maxpool_done 同周期，完成以
+  maxpool_done 为准；
+- Questa 两遍推理（第二遍 reset 后重跑）逐位一致：stem_q/conv1_acc 流
+  12544/12544、pool1 流 3136/3136、pool1 RAM 读回 3136/3136；`stem_q_valid ⇒
+  maxpool_busy`、pool 地址严格连续 0..3135、done 前恰好 12544 个 stem_q 与
+  3136 个 pool1_q、busy 期间额外 start 被忽略、无 X/Z、无超时；
+- Quartus 集成工程 `stem_pool1_smoke` 在 **EP4CE10F17C8** 上 Flow Successful；
+  M9K 分项（Fitter 实测，见最终报告）：**input RAM 1 + weight ROM 1 + pool1 RAM
+  4 + bias 落入逻辑（12 LC/12 reg）**；完整 stem 输出 RAM 已从集成工程消失
+  （块内存位 32,512 = 6272 + 1152 + 25088）。（此前的"pool1 约 1 块 M9K"
+  估算已在 `docs/rtl_microarchitecture.md` §9.6 更正为以 Fitter 为准。）
+
+> 集成仍只覆盖 `input→stem→pool1`，conv2/conv3/GAP/FC 未实现（见
+> `docs/data_format.md` 数据协议）。本阶段保留 stem 独立回归（`STORE_OUTPUT_RAM=1`）
+> 与独立 MaxPool 原始模块。
+
+下一步：进入共享卷积引擎（三卷积分时复用）前，仍需以下板级资料（见 §2
+尚待冻结）：板载主时钟频率与引脚、复位引脚与有效电平、UART RX/TX 引脚、
+调试 LED 引脚。
