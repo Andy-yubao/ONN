@@ -427,11 +427,20 @@ def w8a8_forward(
     x: torch.Tensor,
     act_scales: Dict[str, float],
     weight_cfg: Dict[str, Any],
+    return_trace: bool = False,
 ) -> Tuple[torch.Tensor, Dict[str, Any]]:
     """Simulate one W8A8 forward pass of the fused BaselineCNN.
 
     Returns ``(logits, info)`` where ``info`` carries per-position activation
     saturation counts and INT32-accumulator statistics for this batch.
+
+    When ``return_trace`` is True, ``info["trace"]`` additionally holds the
+    intermediate integer nodes with the same names as the pure-integer
+    reference (:mod:`onn_model.int8_reference`): ``input_q``, ``conv1_acc``,
+    ``stem_q``, ``pool1_q``, ``conv2_acc``, ``conv2_q``, ``pool2_q``,
+    ``conv3_acc``, ``conv3_q``, ``gap_q``, ``fc_acc``.  Accumulator tensors
+    are float64 integer-valued (the fake-quant host); activation tensors are
+    the actual int8 / uint8 quantised values.
     """
     info: Dict[str, Any] = {
         "activation_saturation": {
@@ -440,6 +449,7 @@ def w8a8_forward(
         "activation_numel": {p: 0 for p in ACTIVATION_POSITIONS if p != "logits"},
         "accumulator_max_abs": {},
         "accumulator_overflow": {},
+        "trace": {},
     }
     x = x.to(torch.float32)
 
@@ -459,6 +469,8 @@ def w8a8_forward(
     s_in = act_scales["input"]
     q = quantize_signed(x, s_in)
     _track("input", q)
+    if return_trace:
+        info["trace"]["input_q"] = q
 
     def _dequant_scale(w: Dict[str, Any]) -> Any:
         """Per-channel scale reshaped for a conv (Cout -> Cout,1,1); scalar unchanged."""
@@ -473,12 +485,18 @@ def w8a8_forward(
     acc = F.conv2d(q.to(torch.float64), w["q"].to(torch.float64), stride=1, padding=1)
     acc = acc + w["q_bias"].to(torch.float64).view(1, -1, 1, 1)
     acc = _accumulate_int32(acc, "stem_conv", info)
+    if return_trace:
+        info["trace"]["conv1_acc"] = acc
     y = relu_fp(acc * _dequant_scale(w))
     s_next = act_scales["stem_relu"]
     q_stem = quantize_unsigned(y, s_next)
     _track("stem_relu", q_stem)
+    if return_trace:
+        info["trace"]["stem_q"] = q_stem
     q = F.max_pool2d(q_stem.float(), 2).to(torch.uint8)
     _track("pool1", q)
+    if return_trace:
+        info["trace"]["pool1_q"] = q
 
     # ---- conv2: conv -> ReLU -> UINT8, then MaxPool ----
     s_a = s_next  # stem_relu scale preserved through pool1
@@ -486,12 +504,18 @@ def w8a8_forward(
     acc = F.conv2d(q.to(torch.float64), w["q"].to(torch.float64), stride=1, padding=1)
     acc = acc + w["q_bias"].to(torch.float64).view(1, -1, 1, 1)
     acc = _accumulate_int32(acc, "conv2", info)
+    if return_trace:
+        info["trace"]["conv2_acc"] = acc
     y = relu_fp(acc * _dequant_scale(w))
     s_next = act_scales["conv2_relu"]
     q_conv2 = quantize_unsigned(y, s_next)
     _track("conv2_relu", q_conv2)
+    if return_trace:
+        info["trace"]["conv2_q"] = q_conv2
     q = F.max_pool2d(q_conv2.float(), 2).to(torch.uint8)
     _track("pool2", q)
+    if return_trace:
+        info["trace"]["pool2_q"] = q
 
     # ---- conv3: conv -> ReLU -> UINT8 ----
     s_a = s_next  # conv2_relu scale preserved through pool2
@@ -499,22 +523,30 @@ def w8a8_forward(
     acc = F.conv2d(q.to(torch.float64), w["q"].to(torch.float64), stride=1, padding=1)
     acc = acc + w["q_bias"].to(torch.float64).view(1, -1, 1, 1)
     acc = _accumulate_int32(acc, "conv3", info)
+    if return_trace:
+        info["trace"]["conv3_acc"] = acc
     y = relu_fp(acc * _dequant_scale(w))
     s_conv3 = act_scales["conv3_relu"]
     q_conv3 = quantize_unsigned(y, s_conv3)
     _track("conv3_relu", q_conv3)
+    if return_trace:
+        info["trace"]["conv3_q"] = q_conv3
 
     # ---- GAP: average the dequantised conv3 output, quantise to UINT8 ----
     s_pool = act_scales["pool"]
     a_gap = F.adaptive_avg_pool2d(dequantize(q_conv3, s_conv3), 1).flatten(1)
     q_gap = quantize_unsigned(a_gap, s_pool)
     _track("pool", q_gap)
+    if return_trace:
+        info["trace"]["gap_q"] = q_gap
 
     # ---- fc: integer matmul, output kept FP32 (logits) ----
     w = weight_cfg["fc"]
     acc = q_gap.to(torch.float64) @ w["q"].to(torch.float64).t()
     acc = acc + w["q_bias"].to(torch.float64)
     acc = _accumulate_int32(acc, "fc", info)
+    if return_trace:
+        info["trace"]["fc_acc"] = acc
     logits = acc * (w["weight_scale"] * s_pool)
     return logits, info
 
