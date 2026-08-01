@@ -60,8 +60,8 @@ MNIST 28×28 灰度图
 | 项目 | 说明 |
 |------|------|
 | 器件阵列 | 4×4 光电突触阵列（16 单元），当前尚无可用实物 |
-| FPGA 平台 | 小梅哥 AC620（Cyclone IV，具体型号待核实） |
-| 开发工具 | Quartus II + ModelSim/Questa |
+| FPGA 平台 | 小梅哥 AC620（Cyclone IV E，EP4CE10F17C8，已冻结） |
+| 开发工具 | Quartus Prime（Lite）+ ModelSim/Questa |
 | 训练框架 | Python（PyTorch），通过 Conda 管理环境 |
 
 > ⚠ **安全提示**：在获得官方 pinout 和安全电气规格前，**禁止通电**。详见 [docs/device_bringup_checklist.md](docs/device_bringup_checklist.md)。

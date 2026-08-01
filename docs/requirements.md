@@ -123,7 +123,7 @@
 | B4-05 | 权重正确加载到 FPGA | P0 | 架构已确认 |
 | B4-06 | 单张图像推理在预期时钟周期数内完成 | P1 | TBD—待资源评估 |
 | B4-07 | RTL 与 Python 实现 bit-accurate 一致性比对 | P0 | 架构已确认 |
-| B4-08 | 具体 FPGA 型号确认 | P0 | TBD—待确认 |
+| B4-08 | 具体 FPGA 型号确认 | P0 | ✅ 已确认：EP4CE10F17C8（2026-08-01 冻结） |
 
 > 硬件平台为小梅哥 AC620（Cyclone IV），工具链为 Quartus + ModelSim/Questa，不使用 Vivado / FINN / PYNQ / Xilinx 工具链。
 

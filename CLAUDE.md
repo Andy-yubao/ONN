@@ -7,7 +7,6 @@
 ## 会话约定（必须遵守）
 
 - **用中文回答问题**：所有回复一律使用中文。
-- **会话开始时检查 GPU 版 CUDA 可用性**：每次会话最开始，先执行 CUDA 可用性检查（`torch.cuda.is_available()` 等），确认 GPU 环境正常后再开始任务。
 
 ## 开发环境（必须遵守）
 
@@ -37,6 +36,29 @@
 | `model/runs/` | 训练输出：`.pt` checkpoint、history.csv、metrics.json | **gitignored，权重仅本地** |
 | `model/data/` | MNIST 数据 | 忽略 |
 | `experiments/` | 实验记录与结果（含 multiseed） | 跟踪 |
+| `fpga/baseline_cnn/` | FPGA 参数包、黄金向量、scripts（`params/`、`sim/vectors/`、`scripts/`） | 跟踪 |
+
+## FPGA 工具链（BaselineCNN）
+
+- 工具链探测脚本：`fpga/baseline_cnn/scripts/check_toolchain.ps1`（无 GUI、不改系统 PATH）
+  - PowerShell 运行：`.\fpga\baseline_cnn\scripts\check_toolchain.ps1`
+  - 优先读取环境变量 `QUARTUS_BIN` / `QUESTA_BIN`（指向 bin 目录或直接指向 .exe），未设置时使用下列默认路径
+  - 任一工具缺失或版本命令失败时以非零退出码结束
+- 已确认安装（2026-08-01 探测通过）：
+  - **Quartus Prime Shell 25.1std.0 Build 1129（Lite）**
+    `D:\tools\altera_lite\25.1std\quartus\bin64\quartus_sh.exe`
+  - **Questa Altera Starter FPGA Edition 2025.2**（vlog / vsim 同目录）
+    `D:\tools\altera_lite\25.1std\questa_fse\win64\vlog.exe`
+    `D:\tools\altera_lite\25.1std\questa_fse\win64\vsim.exe`
+
+## FPGA 硬件目标与开发约定（BaselineCNN）
+
+- **目标开发板**：小梅哥 AC620
+- **目标 FPGA**：EP4CE10F17C8（器件系列：Cyclone IV E；封装：F17；速度等级：C8）
+- **器件已冻结**：所有 Quartus 工程、综合报告和资源预算都必须针对该器件；**不得**为编译方便临时切换其他器件
+- 板级引脚**尚未冻结**：AC620 的主时钟、UART、复位、调试 LED 引脚均未确定
+- **未获得可靠板卡引脚表前，不得编造引脚约束**
+- 硬件目标明细见 `fpga/baseline_cnn/docs/hardware_target.md`
 
 ## 模型与分支基线
 
