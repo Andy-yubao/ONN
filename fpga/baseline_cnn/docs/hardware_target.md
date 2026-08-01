@@ -128,6 +128,25 @@ input RAM → stem_conv_serial (STORE_OUTPUT_RAM=0) → 流式 MaxPool → pool1
 > `docs/data_format.md` 数据协议）。本阶段保留 stem 独立回归（`STORE_OUTPUT_RAM=1`）
 > 与独立 MaxPool 原始模块。
 
-下一步：进入共享卷积引擎（三卷积分时复用）前，仍需以下板级资料（见 §2
-尚待冻结）：板载主时钟频率与引脚、复位引脚与有效电平、UART RX/TX 引脚、
-调试 LED 引脚。
+## 8. 共享 conv2/conv3 引擎阶段（已完成，2026-08-01）
+
+在独立验证的 stem/集成之上落地**共享 conv2/conv3 单 MAC 卷积引擎**
+`rtl/conv_u8_serial.v`（冻结设计见 `docs/rtl_microarchitecture.md` §11），
+`layer_sel` 锁存切换两个层；流式 MaxPool 参数化以支持 pool2：
+
+- Questa 黄金验证：**conv2+pool2**（`tb_conv2_pool2`：conv2_acc/conv2_q
+  6272/6272、pool2_q 1568/1568 逐位一致，conv2 与 pool2 同一 start 同启、
+  conv_done 与 pool_done 同周期）与 **conv3**（`tb_conv3_serial`：conv3_acc/
+  conv3_q 1568/1568 两遍一致、reset 后重跑逐位相同）；非法 fm_raddr 0 次、
+  无 X/Z、busy/done 协议断言通过；
+- Quartus smoke 工程 `conv23_smoke` 在 **EP4CE10F17C8** 上 Flow Successful；
+  M9K 分项（Fitter 实测）：**conv2 weight ROM 8 + conv3 weight ROM 9 +
+  两个 bias ROM 共享 2 + FM RAM 4 = 23 块 M9K（50%）**；两个 bias ROM 均映射
+  M9K（与 stem bias 落逻辑不同）；无锁存器、无截断、无除法器/模运算器，
+  requant 64×64 乘法为唯一 DSP 消费者（9-bit 元素 9）；
+- 本阶段**未做完整网络集成**（不接 stem_pool1_pipeline、不实现 GAP/FC/UART），
+  conv2/conv3 的输入特征图由外部 FM RAM 提供（引擎驱动 `fm_raddr`）。
+
+下一步：将该引擎接入完整网络（input→stem→pool1→conv2→pool2→conv3→GAP→FC）
+前，仍需以下板级资料（见 §2 尚待冻结）：板载主时钟频率与引脚、复位引脚与
+有效电平、UART RX/TX 引脚、调试 LED 引脚。

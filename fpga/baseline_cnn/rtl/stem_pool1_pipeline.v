@@ -129,8 +129,11 @@ module stem_pool1_pipeline #(
     // ================= pool1 RAM (3136 x UINT8, the only stored feature map) =================
     // The maxpool outputs are registered (one-cycle), so pool_valid/pool_addr/
     // pool_value are stable for the whole cycle; the RAM write is sampled at the
-    // same posedge the monitor observes pool_valid.  The last write completes one
-    // cycle before maxpool_done, so a post-done readback sees all 3136 values.
+    // posedge.  The LAST pool1 value is written at the same rising edge where
+    // done goes high (the maxpool advertises its final result during S_DONE and
+    // `done <= 1'b1` fires on the very edge the RAM samples we=1).  Once that
+    // edge has passed the RAM contents are valid, so a post-done readback is
+    // safe and sees all 3136 values.
     sync_ram_u8 #(.DEPTH(POOL1_DEPTH), .ADDR_W(POOL1_ADDR_W)) u_pool1_ram (
         .clk   (clk),
         .we    (mp_out_valid_w),

@@ -58,6 +58,8 @@ module tb_stem_conv_serial;
     integer cyc;            // global cycle counter
     integer start_cyc, done_cyc;
     integer readback_bad;   // output RAM readback mismatches
+    integer busy_gap_bad;   // busy dropped to 0 before done (protocol violation)
+    reg     run_active;     // 1 between start and done (per-run)
 
     integer i;
 
@@ -76,6 +78,16 @@ module tb_stem_conv_serial;
         if (done) begin
             done_count = done_count + 1;
             done_cyc = cyc;
+        end
+        // frozen busy/done protocol: once a run has started, busy must stay 1
+        // until the done pulse appears - never a `busy=0 && done=0` window in
+        // between (the S_DONE state keeps busy high through the last cycle).
+        if (done) run_active = 1'b0;
+        if (!run_active && busy) run_active = 1'b1;
+        if (run_active && !done && !busy) begin
+            if (busy_gap_bad < 20)
+                $display("STEM BUSY-DROP cyc=%0d busy=0 done=0 (busy must stay high until done)", cyc);
+            busy_gap_bad = busy_gap_bad + 1;
         end
         if (q_valid) begin
             qcnt = qcnt + 1;
@@ -112,6 +124,7 @@ module tb_stem_conv_serial;
 
         cmp_idx = 0; mismatches = 0; addr_bad = 0; qcnt = 0;
         done_count = 0; busy_cycles = 0; cyc = 0; readback_bad = 0;
+        busy_gap_bad = 0; run_active = 1'b0;
 
         // ---- 1. reset ----
         rst_n = 1'b0;
@@ -132,7 +145,7 @@ module tb_stem_conv_serial;
         // ---- 3. start (single-cycle pulse) ----
         start = 1'b1;
         @(posedge clk);
-        start_cyc = cyc;
+        start_cyc = cyc + 1;      // actual cycle index of the DUT start edge
         start = 1'b0;
 
         // ---- 4/5. wait for the done pulse ----
@@ -152,19 +165,58 @@ module tb_stem_conv_serial;
             end
         end
 
-        // ---- 7. report ----
-        $display("STEM: q_valid_pulses=%0d expected=12544", qcnt);
-        $display("STEM: conv1_acc mismatches=%0d / 12544", mismatches);
-        $display("STEM: stem_q stream mismatches=%0d / 12544", mismatches);
-        $display("STEM: acc/q_addr ordering bad=%0d", addr_bad);
-        $display("STEM: output RAM readback mismatches=%0d / 12544", readback_bad);
-        $display("STEM: done_count=%0d (expect 1), busy_cycles=%0d", done_count, busy_cycles);
-        $display("STEM: start_cyc=%0d done_cyc=%0d total_cycles=%0d", start_cyc, done_cyc, done_cyc - start_cyc);
+        // ---- 7. report run 1 ----
+        $display("STEM RUN1: q_valid_pulses=%0d expected=12544", qcnt);
+        $display("STEM RUN1: conv1_acc/stem_q stream mismatches=%0d / 12544", mismatches);
+        $display("STEM RUN1: acc/q_addr ordering bad=%0d", addr_bad);
+        $display("STEM RUN1: output RAM readback mismatches=%0d / 12544", readback_bad);
+        $display("STEM RUN1: done_count=%0d busy_cycles=%0d busy_gap_bad=%0d", done_count, busy_cycles, busy_gap_bad);
+        $display("STEM RUN1: start_cyc=%0d done_cyc=%0d total_cycles=%0d", start_cyc, done_cyc, done_cyc - start_cyc);
 
         if (mismatches != 0 || addr_bad != 0 || qcnt != 12544 ||
-            done_count != 1 || readback_bad != 0 || busy_cycles == 0) begin
-            $fatal(1, "STEM: %0d mismatches, %0d addr bad, qcnt=%0d, done=%0d, readback=%0d",
-                   mismatches, addr_bad, qcnt, done_count, readback_bad);
+            done_count != 1 || readback_bad != 0 || busy_gap_bad != 0 ||
+            busy_cycles != done_cyc - start_cyc || busy_cycles == 0) begin
+            $fatal(1, "STEM RUN1: %0d mismatches, %0d addr bad, qcnt=%0d, done=%0d, readback=%0d, busy_gap=%0d",
+                   mismatches, addr_bad, qcnt, done_count, readback_bad, busy_gap_bad);
+        end
+
+        // ---- run 2: back-to-back start (no reset, no reload) ----
+        // The module must accept a second start right after the first done and
+        // reproduce identical results; a lost start would hang or drop the pulse.
+        wait (done_count == 1);
+        @(posedge clk);              // one cycle past the done pulse
+        cmp_idx = 0; mismatches = 0; addr_bad = 0; qcnt = 0;
+        done_count = 0; busy_cycles = 0; cyc = 0; readback_bad = 0;
+        busy_gap_bad = 0; run_active = 1'b0;
+
+        start = 1'b1;
+        @(posedge clk);
+        start_cyc = cyc + 1;      // actual cycle index of the DUT start edge
+        start = 1'b0;
+
+        while (!done) @(posedge clk);
+        #1;
+
+        for (i = 0; i < 12544; i = i + 1) begin
+            output_raddr = i[13:0];
+            @(posedge clk);
+            #1;
+            if (output_rdata !== stem_q[i]) begin
+                if (readback_bad < 20)
+                    $display("STEM RUN2 READBACK MISMATCH idx=%0d got=%0d expect=%0d", i, output_rdata, stem_q[i]);
+                readback_bad = readback_bad + 1;
+            end
+        end
+
+        $display("STEM RUN2: q_valid_pulses=%0d mismatches=%0d addr_bad=%0d readback_bad=%0d done=%0d busy_cycles=%0d busy_gap_bad=%0d",
+                 qcnt, mismatches, addr_bad, readback_bad, done_count, busy_cycles, busy_gap_bad);
+        $display("STEM RUN2: start_cyc=%0d done_cyc=%0d total_cycles=%0d", start_cyc, done_cyc, done_cyc - start_cyc);
+
+        if (mismatches != 0 || addr_bad != 0 || qcnt != 12544 ||
+            done_count != 1 || readback_bad != 0 || busy_gap_bad != 0 ||
+            busy_cycles != done_cyc - start_cyc || busy_cycles == 0) begin
+            $fatal(1, "STEM RUN2: %0d mismatches, %0d addr bad, qcnt=%0d, done=%0d, readback=%0d, busy_gap=%0d",
+                   mismatches, addr_bad, qcnt, done_count, readback_bad, busy_gap_bad);
         end
 
         $display("STEM_ALL_PASS");

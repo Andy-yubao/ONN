@@ -7,19 +7,27 @@
   1. vlib  -> fpga/baseline_cnn/sim/work (gitignored)
   2. vlog  -> rtl/{requantize_u8,gap_div49,arithmetic_smoke_top,
             sync_ram_u8,sync_rom_s8,sync_rom_s32,stem_conv_serial,
-            maxpool2x2_stream,stem_pool1_pipeline}.v + tb/*.v
+            maxpool2x2_stream,stem_pool1_pipeline,conv_u8_serial}.v + tb/*.v
   3. vsim  -> tb_requantize_u8      (20384 golden comparisons)
   4. vsim  -> tb_gap_div49          (12496 exhaustive + 32-channel golden)
   5. vsim  -> tb_stem_conv_serial   (digit8 golden: conv1_acc/stem_q stream
-                                     and output-RAM readback, 12544 x3 comps)
+                                     and output-RAM readback, 12544 x3 comps;
+                                     busy/done protocol + back-to-back start)
   6. vsim  -> tb_stem_conv_padding  (padding专项: tap counts / illegal addrs)
-  7. vsim  -> tb_maxpool2x2_stream  (pool golden: continuous + gap passes,
-                                     3136 x2 comparisons + hand-recomputed
-                                     windows + gap freeze / X-Z checks)
+  7. vsim  -> tb_maxpool2x2_stream  (pool golden: continuous + gap + no-reset
+                                     back-to-back passes, 3136 x3 comparisons
+                                     + hand-recomputed windows + X-Z checks)
   8. vsim  -> tb_stem_pool1_pipeline(digit8 golden of the stem+pool1
                                      integration: stem/conv1_acc stream + pool
                                      stream + pool1 RAM readback + frozen
                                      integration assertions, two passes)
+  9. vsim  -> tb_conv2_pool2        (digit8 golden of conv2 + pool2 on the
+                                     shared engine: conv2_acc/conv2_q 6272 +
+                                     pool2_q 1568 + pool-busy / illegal-addr /
+                                     same-cycle-done assertions)
+ 10. vsim  -> tb_conv3_serial       (digit8 golden of conv3 on the shared
+                                     engine: conv3_acc/conv3_q 1568 x2 passes,
+                                     reset-rerun determinism)
 
   Any compile error, simulation fatal or mismatch sets a non-zero exit code.
   $readmemh paths inside the testbenches are relative to the repo root, so
@@ -81,12 +89,15 @@ $srcs = @(
     (Join-Path $rtlDir "stem_conv_serial.v"),
     (Join-Path $rtlDir "maxpool2x2_stream.v"),
     (Join-Path $rtlDir "stem_pool1_pipeline.v"),
+    (Join-Path $rtlDir "conv_u8_serial.v"),
     (Join-Path $tbDir  "tb_requantize_u8.v"),
     (Join-Path $tbDir  "tb_gap_div49.v"),
     (Join-Path $tbDir  "tb_stem_conv_serial.v"),
     (Join-Path $tbDir  "tb_stem_conv_padding.v"),
     (Join-Path $tbDir  "tb_maxpool2x2_stream.v"),
-    (Join-Path $tbDir  "tb_stem_pool1_pipeline.v")
+    (Join-Path $tbDir  "tb_stem_pool1_pipeline.v"),
+    (Join-Path $tbDir  "tb_conv2_pool2.v"),
+    (Join-Path $tbDir  "tb_conv3_serial.v")
 )
 Write-Host "[run_questa] vlog -work $workRel" -ForegroundColor Cyan
 & $vlog -work $workRel $srcs 2>&1
@@ -96,7 +107,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "[run_questa] vlog failed ($LASTEXITCODE)"
 Push-Location $root
 $allOk = $true
 try {
-    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream", "tb_stem_pool1_pipeline")) {
+    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream", "tb_stem_pool1_pipeline", "tb_conv2_pool2", "tb_conv3_serial")) {
         $logFile = Join-Path $logDir "$tb.log"
         Write-Host "[run_questa] vsim -c -work $workRel $tb (log: $logFile)" -ForegroundColor Cyan
         & $vsim -c -work $workRel -do "run -all; quit -f" -l $logFile "$tb" 2>&1

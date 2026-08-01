@@ -60,6 +60,8 @@ module tb_maxpool2x2_stream;
     integer manual_bad;     // hand-recomputed window mismatches
     integer gap_bad;        // internal counters moved during a gap
     integer cross_bad;      // Test B output != Test A output
+    integer busy_gap_bad;   // busy dropped to 0 before done (protocol violation)
+    reg     run_active;     // 1 between start and done (per-run)
     integer oc_, py_, px_, w0, w1, w2, w3;
     integer m;
     reg [7:0] outA [0:3135];        // Test A recorded outputs
@@ -92,6 +94,17 @@ module tb_maxpool2x2_stream;
         if (done) begin
             done_count = done_count + 1;
             done_cyc = cyc;
+        end
+
+        // frozen busy/done protocol: once a run has started, busy must stay 1
+        // until the done pulse appears - never a `busy=0 && done=0` window in
+        // between (S_DONE keeps busy high through the last cycle).
+        if (done) run_active = 1'b0;
+        if (!run_active && busy) run_active = 1'b1;
+        if (run_active && !done && !busy) begin
+            if (busy_gap_bad < 20)
+                $display("MAXPOOL BUSY-DROP cyc=%0d busy=0 done=0 (busy must stay high until done)", cyc);
+            busy_gap_bad = busy_gap_bad + 1;
         end
 
         // X/Z on any output port (busy/done/out_valid/out_addr/out_q)
@@ -201,13 +214,14 @@ module tb_maxpool2x2_stream;
             cmp_idx = 0; mismatches = 0; addr_bad = 0; outcnt = 0;
             incnt = 0; done_count = 0; busy_cycles = 0; cyc = 0;
             xz_bad = 0; manual_bad = 0; gap_bad = 0; cross_bad = 0;
+            busy_gap_bad = 0; run_active = 1'b0;
             start_cyc = 0; done_cyc = 0;
             prev_was_gap = 1'b0;
 
             // ---- start (single-cycle pulse) ----
             start = 1'b1;
             @(posedge clk);
-            start_cyc = cyc;
+            start_cyc = cyc + 1;      // actual cycle index of the DUT start edge
             start = 1'b0;
 
             // ---- feed the stream ----
@@ -262,11 +276,70 @@ module tb_maxpool2x2_stream;
             pass_ok = (outcnt == 3136 && incnt == 12544 && mismatches == 0 &&
                        addr_bad == 0 && xz_bad == 0 && manual_bad == 0 &&
                        gap_bad == 0 && cross_bad == 0 && done_count == 1 &&
-                       busy_cycles > 0);
+                       busy_gap_bad == 0 && busy_cycles > 0 &&
+                       busy_cycles == done_cyc - start_cyc);
             if (!pass_ok)
                 $fatal(1, "MAXPOOL PASS[%0d] FAILED (outcnt=%0d incnt=%0d mism=%0d addr=%0d xz=%0d manual=%0d gap=%0d cross=%0d done=%0d busy=%0d)",
                        passid, outcnt, incnt, mismatches, addr_bad, xz_bad,
                        manual_bad, gap_bad, cross_bad, done_count, busy_cycles);
+        end
+    endtask
+
+    // ================= back-to-back start (no reset) =================
+    // The frozen protocol allows a new start as soon as busy was observed low
+    // (i.e. right after the done pulse).  This run starts a second run with NO
+    // reset and NO re-initialisation after Test A's done, feeding the same
+    // continuous stream; every output must be bit-identical to Test A (which
+    // also proves the start pulse was accepted, not lost).
+    task run_back_to_back;
+        integer ok;
+        begin
+            ok = 0;
+
+            // no reset: the module is in S_IDLE after Test A's done pulse.
+            @(posedge clk);              // one cycle past the done pulse
+            passid = 2;
+            cmp_idx = 0; mismatches = 0; addr_bad = 0; outcnt = 0;
+            incnt = 0; done_count = 0; busy_cycles = 0; cyc = 0;
+            xz_bad = 0; manual_bad = 0; gap_bad = 0; cross_bad = 0;
+            busy_gap_bad = 0; run_active = 1'b0;
+            start_cyc = 0; done_cyc = 0;
+            prev_was_gap = 1'b0;
+
+            // ---- start again right away ----
+            start = 1'b1;
+            @(posedge clk);
+            start_cyc = cyc + 1;      // actual cycle index of the DUT start edge
+            start = 1'b0;
+
+            // ---- feed the same continuous stream ----
+            for (i = 0; i < 12544; i = i + 1) begin
+                in_q = stem_q[i];
+                in_valid = 1'b1;
+                incnt = incnt + 1;
+                @(posedge clk);
+            end
+            in_valid = 1'b0;
+            @(posedge clk);
+
+            wait (done_count == 1);
+            #1;
+
+            $display("MAXPOOL PASS[2] back-to-back (no reset) outcnt=%0d/3136 incnt=%0d/12544 mismatches=%0d addr_bad=%0d xz_bad=%0d manual_bad=%0d gap_bad=%0d cross_bad=%0d done=%0d busy_cycles=%0d busy_gap_bad=%0d",
+                     outcnt, incnt, mismatches, addr_bad, xz_bad, manual_bad, gap_bad,
+                     cross_bad, done_count, busy_cycles, busy_gap_bad);
+            $display("MAXPOOL PASS[2] start_cyc=%0d done_cyc=%0d total_cycles=%0d",
+                     start_cyc, done_cyc, done_cyc - start_cyc);
+
+            ok = (outcnt == 3136 && incnt == 12544 && mismatches == 0 &&
+                  addr_bad == 0 && xz_bad == 0 && manual_bad == 0 &&
+                  gap_bad == 0 && cross_bad == 0 && done_count == 1 &&
+                  busy_gap_bad == 0 && busy_cycles > 0 &&
+                  busy_cycles == done_cyc - start_cyc);
+            if (!ok)
+                $fatal(1, "MAXPOOL PASS[2] FAILED (outcnt=%0d incnt=%0d mism=%0d addr=%0d xz=%0d manual=%0d gap=%0d cross=%0d done=%0d busy=%0d busy_gap=%0d)",
+                       outcnt, incnt, mismatches, addr_bad, xz_bad, manual_bad,
+                       gap_bad, cross_bad, done_count, busy_cycles, busy_gap_bad);
         end
     endtask
 
@@ -282,6 +355,7 @@ module tb_maxpool2x2_stream;
         if (pool1_q[3135] !== 8'h05) $fatal(1, "MAXPOOL: pool1_q.mem truncated (pool1_q[3135]=%h)", pool1_q[3135]);
 
         run_pass(0, 0);            // Test A: continuous input
+        run_back_to_back();        // no-reset second run right after Test A's done
         run_pass(5, 2);            // Test B: 5 valid + 2 gap cycles
 
         $display("MAXPOOL_ALL_PASS");

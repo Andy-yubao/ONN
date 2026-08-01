@@ -87,7 +87,7 @@
   由 `scripts/create_maxpool_project.tcl` 创建，`run_quartus_smoke.ps1
   -ProjectName maxpool_smoke -CreateScript create_maxpool_project.tcl` 编译（纯逻辑，无 M9K/乘法器/除法器）
 - Python 契约测试：`model/tests/test_maxpool_rtl_contract.py`（元素数/CHW 池地址映射/窗口抽查/UINT8 范围/全量 3136 重算），已并入 `run_all.ps1`
-- `run_all.ps1` 现为 10 步：工具链 → 器件 → Questa（requant/GAP/stem/padding/maxpool/集成）→ 算术 smoke → stem smoke → Python 契约 → stem 契约 → maxpool smoke → maxpool 契约 → 集成 smoke
+- `run_all.ps1` 现为 12 步：工具链 → 器件 → Questa（requant/GAP/stem/padding/maxpool/集成/conv2-pool2/conv3）→ 算术 smoke → stem smoke → Python 契约 → stem 契约 → maxpool smoke → maxpool 契约 → 集成 smoke → conv23 smoke → conv23 契约
 - stem 输出 RAM 通过 `STORE_OUTPUT_RAM` 参数控制（默认 1 保留历史回归；集成工程用 0 不实例化）
 
 ### 集成流水线流程（stem_pool1_pipeline，2026-08-01 落地）
@@ -113,6 +113,38 @@
 - 集成工程 M9K 分项（Fitter 实测）：input RAM 1 + weight ROM 1 + **pool1 RAM 4**
   + bias 落入逻辑（12 LC/12 reg）；**完整 stem 输出 RAM 已从集成工程消失**
   （Memory bits 32,512 = 6272 + 1152 + 25088）
+
+### 共享 conv2/conv3 引擎流程（conv_u8_serial，2026-08-01 落地）
+
+- 共享单 MAC 卷积引擎：`rtl/conv_u8_serial.v`，**只服务 conv2/conv3**（不替换
+  stem）；`layer_sel`（0=conv2，1=conv3）在 `start` 时锁存，运行期改变不影响当前
+  推理；输入特征图 RAM **在模块外部**（引擎驱动 `fm_raddr`，外部同步 RAM 一拍
+  延迟返回 `fm_rdata`）；内部实例化 conv2/conv3 权重 + bias 共 4 个 ROM；冻结设计
+  见 `docs/rtl_microarchitecture.md` §11
+- 遍历 `oc→y→x→ic→ky→kx`，输出 CHW；**不用除法/取模**（直接维护 ic/ky/kx 嵌套
+  计数器，地址常数乘法全用移位/加减：196=128+64+4、49=32+16+1、144=128+16、
+  288=256+32、14=16−2、7=8−1、9=8+1、3=2+1）；padding 越界贡献 0 且不生成非法
+  RAM 地址；乘积 ≥17 位有符号、精确累加 signed 64-bit、bias 后 INT32 饱和、
+  复用 `requantize_u8.v`（multiplier 按 layer 选择：conv2 1097020857 / conv3
+  1298974956，shift 38）
+- `maxpool2x2_stream` 已**参数化**支持 pool2：`N_CH/IN_H/IN_W/OC_W/XY_W/
+  OUT_ADDR_W`，默认=stem 配置原测试不变；pool2 配置 `N_CH=32, IN_H=14, IN_W=14,
+  OC_W=5, XY_W=4, OUT_ADDR_W=11`
+- **busy/done 协议（冻结，本阶段修复）**：stem 与 maxpool 的 `busy` 均覆盖
+  `S_DONE`——从 start 起保持 1 直到 done 脉冲，无 `busy=0 && done=0` 窗口；
+  done 高电平期间 busy 可为 0；`busy_cycles == done 周期 − start 周期`；
+  连续两次启动（done 后立即再 start，无 reset）不丢失
+- Questa 验证：`tb/tb_conv2_pool2.v`（digit8：conv2 与 pool2 同一 start 同启，
+  conv2_acc/conv2_q 6272/6272 + pool2_q 1568/1568 逐位一致、`q_valid ⇒ pool_busy`、
+  conv_done 与 pool_done 同周期、非法 fm_raddr 0 次、无 X/Z）+
+  `tb/tb_conv3_serial.v`（conv3_acc/conv3_q 1568/1568 两遍一致、reset 后重跑逐位
+  相同、非法 fm_raddr 0 次），已并入 `run_questa.ps1`
+- Quartus smoke 工程：`conv23_smoke`（`quartus/conv23_smoke.{qpf,qsf}` 提交）；
+  由 `scripts/create_conv23_project.tcl` 创建，`run_quartus_smoke.ps1
+  -ProjectName conv23_smoke -CreateScript create_conv23_project.tcl` 编译
+- conv23 smoke M9K 分项（Fitter 实测）：**conv2 weight ROM 8 + conv3 weight ROM 9
+  + 两个 bias ROM 共享 2 + FM RAM 4 = 23 块（50%）**；无 latch、无截断、无除法器/
+  模运算器，requant 64×64 乘法为唯一 DSP 消费者（9-bit 元素 9）
 
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 

@@ -94,17 +94,21 @@ IDLE ──start──▶ PROLOGUE ──▶ ACC ──(tap==8)──▶ ADD_BIA
 | ACC | 累加上一拍读到的 tap 数据；同时发出下一个 tap 的读地址（软件流水）；tap==8 时退出 |
 | ADD_BIAS | `acc64 += sign_extend(bias[oc])`（bias ROM 上一拍采样） |
 | REQ | 组合：`acc32 = saturate(acc64)` → `q = requantize(acc32)`；写输出 RAM；脉冲 `acc_valid`/`q_valid`；推进坐标 |
-| DONE | `done` 单拍脉冲，`busy=0` |
+| DONE | `done` 单拍脉冲；**busy 覆盖 DONE** 保持为 1 |
 
 - 同步 RAM 读有**一拍延迟**：发出地址的下一拍数据才有效，FSM 在 ACC 状态消费，
   **绝不在发出地址的同一拍假设数据已有效**；
 - `acc_addr` / `q_addr` 从 0 严格单调递增到 12543（oc→y→x 遍历保证）；
-- `done` 单拍脉冲；运行期 `busy=1`。
+- **busy/done 协议（冻结）**：`busy` 覆盖 PROLOGUE..DONE，从接收 `start` 起保持
+  为 1，**直到 done 脉冲出现前不得提前下降**（运行开始后不存在 `busy=0 && done=0`
+  窗口）；`done` 为单周期脉冲；done 高电平期间 `busy` 可为 0；外部只能在观察到
+  `busy=0` 后发起新的 `start`（连续两次启动不丢失 start）。
 
 ## 6. 周期预算
 
 - 每输出元素：PROLOGUE 1 + ACC 9 + ADD_BIAS 1 + REQ 1 = **12 周期**；
-- 全图 12544 输出 ≈ 150,528 周期 + 首尾开销；
+- 全图 12544 输出 = 150,528 周期（compute）+ 1（S_DONE 状态周期）= **150,529**；
+  `busy` 覆盖 S_DONE，故 `busy_cycles == done 周期 − start 周期 == 150529`；
 - 单 MAC lane、单输出串行，此为正确性优先的第一版，不追求吞吐。
 
 ## 7. 同步存储约定
@@ -147,27 +151,43 @@ stem_q 16×28×28（UINT8，CHW，oc→y→x）
 
 ### 9.2 冻结的接口与契约
 
+模块已**参数化**以同时服务 pool1（stem 默认配置）与 pool2（conv2 输出配置），
+默认参数保持原 stem 测试不变：
+
 ```verilog
-module maxpool2x2_stream (
+module maxpool2x2_stream #(
+    parameter N_CH       = 16,     // 特征图通道数（pool2: 32）
+    parameter IN_H       = 28,     // 输入行数（pool2: 14）
+    parameter IN_W       = 28,     // 输入列数（pool2: 14）
+    parameter OC_W       = 4,      // oc 计数器位宽（pool2: 5）
+    parameter XY_W       = 5,      // y/x 计数器位宽（pool2: 4）
+    parameter OUT_ADDR_W = 12      // out_cnt/out_addr 位宽（pool2: 11）
+) (
     input  wire       clk, rst_n,
     input  wire       start,      // 单周期脉冲；busy 期间忽略
     input  wire       in_valid,   // 合格输入（posedge 采样）
     input  wire [7:0] in_q,       // UINT8 特征图值
-    output reg        busy,       // 消费输入流期间为 1
+    output reg        busy,       // 从 start 起保持 1 直到 done（RUN..DONE）
     output reg        out_valid,  // 每个池化结果一个单周期脉冲
-    output reg [11:0] out_addr,   // CHW 池地址，严格 0..3135，每结果 +1
+    output reg [OUT_ADDR_W-1:0] out_addr,   // CHW 池地址，每结果 +1
     output reg [7:0]  out_q,      // UINT8 池化结果
     output reg        done        // 最后一个结果输出后的单周期脉冲
 );
 ```
 
-- 一次运行固定接收 **12544** 个输入，顺序 `oc=0..15 → y=0..27 → x=0..27`；
+- 派生几何为局部参数：`POOL_H = IN_H>>1`、`POOL_W = IN_W>>1`（移位，非除法）、
+  `N_INPUTS = N_CH*IN_H*IN_W`、`N_OUTPUTS = N_CH*POOL_H*POOL_W`；
+- 一次运行固定接收 **N_INPUTS** 个输入（pool1: 12544，pool2: 6272），顺序
+  `oc→y→x`；
 - 模块内部 `oc/y/x` 计数器**只在 `busy && in_valid` 时前进**——输入流中任意
   长度的空拍都不会推进任何状态（坐标、row_buffer、current_left、输出地址）；
-- 输出顺序 `oc=0..15 → pool_y=0..13 → pool_x=0..13`；`out_addr` 严格从 0 递增
-  到 3135；
+- 输出顺序 `oc→pool_y→pool_x`；`out_addr` 严格从 0 递增到 N_OUTPUTS−1
+  （pool1: 0..3135，pool2: 0..1567）；
 - `done` 单周期脉冲，且**只在最后一个池化结果已经有效输出之后**产生；
-- **禁止**在本模块中使用除法/取模/通用乘法——坐标与输出地址全部由小计数器维护。
+- **busy/done 协议（冻结，同 stem）**：`busy` 覆盖 RUN..DONE，从 start 起保持
+  为 1 直到 done 脉冲出现，不存在 `busy=0 && done=0` 窗口；
+- **禁止**在本模块中使用除法/取模/通用乘法——坐标与输出地址全部由小计数器维护，
+  半尺寸是移位。
 
 ### 9.3 流式结构
 
@@ -191,15 +211,19 @@ module maxpool2x2_stream (
 
 ### 9.4 验证
 
-- `tb_maxpool2x2_stream.v` 两遍 golden 测试：
+- `tb_maxpool2x2_stream.v` 三遍 golden 测试：
   - **测试 A（连续）**：start 后连续 12544 个 `in_valid=1`；
+  - **测试 C（无 reset 背靠背）**：A 的 done 后立即再次 start、再次喂同一连续流，
+    输出与 A 逐位一致（证明连续两次启动不丢失 start）；
   - **测试 B（空拍）**：每 5 个有效输入插入 2 个空拍；
-  - 两遍输出与 `pool1_q.mem` **3136/3136 逐位一致**且两遍完全相同；
+  - 三遍输出与 `pool1_q.mem` **3136/3136 逐位一致**且各遍完全相同；
   - 空拍期间内部 `oc/y/x/out_cnt` 冻结（`gap_bad=0`）；
   - 专项手工重算：`oc0 pool(0,0)/(0,13)/(13,0)/(13,13)`、`oc15 pool(13,13)`
     五个窗口直接对 4 个 stem_q 取 max 核对；
   - `out_addr` 严格 0..3135、`out_valid` 总次数 3136、有效输入 12544、
     `done` 单脉冲、输出无 X/Z；
+  - **busy/done 协议断言**：运行开始后 done 前无 `busy=0 && done=0`（0 违例），
+    `busy_cycles == done 周期 − start 周期`；
   - 失败打印前 20 项（input_count / out_idx / oc / pool_y / pool_x /
     四个输入值 / expected / actual），非零退出。
 - `model/tests/test_maxpool_rtl_contract.py`：元素数、CHW 布局与池地址映射、
@@ -316,10 +340,12 @@ done = maxpool_done              # 完成条件以 maxpool_done 为准
 | start → 第一项 stem_q | 11 |
 | start → 第一项 pool1_q | 360 |
 | start → 最终 done | 150529 |
-| busy 总周期 | 150528 |
+| busy 总周期 | 150529 |
 | stem_done 与 maxpool_done | 同周期（均落在 start+150529） |
 
-`150528 = 12544 × 12`（stem 每输出 12 周期），pool 输出由 stem 节拍驱动。
+`150528 = 12544 × 12`（stem 每输出 12 周期）为 compute 周期，另 +1 为 S_DONE
+状态周期；**busy 覆盖 S_DONE**，故 `busy_cycles == done 周期 − start 周期`。
+pool 输出由 stem 节拍驱动。
 
 ### 10.6 验证（tb_stem_pool1_pipeline，digit8 / test index 61）
 
@@ -357,3 +383,133 @@ M9K 分项（Fitter RAM Summary，最终数字以此为准）：
   （其 100352 bit 不在其中）；
 - `STORE_OUTPUT_RAM=0` 使 stem 的 `out_we/out_waddr/out_wdata` 未使用，综合器
   报告 3 条 Warning 10036（对象被赋值但从不读取），属预期、非错误。
+
+## 11. 共享 conv2/conv3 单 MAC 卷积引擎（conv_u8_serial，2026-08-01）
+
+独立的、只服务 conv2/conv3 的**共享单 MAC 串行卷积引擎**
+`rtl/conv_u8_serial.v`（**不替换**已验证的 stem 引擎 `stem_conv_serial.v`）：
+
+```text
+conv2 (layer_sel=0): pool1_q 16×14×14 → Conv2d 16→32,3×3,pad1 → conv2_q 32×14×14
+conv3 (layer_sel=1): pool2_q 32×7×7  → Conv2d 32→32,3×3,pad1 → conv3_q 32×7×7
+```
+
+### 11.1 层配置（冻结，与 manifest.json 一致）
+
+| 项 | conv2 | conv3 |
+|---|---|---|
+| 输入（UINT8，CHW） | pool1_q 16×14×14（3136） | pool2_q 32×7×7（1568） |
+| 权重（SINT8，OIHW） | 32×16×3×3 = 4608 | 32×32×3×3 = 9216 |
+| bias（SINT32） | 32 | 32 |
+| 输出（CHW） | conv2_q 32×14×14（6272） | conv3_q 32×7×7（1568） |
+| requant multiplier | 1097020857（0x4162F7B9） | 1298974956（0x4D6C5DEC） |
+| requant shift | 38 | 38 |
+
+### 11.2 接口与连接（冻结）
+
+```verilog
+module conv_u8_serial #(
+    parameter WT2_MEM_FILE/BIAS2_MEM_FILE/WT3_MEM_FILE/BIAS3_MEM_FILE
+) (
+    input  wire       clk, rst_n,
+    input  wire       start,            // 单周期脉冲；busy 期间忽略
+    input  wire       layer_sel,        // 0=conv2，1=conv3；start 时锁存
+    output reg        busy, done,       // busy 覆盖 DONE（同 stem 协议）
+    output reg [11:0] fm_raddr,         // 外部输入 FM RAM 读地址
+    input  wire [7:0] fm_rdata,         // 外部同步 RAM 一拍延迟返回（UINT8）
+    output reg        acc_valid, acc_addr[12:0], acc_value(S32),   // acc 调试流
+    output reg        q_valid,  q_addr[12:0],  q_value[7:0]        // q 调试流
+);
+```
+
+- 输入特征图 RAM **位于模块外部**：引擎驱动 `fm_raddr`，外部同步 RAM 下一拍
+  提供 `fm_rdata`（与 `sync_ram_u8` 一拍延迟契约一致）；
+- 模块内部实例化两个层的 weight/bias ROM 共 4 个：conv2 weight（4608）、
+  conv3 weight（9216）、conv2 bias（32）、conv3 bias（32）；
+- **`layer_sel` 在 `start` 时锁存到 `layer`**——运行期间外部改变 `layer_sel`
+  不影响当前推理；
+- 复用已验证的 `requantize_u8.v`（乘法器按 `layer` 选择），**从不重实现**。
+
+### 11.3 遍历与地址公式（冻结）
+
+遍历固定 `oc → y → x`（外层）→ `ic → ky → kx`（内层），输出 CHW：
+
+```text
+out_addr    = (oc*H + y)*W + x           # H=W=14 (conv2) / 7 (conv3)
+in_addr     = (ic*H + iy)*W + ix         # iy=y+ky-1, ix=x+kx-1（带 padding）
+weight_addr = ((oc*Cin + ic)*3 + ky)*3 + kx
+```
+
+- padding 越界 tap 贡献 0，且**不生成非法 RAM 地址**（地址总线强制为 0）；
+- **不用除法/取模**：不用 tap 编号再 `/3`、`%3` 恢复坐标，直接维护 `ic/ky/kx`
+  嵌套计数器（kx 到 2 → ky+1；ky 到 2 → ic+1）；
+- 地址常数乘法全部写为移位/加减：`196=128+64+4`、`49=32+16+1`、
+  `144=128+16`、`288=256+32`、`14=16−2`、`7=8−1`、`9=8+1`、`3=2+1`；
+  不推断通用除法器/模运算器。
+
+### 11.4 数值语义（冻结，scheme A）
+
+```text
+acc64   = Σ (UINT8 input × SINT8 weight)          # 乘积至少 17 位有符号
+acc64  += sign_extend(bias)                        # 所有 MAC 之后加一次
+acc32   = saturate_int32(acc64)                    # clamp，绝不回绕
+q       = requantize_u8(acc32, layer_mult, 38)
+```
+
+- 输入按**无符号 0..255** 解释，权重按**有符号 −127..127** 解释；
+- 精确累加使用 **signed 64-bit**；INT32 饱和在 bias 之后，不允许回绕；
+- 同步 RAM/ROM 的一拍延迟在流水线中正确处理（PROLOGUE 发 tap0，MAC 累加一拍
+  前发出的 tap 数据，同时发出下一个 tap 读）。
+
+### 11.5 周期预算（实测）
+
+| 层 | 每输出周期 | 首项 q | start → done | busy 总周期 |
+|---|---|---|---|---|
+| conv2 | 1+144+1+1 = **147**（16×9+3） | 146 | **921985** | 921985 |
+| conv3 | 1+288+1+1 = **291**（32×9+3） | 290 | **456289** | 456289 |
+
+`6272×147 + 1 = 921985`、`1568×291 + 1 = 456289`（+1 为 S_DONE 状态周期；done
+脉冲在其后一周期，busy 覆盖 S_DONE 故 `busy_cycles == done − start`）。conv2 与
+conv3 的固定首尾开销即这 1 个 S_DONE 周期。
+
+### 11.6 验证（tb_conv2_pool2 / tb_conv3_serial，digit8 / test index 61）
+
+- **conv2 + pool2**：`tb_conv2_pool2.v`。conv2 与参数化 MaxPool（N_CH=32,
+  IN_H=14, IN_W=14, OC_W=5, XY_W=4, OUT_ADDR_W=11）**同一 start 同启**，非由
+  conv2_done 启动 pool2：
+  - conv2_acc / conv2_q 流 **6272/6272 逐位一致**，地址严格 0..6271；
+  - pool2 流 **1568/1568 逐位一致**，地址严格 0..1567；
+  - `q_valid ⇒ pool_busy`（0 违例）；非法 fm_raddr（>3135）**0 次**；
+    `conv_done` 与 `pool_done` **同周期**、`done` 单脉冲、无 X/Z。
+- **conv3**：`tb_conv3_serial.v` 两遍（第二遍 reset 后重跑）：
+  - conv3_acc / conv3_q 流 **1568/1568 逐位一致**，地址严格 0..1567；
+  - 非法 fm_raddr（>1567）**0 次**、`done` 单脉冲、无 X/Z；
+  - **两遍结果逐位相同**（确定性）。
+- `model/tests/test_conv23_rtl_contract.py`：元素数、conv2/conv3 OIHW 地址双射、
+  输入/输出 CHW 双射、四角/边缘/中心 tap 数、UINT8×SINT8 解释、multiplier/shift
+  与 manifest 一致、Python 全量重算 conv2/conv3 输出、全量 pool2 重算。
+
+### 11.7 综合资源（conv23_smoke，EP4CE10F17C8，2026-08-01 Fitter 实测）
+
+（由 `run_all.ps1` 步骤 11 编译）Flow Successful，LE 829、寄存器 141、
+9-bit 乘法器 9、**M9K 23 块（50%）**、块内存位 137,728/423,936（32%）、
+物理引脚 0、虚拟引脚 45。
+
+M9K 分项（Fitter RAM Summary，最终数字以此为准）：
+
+| 存储 | 模板 | 容量 | M9K |
+|---|---|---|---|
+| conv2 weight ROM | `sync_rom_s8` | 4608×8 = 36864 bit | **8** |
+| conv3 weight ROM | `sync_rom_s8` | 9216×8 = 73728 bit | **9** |
+| conv2 bias ROM | `sync_rom_s32` | 32×32 = 1024 bit | **2（与 conv3 bias 共享打包）** |
+| conv3 bias ROM | `sync_rom_s32` | 32×32 = 1024 bit | 同上 |
+| FM RAM（conv2 输入平面） | `sync_ram_u8` | 3136×8 = 25088 bit | **4** |
+
+- 两个 bias ROM 均映射到 M9K（各 2 块、位置相同被 Fitter 打包，故总数 23 而非
+  25）；**与 stem bias 落入逻辑不同**（stem bias 仅 16×32=512 bit 太小）；
+- 总内存位 137,728 = 36864+73728+1024+1024+25088；
+- **无锁存器、无截断**（0 条 Warning 10230）、无实际 signed 警告（20 条匹配均为
+  LPM 参数显示）、**无除法器/模运算器**；
+- requantize_u8 的 64×64 乘法为唯一的嵌入式乘法器消费者（MAP 9-bit 元素 9），
+  是最大的组合逻辑块（requant 层次 ~252 LE）；本阶段未加时钟约束（板载时钟未
+  冻结），Fitter 未做时序收敛分析（"Timing requirements not specified"）。

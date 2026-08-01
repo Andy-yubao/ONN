@@ -8,8 +8,10 @@
     2. check_device           (EP4CE10F17C8 recognised by Quartus)
     3. Questa simulation      (requant 20384 + GAP exhaustive/golden vectors
                               + stem_conv_serial 12544 golden + padding专项
-                              + maxpool2x2_stream 3136 x2 golden + gap/X-Z
-                              + stem_pool1 integration golden, two passes)
+                              + maxpool2x2_stream 3136 x3 golden + gap/X-Z
+                              + stem_pool1 integration golden, two passes
+                              + conv2+pool2 golden, two passes
+                              + conv3 golden, two passes)
     4. Quartus smoke compile  (arithmetic baseline_cnn_smoke project)
     5. Quartus stem compile   (full serial stem engine, stem_conv_smoke project)
     6. Python contract test   (arithmetic golden vectors)
@@ -17,6 +19,8 @@
     8. Quartus maxpool compile(streaming 2x2 max-pool, maxpool_smoke project)
     9. Python maxpool contract(pool golden / CHW mapping / 3136 recompute)
    10. Quartus integration    (stem+pool1, stem_pool1_smoke project)
+   11. Quartus conv23 compile (shared conv2/conv3 engine, conv23_smoke project)
+   12. Python conv23 contract (conv2/conv3 golden / OIHW+CHW / pool2 recompute)
 
   Any failing step stops the run with a non-zero exit code.
 
@@ -30,7 +34,7 @@ $root     = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $scripts  = Join-Path $root "fpga\baseline_cnn\scripts"
 
 $failures = @()
-$totalSteps = 10
+$totalSteps = 12
 
 function Invoke-Step {
     param([int]$Index, [string]$Name, [scriptblock]$Body)
@@ -109,6 +113,20 @@ Invoke-Step 9 "python_maxpool_contract" {
 Invoke-Step 10 "quartus_stem_pool1" {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scripts "run_quartus_smoke.ps1") `
         -ProjectName stem_pool1_smoke -CreateScript create_stem_pool1_project.tcl
+}
+
+# ---- 11. Quartus shared conv2/conv3 engine compile ----
+Invoke-Step 11 "quartus_conv23" {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scripts "run_quartus_smoke.ps1") `
+        -ProjectName conv23_smoke -CreateScript create_conv23_project.tcl
+}
+
+# ---- 12. Python conv23 contract test ----
+Invoke-Step 12 "python_conv23_contract" {
+    $py = if (Test-Path env:ONN_PYTHON) { (Get-Item env:ONN_PYTHON).Value }
+          elseif (Test-Path "D:\tools\anaconda3\envs\onn\python.exe") { "D:\tools\anaconda3\envs\onn\python.exe" }
+          else { "python" }
+    & $py -m pytest model\tests\test_conv23_rtl_contract.py -q
 }
 
 Write-Host "`n=============================================" -ForegroundColor Cyan

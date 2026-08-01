@@ -56,7 +56,8 @@ module stem_conv_serial #(
 
     // ---- control ----
     input  wire              start,   // single-cycle pulse; ignored while busy
-    output reg               busy,    // 1 while running (PROLOGUE..REQ)
+    output reg               busy,    // 1 from start until done (PROLOGUE..DONE);
+                                      //   never drops before the done pulse
     output reg               done,    // single-cycle pulse at end of run
 
     // ---- conv1_acc debug stream (one pulse per output element) ----
@@ -214,9 +215,13 @@ module stem_conv_serial #(
     endgenerate
 
     // ================= debug streams / control outputs =================
+    // busy covers S_DONE too: once the run has started it stays 1 until the
+    // done pulse appears, so there is never a `busy=0 && done=0` window between
+    // start and done (external controllers may safely start a new run as soon
+    // as they observed busy==0 on the previous cycle).
     always @* begin
         busy = (state == S_PROLOGUE) || (state == S_ACC) ||
-               (state == S_ADD_BIAS) || (state == S_REQ);
+               (state == S_ADD_BIAS) || (state == S_REQ) || (state == S_DONE);
     end
     always @* begin
         acc_valid = (state == S_REQ);
