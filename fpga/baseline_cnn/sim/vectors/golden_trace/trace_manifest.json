@@ -1,0 +1,170 @@
+{
+  "nodes": {
+    "conv1_acc": {
+      "bit_width": 32,
+      "dtype": "torch.int32",
+      "file": "conv1_acc.mem",
+      "max": 25218,
+      "min": -43565,
+      "numel": 12544,
+      "sha256": "56aee8275fe20fb10cd5df536b35688009a3ea4d0529a21ee9fff198b42071ea",
+      "shape": [
+        1,
+        16,
+        28,
+        28
+      ]
+    },
+    "conv2_acc": {
+      "bit_width": 32,
+      "dtype": "torch.int32",
+      "file": "conv2_acc.mem",
+      "max": 54734,
+      "min": -64449,
+      "numel": 6272,
+      "sha256": "a5086be482d077ce69e3fc96d635b6a083a810731772fc3e52f9794c509280b6",
+      "shape": [
+        1,
+        32,
+        14,
+        14
+      ]
+    },
+    "conv2_q": {
+      "bit_width": 8,
+      "dtype": "torch.uint8",
+      "file": "conv2_q.mem",
+      "max": 218,
+      "min": 0,
+      "numel": 6272,
+      "sha256": "1af95cfcdb95e358842877899a7a6cdcf411b1039f2362c9031f0f8004fd672a",
+      "shape": [
+        1,
+        32,
+        14,
+        14
+      ]
+    },
+    "conv3_acc": {
+      "bit_width": 32,
+      "dtype": "torch.int32",
+      "file": "conv3_acc.mem",
+      "max": 46309,
+      "min": -27892,
+      "numel": 1568,
+      "sha256": "4006b65ed30b6c28470837323117e4d5cb69e16499a75fb3bc12447cf1006a45",
+      "shape": [
+        1,
+        32,
+        7,
+        7
+      ]
+    },
+    "conv3_q": {
+      "bit_width": 8,
+      "dtype": "torch.uint8",
+      "file": "conv3_q.mem",
+      "max": 219,
+      "min": 0,
+      "numel": 1568,
+      "sha256": "9a31dddbf4e761bbf733ad03ee43e80c81ee23354d875578847aff6f3d45e755",
+      "shape": [
+        1,
+        32,
+        7,
+        7
+      ]
+    },
+    "fc_acc": {
+      "bit_width": 32,
+      "dtype": "torch.int32",
+      "file": "fc_acc.mem",
+      "max": 15754,
+      "min": -26075,
+      "numel": 10,
+      "sha256": "76cb1bee00d6b4e4042a130270bda74be4e4a57e31a7e23404d33925d8aef041",
+      "shape": [
+        1,
+        10
+      ]
+    },
+    "gap_q": {
+      "bit_width": 8,
+      "dtype": "torch.uint8",
+      "file": "gap_q.mem",
+      "max": 52,
+      "min": 2,
+      "numel": 32,
+      "sha256": "58fea555327db6aa067386ce0e87354905154dfb5a6538114a814fde12666f16",
+      "shape": [
+        1,
+        32
+      ]
+    },
+    "input_q": {
+      "bit_width": 8,
+      "dtype": "torch.int8",
+      "file": "input_q.mem",
+      "max": 127,
+      "min": -19,
+      "numel": 784,
+      "sha256": "ffbcb0cd0badf81ef5faf262dbcfd2f35baa959e6e9b3b51f260071bbebe49f6",
+      "shape": [
+        1,
+        1,
+        28,
+        28
+      ]
+    },
+    "pool1_q": {
+      "bit_width": 8,
+      "dtype": "torch.uint8",
+      "file": "pool1_q.mem",
+      "max": 189,
+      "min": 0,
+      "numel": 3136,
+      "sha256": "939103fab0f4468767498804ea2d008bdaac15d43467000cf656cda9dbf8fecf",
+      "shape": [
+        1,
+        16,
+        14,
+        14
+      ]
+    },
+    "pool2_q": {
+      "bit_width": 8,
+      "dtype": "torch.uint8",
+      "file": "pool2_q.mem",
+      "max": 218,
+      "min": 0,
+      "numel": 1568,
+      "sha256": "2131112591fc754ec6bdd284454d65f0c358ad16dfb999f743d1eb6cf48c105d",
+      "shape": [
+        1,
+        32,
+        7,
+        7
+      ]
+    },
+    "stem_q": {
+      "bit_width": 8,
+      "dtype": "torch.uint8",
+      "file": "stem_q.mem",
+      "max": 189,
+      "min": 0,
+      "numel": 12544,
+      "sha256": "34e797de575a12027dd4aa63733343a922be450bd2e6ee64fa9dca172c6e3237",
+      "shape": [
+        1,
+        16,
+        28,
+        28
+      ]
+    }
+  },
+  "prediction": 8,
+  "prediction_file": "prediction.txt",
+  "sample_index": 61,
+  "source": "digit-8 smoke sample",
+  "true_label": 8
+}

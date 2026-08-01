@@ -1,0 +1,197 @@
+{
+  "count": 10,
+  "input_preprocessing": "PC-side: MNIST ToTensor + Normalize(0.1307,0.3081) then quantise to INT8 (input_q). FPGA v1 does no float normalisation.",
+  "samples": [
+    {
+      "digit": 0,
+      "dir": "digit0_idx00003",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "45006e2bf92e53dbba5fb8cc60a1b1acf591bcabbdf80196391b0e2320973f86"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "df42f6aa10db0f292500f4d18c105c6a68ddae6a7d233fc92729b2abc1a19353"
+      },
+      "prediction": 0,
+      "test_index": 3,
+      "true_label": 0
+    },
+    {
+      "digit": 1,
+      "dir": "digit1_idx00002",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "2672b403fbe6fda9ade476e63d9993681af8c5a63f37d356c8fa517b6ebdc250"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "12258eba784601b9516a9d25cf5db4c8477f190078a7c2fdc34b49291588a084"
+      },
+      "prediction": 1,
+      "test_index": 2,
+      "true_label": 1
+    },
+    {
+      "digit": 2,
+      "dir": "digit2_idx00001",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "2c438b9a7cb6db82e360f936f1161880fc8725158d173e6df8c20589cda58e94"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "cb6f83741ca335ba479dc683440bf1938f100ced7b12e78763adb8f0ea3e1984"
+      },
+      "prediction": 2,
+      "test_index": 1,
+      "true_label": 2
+    },
+    {
+      "digit": 3,
+      "dir": "digit3_idx00018",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "3c12a4b743230de1746423fd9bacbf558e5685e936fc89e14a50e6b268958f6b"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "67ffc6e083c1fe1a3ab3442ab98b0c6ed8b041c35cef60a729fc78a623da28c1"
+      },
+      "prediction": 3,
+      "test_index": 18,
+      "true_label": 3
+    },
+    {
+      "digit": 4,
+      "dir": "digit4_idx00004",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "6f7462bc967c367d58c7e8689a4ba29fabcdb82599b39b5e869749ef7f97acb1"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "e94fe9341799524baf2b0bb38a7a9e3c12ebe260430dd1a57d72d79e839789d2"
+      },
+      "prediction": 4,
+      "test_index": 4,
+      "true_label": 4
+    },
+    {
+      "digit": 5,
+      "dir": "digit5_idx00008",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "bfc776031fe207d3634644b958cf3d402850d99ee335bda98a78ec8e2e1dbfff"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "ea102424f3aef86c56467a45b16f439c3825677d69272673d060d62af724d0bd"
+      },
+      "prediction": 5,
+      "test_index": 8,
+      "true_label": 5
+    },
+    {
+      "digit": 6,
+      "dir": "digit6_idx00011",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "9196a93aa2e164dac572865ec5bae78d1b2ec9b0f914ef08a34078d8be88b528"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "27a71a4993b2053f0e63a417bd68428009ea8669681bad874c11cb42974cdc67"
+      },
+      "prediction": 6,
+      "test_index": 11,
+      "true_label": 6
+    },
+    {
+      "digit": 7,
+      "dir": "digit7_idx00000",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "3a51b87688d24f34857878b171c5b951953428e6ee4c46f07cb37337fbaa6aa8"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "fea985e29d1fab253ad5900459c7079f334c950096d0715c64ac04915dad3c3f"
+      },
+      "prediction": 7,
+      "test_index": 0,
+      "true_label": 7
+    },
+    {
+      "digit": 8,
+      "dir": "digit8_idx00061",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "76cb1bee00d6b4e4042a130270bda74be4e4a57e31a7e23404d33925d8aef041"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "ffbcb0cd0badf81ef5faf262dbcfd2f35baa959e6e9b3b51f260071bbebe49f6"
+      },
+      "prediction": 8,
+      "test_index": 61,
+      "true_label": 8
+    },
+    {
+      "digit": 9,
+      "dir": "digit9_idx00007",
+      "fc_acc": {
+        "bit_width": 32,
+        "file": "fc_acc.mem",
+        "numel": 10,
+        "sha256": "983af778d0c4bac6cd6d2864d96a9c115e66309fc8ed0a48c03404c3da8dc3e8"
+      },
+      "input_q": {
+        "bit_width": 8,
+        "file": "input_q.mem",
+        "numel": 784,
+        "sha256": "fc86afd73c0be532f9219cffb857efd21f4026f26cd3add7d1ab2611d03ded8a"
+      },
+      "prediction": 9,
+      "test_index": 7,
+      "true_label": 9
+    }
+  ],
+  "selection_rule": "smallest MNIST test index whose digit d is classified correctly by the frozen integer reference (prediction == label == d)"
+}

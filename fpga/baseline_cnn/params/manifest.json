@@ -1,0 +1,451 @@
+{
+  "biases": {
+    "conv2": {
+      "bit_width": 32,
+      "file": "params/biases/conv2_bias.mem",
+      "mif": "params/biases/conv2_bias.mif",
+      "numel": 32,
+      "sha256": "a3fb06ccf3a9c18fda604a8fcfbfe7f6d8c8a73bc2f56c3006731fb268f05aa2",
+      "shape": [
+        32
+      ]
+    },
+    "conv3": {
+      "bit_width": 32,
+      "file": "params/biases/conv3_bias.mem",
+      "mif": "params/biases/conv3_bias.mif",
+      "numel": 32,
+      "sha256": "577964b48c346673591f0d00bf7eaec260ce5e41051c47a224a778a5a831b107",
+      "shape": [
+        32
+      ]
+    },
+    "fc": {
+      "bit_width": 32,
+      "file": "params/biases/fc_bias.mem",
+      "mif": "params/biases/fc_bias.mif",
+      "numel": 10,
+      "sha256": "9003a14bf654846733d193439024dd6be9979d9ab4b72ff0a077f50fe10d79b6",
+      "shape": [
+        10
+      ]
+    },
+    "stem_conv": {
+      "bit_width": 32,
+      "file": "params/biases/stem_bias.mem",
+      "mif": "params/biases/stem_bias.mif",
+      "numel": 16,
+      "sha256": "3061e4e2f9feb4c7bc1c9b3898393ae59460b78535287c8c6c87d72b26b59cdb",
+      "shape": [
+        16
+      ]
+    }
+  },
+  "checksums": "params/checksums.sha256",
+  "dtypes": {
+    "accumulator": "int32",
+    "bias": {
+      "bit_width": 32,
+      "max": 2147483647,
+      "min": -2147483648,
+      "name": "sint32"
+    },
+    "input": {
+      "bit_width": 8,
+      "max": 127,
+      "min": -128,
+      "name": "sint8",
+      "zero_point": 0
+    },
+    "relu_output": {
+      "bit_width": 8,
+      "max": 255,
+      "min": 0,
+      "name": "uint8",
+      "zero_point": 0
+    },
+    "weight": {
+      "bit_width": 8,
+      "max": 127,
+      "min": -127,
+      "name": "sint8",
+      "zero_point": 0
+    }
+  },
+  "format": {
+    "model": "BaselineCNN",
+    "name": "baseline_cnn_hardware_params",
+    "scheme": "scheme_a",
+    "source": "Int8Reference (frozen pure-integer reference)",
+    "version": 1
+  },
+  "golden_trace": {
+    "manifest": "sim/vectors/golden_trace/trace_manifest.json",
+    "nodes": {
+      "conv1_acc": {
+        "bit_width": 32,
+        "dtype": "torch.int32",
+        "file": "conv1_acc.mem",
+        "max": 25218,
+        "min": -43565,
+        "numel": 12544,
+        "sha256": "56aee8275fe20fb10cd5df536b35688009a3ea4d0529a21ee9fff198b42071ea",
+        "shape": [
+          1,
+          16,
+          28,
+          28
+        ]
+      },
+      "conv2_acc": {
+        "bit_width": 32,
+        "dtype": "torch.int32",
+        "file": "conv2_acc.mem",
+        "max": 54734,
+        "min": -64449,
+        "numel": 6272,
+        "sha256": "a5086be482d077ce69e3fc96d635b6a083a810731772fc3e52f9794c509280b6",
+        "shape": [
+          1,
+          32,
+          14,
+          14
+        ]
+      },
+      "conv2_q": {
+        "bit_width": 8,
+        "dtype": "torch.uint8",
+        "file": "conv2_q.mem",
+        "max": 218,
+        "min": 0,
+        "numel": 6272,
+        "sha256": "1af95cfcdb95e358842877899a7a6cdcf411b1039f2362c9031f0f8004fd672a",
+        "shape": [
+          1,
+          32,
+          14,
+          14
+        ]
+      },
+      "conv3_acc": {
+        "bit_width": 32,
+        "dtype": "torch.int32",
+        "file": "conv3_acc.mem",
+        "max": 46309,
+        "min": -27892,
+        "numel": 1568,
+        "sha256": "4006b65ed30b6c28470837323117e4d5cb69e16499a75fb3bc12447cf1006a45",
+        "shape": [
+          1,
+          32,
+          7,
+          7
+        ]
+      },
+      "conv3_q": {
+        "bit_width": 8,
+        "dtype": "torch.uint8",
+        "file": "conv3_q.mem",
+        "max": 219,
+        "min": 0,
+        "numel": 1568,
+        "sha256": "9a31dddbf4e761bbf733ad03ee43e80c81ee23354d875578847aff6f3d45e755",
+        "shape": [
+          1,
+          32,
+          7,
+          7
+        ]
+      },
+      "fc_acc": {
+        "bit_width": 32,
+        "dtype": "torch.int32",
+        "file": "fc_acc.mem",
+        "max": 15754,
+        "min": -26075,
+        "numel": 10,
+        "sha256": "76cb1bee00d6b4e4042a130270bda74be4e4a57e31a7e23404d33925d8aef041",
+        "shape": [
+          1,
+          10
+        ]
+      },
+      "gap_q": {
+        "bit_width": 8,
+        "dtype": "torch.uint8",
+        "file": "gap_q.mem",
+        "max": 52,
+        "min": 2,
+        "numel": 32,
+        "sha256": "58fea555327db6aa067386ce0e87354905154dfb5a6538114a814fde12666f16",
+        "shape": [
+          1,
+          32
+        ]
+      },
+      "input_q": {
+        "bit_width": 8,
+        "dtype": "torch.int8",
+        "file": "input_q.mem",
+        "max": 127,
+        "min": -19,
+        "numel": 784,
+        "sha256": "ffbcb0cd0badf81ef5faf262dbcfd2f35baa959e6e9b3b51f260071bbebe49f6",
+        "shape": [
+          1,
+          1,
+          28,
+          28
+        ]
+      },
+      "pool1_q": {
+        "bit_width": 8,
+        "dtype": "torch.uint8",
+        "file": "pool1_q.mem",
+        "max": 189,
+        "min": 0,
+        "numel": 3136,
+        "sha256": "939103fab0f4468767498804ea2d008bdaac15d43467000cf656cda9dbf8fecf",
+        "shape": [
+          1,
+          16,
+          14,
+          14
+        ]
+      },
+      "pool2_q": {
+        "bit_width": 8,
+        "dtype": "torch.uint8",
+        "file": "pool2_q.mem",
+        "max": 218,
+        "min": 0,
+        "numel": 1568,
+        "sha256": "2131112591fc754ec6bdd284454d65f0c358ad16dfb999f743d1eb6cf48c105d",
+        "shape": [
+          1,
+          32,
+          7,
+          7
+        ]
+      },
+      "stem_q": {
+        "bit_width": 8,
+        "dtype": "torch.uint8",
+        "file": "stem_q.mem",
+        "max": 189,
+        "min": 0,
+        "numel": 12544,
+        "sha256": "34e797de575a12027dd4aa63733343a922be450bd2e6ee64fa9dca172c6e3237",
+        "shape": [
+          1,
+          16,
+          28,
+          28
+        ]
+      }
+    },
+    "prediction": 8,
+    "sample_index": 61,
+    "true_label": 8
+  },
+  "layouts": {
+    "conv_weight": "OIHW",
+    "fc_weight": "OI",
+    "feature_map": "CHW"
+  },
+  "network": {
+    "accumulator_requant_order": "acc * multiplier (INT64) -> round-half-away-from-zero right shift -> saturate to UINT8",
+    "fc_input_activation": "conv3_relu",
+    "gap": {
+      "divisor": 49,
+      "output_unit": "conv3_relu",
+      "rounding": "round-half-away-from-zero",
+      "type": "integer_sum_div"
+    },
+    "input_preprocessing": "PC-side: MNIST ToTensor + Normalize(0.1307, 0.3081) then quantise to INT8 (input_q); FPGA v1 performs no float normalisation",
+    "input_scale": 0.02221643079922894,
+    "input_shape": [
+      1,
+      28,
+      28
+    ],
+    "layers": {
+      "conv2": {
+        "activation_input_scale": 0.021577694836784813,
+        "activation_output_scale": 0.019625250498453775,
+        "bias_file": "params/biases/conv2_bias.mem",
+        "input_shape": [
+          16,
+          14,
+          14
+        ],
+        "kernel": [
+          3,
+          3
+        ],
+        "output_shape": [
+          32,
+          14,
+          14
+        ],
+        "padding": 1,
+        "requant": {
+          "bit_width": 32,
+          "multiplier": 1097020857,
+          "real_multiplier": 0.003990938630076133,
+          "relative_error": 3.4391519550608423e-10,
+          "shift": 38,
+          "signed": true
+        },
+        "stride": 1,
+        "weight_file": "params/weights/conv2_weight.mem",
+        "weight_scale": 0.003629821022664468
+      },
+      "conv3": {
+        "activation_input_scale": 0.019625250498453775,
+        "activation_output_scale": 0.06480570026472503,
+        "bias_file": "params/biases/conv3_bias.mem",
+        "input_shape": [
+          32,
+          7,
+          7
+        ],
+        "kernel": [
+          3,
+          3
+        ],
+        "output_shape": [
+          32,
+          7,
+          7
+        ],
+        "padding": 1,
+        "requant": {
+          "bit_width": 32,
+          "multiplier": 1298974956,
+          "real_multiplier": 0.0047256433617943955,
+          "relative_error": 1.9542422591449784e-10,
+          "shift": 38,
+          "signed": true
+        },
+        "stride": 1,
+        "weight_file": "params/weights/conv3_weight.mem",
+        "weight_scale": 0.015604826409047045
+      },
+      "fc": {
+        "activation_input_scale": 0.06480570026472503,
+        "argmax_directly_on_int32_accumulator": true,
+        "bias_file": "params/biases/fc_bias.mem",
+        "input_shape": [
+          32
+        ],
+        "output_shape": [
+          10
+        ],
+        "weight_file": "params/weights/fc_weight.mem",
+        "weight_scale": 0.00802971903733381
+      },
+      "stem_conv": {
+        "activation_input_scale": 0.02221643079922894,
+        "activation_output_scale": 0.021577694836784813,
+        "bias_file": "params/biases/stem_bias.mem",
+        "input_shape": [
+          1,
+          28,
+          28
+        ],
+        "kernel": [
+          3,
+          3
+        ],
+        "output_shape": [
+          16,
+          28,
+          28
+        ],
+        "padding": 1,
+        "requant": {
+          "bit_width": 32,
+          "multiplier": 2056884242,
+          "real_multiplier": 0.007482901280291143,
+          "relative_error": 9.96617928142558e-11,
+          "shift": 38,
+          "signed": true
+        },
+        "stride": 1,
+        "weight_file": "params/weights/stem_weight.mem",
+        "weight_scale": 0.007267763295511561
+      }
+    },
+    "maxpool": {
+      "scale_preserved": true,
+      "type": "2x2 stride-2"
+    },
+    "rounding": "round-half-away-from-zero",
+    "saturation": "clamp-saturate-no-wraparound"
+  },
+  "params_header": {
+    "file": "params/baseline_cnn_params.vh",
+    "sha256": "a0c35e01d4ee31cd8f73867a36a53271c10126f064c1fdd67385507efdfb4739"
+  },
+  "smoke_vectors": {
+    "count": 10,
+    "manifest": "sim/vectors/smoke/smoke_manifest.json"
+  },
+  "weights": {
+    "conv2": {
+      "bit_width": 8,
+      "file": "params/weights/conv2_weight.mem",
+      "layout": "OIHW",
+      "mif": "params/weights/conv2_weight.mif",
+      "numel": 4608,
+      "sha256": "cdd8a216f83be02b6a6e88bd0f57169e3e8b730b9f08c6c259b6b1ed123fad5c",
+      "shape": [
+        32,
+        16,
+        3,
+        3
+      ]
+    },
+    "conv3": {
+      "bit_width": 8,
+      "file": "params/weights/conv3_weight.mem",
+      "layout": "OIHW",
+      "mif": "params/weights/conv3_weight.mif",
+      "numel": 9216,
+      "sha256": "a0c43ff4274fd0a85ebda4fd556f4070433cd7df8c00d86784736a55d34c4588",
+      "shape": [
+        32,
+        32,
+        3,
+        3
+      ]
+    },
+    "fc": {
+      "bit_width": 8,
+      "file": "params/weights/fc_weight.mem",
+      "layout": "OI",
+      "mif": "params/weights/fc_weight.mif",
+      "numel": 320,
+      "sha256": "ae795af339a74c54891870766528c117a3069763297ac9af811d3007d37da522",
+      "shape": [
+        10,
+        32
+      ]
+    },
+    "stem_conv": {
+      "bit_width": 8,
+      "file": "params/weights/stem_weight.mem",
+      "layout": "OIHW",
+      "mif": "params/weights/stem_weight.mif",
+      "numel": 144,
+      "sha256": "db9a4e1213e0fbac93105ae25feaab6b299674566791da5b5eb5d973454553b6",
+      "shape": [
+        16,
+        1,
+        3,
+        3
+      ]
+    }
+  }
+}

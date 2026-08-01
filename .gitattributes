@@ -1,0 +1,8 @@
+# Force LF for the generated FPGA hardware data files.
+#
+# The export writes LF-only files and records their SHA256 in manifest.json /
+# checksums.sha256.  With core.autocrlf=true git would convert them to CRLF on
+# a Windows checkout, changing the bytes and breaking the recorded hashes.
+# eol=lf pins both the blob and the working tree to LF so the hashes are stable
+# across machines and checkouts.
+fpga/baseline_cnn/**  text eol=lf
