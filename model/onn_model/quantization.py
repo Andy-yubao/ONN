@@ -7,7 +7,7 @@ rather than framework-specific quantised model formats.
 from __future__ import annotations
 
 import copy
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import torch
 from torch import nn
@@ -182,6 +182,36 @@ def check_bn_fusion_error(
     }
 
 
+def load_bn_fused_model(
+    checkpoint_path: str,
+    model_factory: Callable[[], nn.Module],
+    device: Optional[torch.device] = None,
+) -> Tuple[nn.Module, Dict[str, Any]]:
+    """Rebuild a BN-fused model from a saved fused checkpoint.
+
+    ``checkpoint_path`` must point to an artifact saved by ``torch.save`` with
+    a top-level ``"state_dict"`` key, where the state dict was produced by
+    :func:`fuse_model_bn` applied to a model built by ``model_factory()``.
+
+    The fused structure (Conv2d with bias, no BatchNorm) is rebuilt by fusing a
+    fresh ``model_factory()`` instance, then the saved state dict is loaded with
+    ``strict=True``.  The unfused ``BaselineCNN`` class cannot load the fused
+    state dict directly (BatchNorm keys are missing), which is why this helper
+    exists.
+
+    Returns
+    -------
+    (fused_model, checkpoint_dict)
+    """
+    if device is None:
+        device = torch.device("cpu")
+    fused = fuse_model_bn(model_factory())
+    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    fused.load_state_dict(ckpt["state_dict"], strict=True)
+    fused.eval()
+    return fused, ckpt
+
+
 # ============================================================================
 #  INT8 PTQ Simulation
 # ============================================================================
@@ -289,7 +319,10 @@ def quantize_weights_per_channel(
         scales.append(scale)
         zero_points.append(0)
 
-        q = (w / scale).round().clamp(-128, 127).to(torch.int8)
+        # Weight quantisation must use round-half-away-from-zero and the
+        # symmetric range [-127, 127] (never -128) per the PTQ numerical rules.
+        q = (torch.sign(w / scale) * torch.floor((w / scale).abs() + 0.5))
+        q = q.clamp(-127, 127).to(torch.int8)
         saturated += (q.abs() >= 127).sum().item()
         if isinstance(module, nn.Conv2d):
             qweight[c] = q.view(weight[c].shape).float()
