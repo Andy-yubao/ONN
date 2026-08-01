@@ -122,3 +122,104 @@ IDLE ──start──▶ PROLOGUE ──▶ ACC ──(tap==8)──▶ ADD_BIA
 | 层间复用 | 仅 stem | 共享 MAC 引擎分时复用三层 |
 | 数据搬运 | 输入逐点随机读 | 行缓存 / 双缓冲 |
 | 吞吐 | 12 cyc/输出 | 优化到 ~1 cyc/输出 |
+
+## 9. 流式 MaxPool（maxpool2x2_stream，2026-08-01）
+
+独立、可综合的 `2×2 stride=2 MaxPool` 流式原始模块 `rtl/maxpool2x2_stream.v`，
+直接消费 stem 引擎的 `q_valid` 流：
+
+```text
+stem_q 16×28×28（UINT8，CHW，oc→y→x）
+→ 2×2 MaxPool，stride 2
+→ pool1_q 16×14×14（UINT8，CHW，oc→pool_y→pool_x）
+```
+
+### 9.1 存储路径的现状与最终方案
+
+| 项 | 现状（本阶段） | 最终集成 |
+|---|---|---|
+| stem 完整 output RAM（12544×8） | **保留**，仅用于第一阶段逐位验证 | **删除** |
+| stem → MaxPool 数据通路 | 独立模块各自验证 | stem 的 `q_valid` 流**直接**进入 MaxPool |
+| 保存的特征图 | stem_q（完整 16×28×28） | **仅 pool1_q**（16×14×14） |
+
+> 下一阶段重构 stem 存储路径（去掉 output RAM、将 `q_valid` 接到 MaxPool）
+> 的前提是独立 MaxPool 已通过全部验证——本阶段已完成该验证。
+
+### 9.2 冻结的接口与契约
+
+```verilog
+module maxpool2x2_stream (
+    input  wire       clk, rst_n,
+    input  wire       start,      // 单周期脉冲；busy 期间忽略
+    input  wire       in_valid,   // 合格输入（posedge 采样）
+    input  wire [7:0] in_q,       // UINT8 特征图值
+    output reg        busy,       // 消费输入流期间为 1
+    output reg        out_valid,  // 每个池化结果一个单周期脉冲
+    output reg [11:0] out_addr,   // CHW 池地址，严格 0..3135，每结果 +1
+    output reg [7:0]  out_q,      // UINT8 池化结果
+    output reg        done        // 最后一个结果输出后的单周期脉冲
+);
+```
+
+- 一次运行固定接收 **12544** 个输入，顺序 `oc=0..15 → y=0..27 → x=0..27`；
+- 模块内部 `oc/y/x` 计数器**只在 `busy && in_valid` 时前进**——输入流中任意
+  长度的空拍都不会推进任何状态（坐标、row_buffer、current_left、输出地址）；
+- 输出顺序 `oc=0..15 → pool_y=0..13 → pool_x=0..13`；`out_addr` 严格从 0 递增
+  到 3135；
+- `done` 单周期脉冲，且**只在最后一个池化结果已经有效输出之后**产生；
+- **禁止**在本模块中使用除法/取模/通用乘法——坐标与输出地址全部由小计数器维护。
+
+### 9.3 流式结构
+
+只保存上一条偶数行 `row_buffer[0:27]`（每项 UINT8，共 28×8=224 bit）：
+
+| 输入位置 | 动作 |
+|---|---|
+| 偶数行 `y[0]==0` | `row_buffer[x] <= in_q`，不产生输出 |
+| 奇数行 `y[0]==1`、偶数 x | `current_left <= in_q`（保存奇数行左侧值），不产生输出 |
+| 奇数行 `y[0]==1`、奇数 x | 2×2 窗口齐：`max(row_buffer[x-1], row_buffer[x], current_left, in_q)` → `out_valid` |
+
+- 四个 UINT8 最大值用**比较树**（`max_top → max_bottom → max_all`），比较为
+  **unsigned**，绝不把有符号比较误用于 UINT8；
+- 切到新输出通道时**不要求清空** row_buffer：新通道偶数行会在任何奇数行读取前
+  完整覆盖 28 个位置；
+- row_buffer 只在奇数行/奇数 x 时读取（组合读已加 guard），保证首行无 X；
+- `row_buffer` 是 28×8 寄存器数组（组合读、仅 224 bit），不映射 M9K，预期落入
+  逻辑（详见 §9.5 资源报告）；
+- 输出 `out_valid/out_q/out_addr` 为**寄存器输出**（产生沿捕获），配合 testbench
+  的 `posedge + #1` 采样无竞态。
+
+### 9.4 验证
+
+- `tb_maxpool2x2_stream.v` 两遍 golden 测试：
+  - **测试 A（连续）**：start 后连续 12544 个 `in_valid=1`；
+  - **测试 B（空拍）**：每 5 个有效输入插入 2 个空拍；
+  - 两遍输出与 `pool1_q.mem` **3136/3136 逐位一致**且两遍完全相同；
+  - 空拍期间内部 `oc/y/x/out_cnt` 冻结（`gap_bad=0`）；
+  - 专项手工重算：`oc0 pool(0,0)/(0,13)/(13,0)/(13,13)`、`oc15 pool(13,13)`
+    五个窗口直接对 4 个 stem_q 取 max 核对；
+  - `out_addr` 严格 0..3135、`out_valid` 总次数 3136、有效输入 12544、
+    `done` 单脉冲、输出无 X/Z；
+  - 失败打印前 20 项（input_count / out_idx / oc / pool_y / pool_x /
+    四个输入值 / expected / actual），非零退出。
+- `model/tests/test_maxpool_rtl_contract.py`：元素数、CHW 布局与池地址映射、
+  四角/中心/末窗口抽查、UINT8 范围、Python 重算全量 3136 一致。
+
+### 9.5 综合资源（maxpool_smoke，EP4CE10F17C8，2026-08-01）
+
+（由 `run_all.ps1` 步骤 8 实测，详见最终报告。）该原始模块为**纯逻辑**：
+row_buffer 为寄存器实现，**无** M9K、**无**嵌入式乘法器、**无**除法器。
+
+### 9.6 与下一阶段（stem+MaxPool 集成）的接口变化
+
+集成时需改动：
+
+1. **stem 侧**：移除输出 RAM 写端口与 `output_raddr/rdata` 读端口；
+   `q_valid/q_value` 从"调试流"升级为"下游流水信号"；
+2. **MaxPool 侧**：`in_valid/in_q` 改接 stem 的 `q_valid/q_value`；`start` 由
+   stem 的 done（或上游控制器）触发；`busy` 可作为 stem 的背压（当前 stem 为
+   固定节拍输出，两者天然同步）；
+3. **存储**：删除 16 块 M9K 的 stem 输出 RAM，仅保留 MaxPool 的 pool1_q 存储
+   （16×14×14=3136×8 ≈ 1 块 M9K）；
+4. stem 输出节拍为每 12 周期一个结果、MaxPool 每 2 周期消费一个结果，吞吐
+   由 stem 决定，无需额外同步。

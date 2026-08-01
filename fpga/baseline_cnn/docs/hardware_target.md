@@ -61,12 +61,41 @@
 - Quartus smoke 工程 `stem_conv_smoke` 在 **EP4CE10F17C8** 上 Flow Successful：
   LE 697、寄存器 166、9-bit 乘法器 9、**M9K 18 块（39%）**、块内存位 107,776/423,936（25%）、
   物理引脚 0、虚拟引脚 64；
-- 四个存储（input RAM / output RAM / weight ROM / bias ROM）全部由通用同步模板
-  （`sync_ram_u8.v` / `sync_rom_s8.v` / `sync_rom_s32.v`）推断为 M9K（altsyncram），未用厂商 IP；
+- M9K 分项（勘误后的准确结论，证据见下）：**input RAM 1 + output RAM 16 + weight ROM 1 = 18**，
+  **bias ROM 未映射 M9K**（16×32=512 bit 太小，Fitter 落入逻辑）。此前"四个存储全部推断为
+  M9K（1+16+1+1=19）"的说法**有误**，已修正；M9K 总数 18 与 fit 报告一致；
+  - 证据：fit.rpt 编译层次节点 `u_bias_rom` 显示 Memory Bits=0、M9Ks=0、12 LC/12 寄存器；
+    map/fit 的 Fitter RAM Summary 只列出 3 个 altsyncram 实例（input/output/weight）；
+    "Total block memory bits 107,776 = 6272 + 100352 + 1152"（不含 bias 的 512 bit）；
+    "Total block memory implementation bits 165,888 = 18 × 9216"（18 块 M9K 的配置容量）。
+  - 三个 M9K 存储均由通用同步模板（`sync_ram_u8.v` / `sync_rom_s8.v`）推断（altsyncram），
+    未用厂商 IP；weight ROM 由 `$readmemh` 初始化并经综合转为 MIF。
 - 顶层 `stem_conv_smoke_top` 为寄存器包装 + 全部 VIRTUAL_PIN；调试流（acc/q 地址与值）在
   包装层压缩为 8-bit 计数与 XOR，避免虚拟引脚爆炸；**不是最终板级顶层**。
 
 > 该资源仅为 stem 单 MAC 层，不是完整 CNN（conv2/conv3/MaxPool/GAP/FC 未实现）。
 
-下一步：进入 MaxPool 或共享卷积引擎（三卷积分时复用）设计前，仍需以下板级资料
-（见 §2 尚待冻结）：板载主时钟频率与引脚、复位引脚与有效电平、UART RX/TX 引脚、调试 LED 引脚。
+## 6. 流式 MaxPool 阶段（已完成，2026-08-01）
+
+在 stem 引擎之上落地**独立流式 `2×2 stride=2 MaxPool` 原始模块**
+`rtl/maxpool2x2_stream.v`（冻结设计见 `docs/rtl_microarchitecture.md` §9）：
+
+- 直接消费 `stem_q` 流（oc→y→x，每拍一个 UINT8）→ 输出 `pool1_q` 16×14×14；
+  只保存上一条偶数行（`row_buffer` 28×8=224 bit），无除法/取模/通用乘法，
+  坐标与输出地址全部用计数器维护，UINT8 比较树取 max；
+- Questa 两遍 golden 验证：连续输入与"每 5 发插 2 空拍"输入均 **3136/3136 逐位一致**、
+  两遍输出完全相同；空拍期间内部计数冻结（gap_bad=0）；`out_addr` 严格 0..3135、
+  `done` 单脉冲、输出无 X/Z；专项手工重算 5 个窗口通过；
+- Quartus smoke 工程 `maxpool_smoke` 在 **EP4CE10F17C8** 上 Flow Successful，
+  纯逻辑（LE/寄存器详见最终报告）：**无 M9K、无嵌入式乘法器、无除法器**，
+  `row_buffer` 由寄存器实现；物理引脚 0、全部虚拟引脚；
+- 顶层 `maxpool_smoke_top` 为寄存器包装 + 全部 VIRTUAL_PIN，另带
+  `dbg_incnt/dbg_outcnt`（16-bit 计数）作为完成观测量；**不是最终板级顶层**。
+
+> 本阶段**保留** stem 完整 output RAM（仅用于第一阶段验证）；最终集成方案为
+> stem 的 `q_valid` 流直接进入 MaxPool、只保存 `pool1_q`（详见
+> `docs/rtl_microarchitecture.md` §9.1 / §9.6）。
+
+下一步：进入共享卷积引擎（三卷积分时复用）或 stem+MaxPool 集成前，仍需以下
+板级资料（见 §2 尚待冻结）：板载主时钟频率与引脚、复位引脚与有效电平、
+UART RX/TX 引脚、调试 LED 引脚。

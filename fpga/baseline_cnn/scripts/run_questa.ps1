@@ -1,17 +1,21 @@
 ﻿<#
 .SYNOPSIS
-  Questa golden-vector verification for the arithmetic blocks and the serial
-  stem convolution engine.
+  Questa golden-vector verification for the arithmetic blocks, the serial
+  stem convolution engine and the streaming 2x2 max-pool primitive.
 
 .DESCRIPTION
   1. vlib  -> fpga/baseline_cnn/sim/work (gitignored)
   2. vlog  -> rtl/{requantize_u8,gap_div49,arithmetic_smoke_top,
-            sync_ram_u8,sync_rom_s8,sync_rom_s32,stem_conv_serial}.v + tb/*.v
-  3. vsim  -> tb_requantize_u8     (20384 golden comparisons)
-  4. vsim  -> tb_gap_div49         (12496 exhaustive + 32-channel golden)
-  5. vsim  -> tb_stem_conv_serial  (digit8 golden: conv1_acc/stem_q stream and
-                                    output-RAM readback, 12544 x3 comparisons)
-  6. vsim  -> tb_stem_conv_padding (padding专项: tap counts / illegal addrs)
+            sync_ram_u8,sync_rom_s8,sync_rom_s32,stem_conv_serial,
+            maxpool2x2_stream}.v + tb/*.v
+  3. vsim  -> tb_requantize_u8      (20384 golden comparisons)
+  4. vsim  -> tb_gap_div49          (12496 exhaustive + 32-channel golden)
+  5. vsim  -> tb_stem_conv_serial   (digit8 golden: conv1_acc/stem_q stream
+                                     and output-RAM readback, 12544 x3 comps)
+  6. vsim  -> tb_stem_conv_padding  (padding专项: tap counts / illegal addrs)
+  7. vsim  -> tb_maxpool2x2_stream  (pool golden: continuous + gap passes,
+                                     3136 x2 comparisons + hand-recomputed
+                                     windows + gap freeze / X-Z checks)
 
   Any compile error, simulation fatal or mismatch sets a non-zero exit code.
   $readmemh paths inside the testbenches are relative to the repo root, so
@@ -71,10 +75,12 @@ $srcs = @(
     (Join-Path $rtlDir "sync_rom_s8.v"),
     (Join-Path $rtlDir "sync_rom_s32.v"),
     (Join-Path $rtlDir "stem_conv_serial.v"),
+    (Join-Path $rtlDir "maxpool2x2_stream.v"),
     (Join-Path $tbDir  "tb_requantize_u8.v"),
     (Join-Path $tbDir  "tb_gap_div49.v"),
     (Join-Path $tbDir  "tb_stem_conv_serial.v"),
-    (Join-Path $tbDir  "tb_stem_conv_padding.v")
+    (Join-Path $tbDir  "tb_stem_conv_padding.v"),
+    (Join-Path $tbDir  "tb_maxpool2x2_stream.v")
 )
 Write-Host "[run_questa] vlog -work $workRel" -ForegroundColor Cyan
 & $vlog -work $workRel $srcs 2>&1
@@ -84,7 +90,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "[run_questa] vlog failed ($LASTEXITCODE)"
 Push-Location $root
 $allOk = $true
 try {
-    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding")) {
+    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream")) {
         $logFile = Join-Path $logDir "$tb.log"
         Write-Host "[run_questa] vsim -c -work $workRel $tb (log: $logFile)" -ForegroundColor Cyan
         & $vsim -c -work $workRel -do "run -all; quit -f" -l $logFile "$tb" 2>&1

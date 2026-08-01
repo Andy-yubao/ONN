@@ -74,7 +74,21 @@
 - Questa 验证：`tb/tb_stem_conv_serial.v`（digit8 黄金，conv1_acc/stem_q 流/读回 12544×3 逐位一致）
   + `tb/tb_stem_conv_padding.v`（padding 专项：四角 4/边缘 6/中心 9 有效 tap），已并入 `run_questa.ps1`
 - Python 契约测试：`model/tests/test_stem_rtl_contract.py`（地址公式/元素数/tap 数/mult 常数/signed 解释），已并入 `run_all.ps1`
-- `run_all.ps1` 现为 7 步：工具链 → 器件 → Questa（requant/GAP/stem/padding）→ 算术 smoke → stem smoke → Python 契约 → stem 契约
+- `run_all.ps1` 当时为 7 步：工具链 → 器件 → Questa（requant/GAP/stem/padding）→ 算术 smoke → stem smoke → Python 契约 → stem 契约
+
+### 流式 MaxPool 流程（maxpool2x2_stream，2026-08-01 落地）
+
+- 独立可综合流式 `2×2 stride=2 MaxPool` 原始模块：`rtl/maxpool2x2_stream.v`
+  （直接消费 `stem_q` 流 → `pool1_q`；只存上一条偶数行 `row_buffer` 28×8；无除法/取模/乘法，
+  UINT8 比较树；oc/y/x 计数仅在 `busy && in_valid` 前进；冻结设计见 `docs/rtl_microarchitecture.md` §9）
+- Questa 验证：`tb/tb_maxpool2x2_stream.v` 两遍 golden——连续输入 + 每 5 发插 2 空拍，
+  均 3136/3136 逐位一致、空拍冻结检查、专项手工重算 5 窗口、无 X/Z，已并入 `run_questa.ps1`
+- Quartus smoke 工程：`maxpool_smoke`（`quartus/maxpool_smoke.{qpf,qsf}` 提交）；
+  由 `scripts/create_maxpool_project.tcl` 创建，`run_quartus_smoke.ps1
+  -ProjectName maxpool_smoke -CreateScript create_maxpool_project.tcl` 编译（纯逻辑，无 M9K/乘法器/除法器）
+- Python 契约测试：`model/tests/test_maxpool_rtl_contract.py`（元素数/CHW 池地址映射/窗口抽查/UINT8 范围/全量 3136 重算），已并入 `run_all.ps1`
+- `run_all.ps1` 现为 9 步：工具链 → 器件 → Questa（requant/GAP/stem/padding/maxpool）→ 算术 smoke → stem smoke → Python 契约 → stem 契约 → maxpool smoke → maxpool 契约
+- stem 输出 RAM 现阶段**保留**（仅用于第一阶段验证）；最终集成改为 stem `q_valid` 直接进 MaxPool、只保存 `pool1_q`
 
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 
