@@ -51,6 +51,16 @@
     `D:\tools\altera_lite\25.1std\questa_fse\win64\vlog.exe`
     `D:\tools\altera_lite\25.1std\questa_fse\win64\vsim.exe`
 
+### 算术 smoke 流程（requantize_u8 / gap_div49，2026-08-01 落地）
+
+- 统一入口：`fpga/baseline_cnn/scripts/run_all.ps1`
+  （工具链探测 → 器件检查 → Questa 黄金向量 → Quartus smoke 综合 → Python 契约测试）
+- 分步：`run_questa.ps1`（requant 20384 项 + GAP 穷举/黄金向量）、`run_quartus_smoke.ps1`
+  （device 检查 → 建工程 → compile → 资源/警告报告）
+- 工程与 RTL：`fpga/baseline_cnn/quartus/`（`.qpf`/`.qsf` 提交，缓存忽略）、`fpga/baseline_cnn/rtl/`
+- 顶层 `baseline_cnn_smoke_top` 为寄存器包装 + 全部 VIRTUAL_PIN（Fitter 拒绝纯组合虚拟引脚，
+  Error 171016），非最终板级顶层
+
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 
 - **目标开发板**：小梅哥 AC620

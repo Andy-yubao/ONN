@@ -1,9 +1,10 @@
 # BaselineCNN 硬件数据格式（scheme A 纯整数参考模型导出）
 
-> 适用对象：`fpga/baseline_cnn/` 参数包与 ModelSim 黄金测试向量。
+> 适用对象：`fpga/baseline_cnn/` 参数包、ModelSim 黄金测试向量与 RTL。
 > 唯一数值标准：冻结的 `Int8Reference`（`model/onn_model/int8_reference.py`）及其
 > `candidate_quant_config.json`（方案 A，per-tensor 权重）。本文件不推导任何量化公式。
-> 本阶段无 RTL、无 UART。
+> 当前 RTL 状态：算术 smoke 阶段已落地——`rtl/requantize_u8.v` 与 `rtl/gap_div49.v`
+> 已通过 Questa 黄金向量验证并在 EP4CE10F17C8 上完成综合/Fitter（无 UART，无卷积引擎）。
 
 ## 1. 整数类型与补码表示
 

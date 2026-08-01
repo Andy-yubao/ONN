@@ -55,6 +55,9 @@ incremental_db/
 *.jam
 *.jic
 *.sld
+*.pin
+*.smsg
+*.jditmp
 output_files/
 
 # ModelSim
