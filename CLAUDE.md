@@ -61,6 +61,21 @@
 - 顶层 `baseline_cnn_smoke_top` 为寄存器包装 + 全部 VIRTUAL_PIN（Fitter 拒绝纯组合虚拟引脚，
   Error 171016），非最终板级顶层
 
+### stem 卷积引擎流程（stem_conv_serial，2026-08-01 落地）
+
+- 第一版单 MAC 串行 stem 卷积引擎：`rtl/stem_conv_serial.v`
+  （实现 `input_q → stem Conv2d(1→16,3×3,pad1) → +bias → INT32 饱和 → requantize_u8 → stem_q`；
+  冻结设计见 `docs/rtl_microarchitecture.md`）
+- 同步存储模板：`rtl/sync_ram_u8.v`、`rtl/sync_rom_s8.v`、`rtl/sync_rom_s32.v`
+  （一拍延迟同步读，无厂商 IP，Quartus 推断 M9K）
+- Quartus smoke 工程：`stem_conv_smoke`（`quartus/stem_conv_smoke.{qpf,qsf}` 提交）；
+  由 `scripts/create_stem_conv_project.tcl` 创建，`run_quartus_smoke.ps1
+  -ProjectName stem_conv_smoke -CreateScript create_stem_conv_project.tcl` 编译
+- Questa 验证：`tb/tb_stem_conv_serial.v`（digit8 黄金，conv1_acc/stem_q 流/读回 12544×3 逐位一致）
+  + `tb/tb_stem_conv_padding.v`（padding 专项：四角 4/边缘 6/中心 9 有效 tap），已并入 `run_questa.ps1`
+- Python 契约测试：`model/tests/test_stem_rtl_contract.py`（地址公式/元素数/tap 数/mult 常数/signed 解释），已并入 `run_all.ps1`
+- `run_all.ps1` 现为 7 步：工具链 → 器件 → Questa（requant/GAP/stem/padding）→ 算术 smoke → stem smoke → Python 契约 → stem 契约
+
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 
 - **目标开发板**：小梅哥 AC620

@@ -18,7 +18,20 @@
 .PARAMETER QUARTUS_BIN
   Optional; overrides the default Quartus bin directory (or points straight
   at the .exe). Falls back to the frozen install path if unset.
+
+.PARAMETER ProjectName
+  Optional; the Quartus project to create/compile. Defaults to the arithmetic
+  smoke project baseline_cnn_smoke; pass "stem_conv_smoke" for the stem engine.
+
+.PARAMETER CreateScript
+  Optional; the Tcl script that creates the project. Defaults to the arithmetic
+  create_quartus_project.tcl; pass create_stem_conv_project.tcl for the stem
+  engine.
 #>
+param(
+    [string]$ProjectName  = "baseline_cnn_smoke",
+    [string]$CreateScript = "create_quartus_project.tcl"
+)
 $ErrorActionPreference = "Continue"
 
 $DEFAULT_QUARTUS_BIN = "D:\tools\altera_lite\25.1std\quartus\bin64"
@@ -44,9 +57,9 @@ if (-not $quartus_sh) { exit 1 }
 $root       = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $quartusDir = Join-Path $root "fpga\baseline_cnn\quartus"
 $scriptsDir = Join-Path $root "fpga\baseline_cnn\scripts"
-$projName   = "baseline_cnn_smoke"
+$projName   = $ProjectName
 $outDir     = Join-Path $quartusDir "output_files"
-$compileLog = Join-Path $outDir "compile.log"
+$compileLog = Join-Path $outDir "compile_$projName.log"
 
 function Test-Regex {
     param([string]$Text, [string]$Pattern)
@@ -66,10 +79,10 @@ try {
     }
 
     # ---- 2. create project ----
-    Write-Host "[quartus_smoke] 2/4 create_quartus_project.tcl" -ForegroundColor Cyan
-    & $quartus_sh -t (Join-Path $scriptsDir "create_quartus_project.tcl") 2>&1
+    Write-Host "[quartus_smoke] 2/4 $CreateScript" -ForegroundColor Cyan
+    & $quartus_sh -t (Join-Path $scriptsDir $CreateScript) 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[quartus_smoke] create_quartus_project failed ($LASTEXITCODE)" -ForegroundColor Red; exit 1
+        Write-Host "[quartus_smoke] $CreateScript failed ($LASTEXITCODE)" -ForegroundColor Red; exit 1
     }
 
     # ---- 3. compile ----

@@ -6,9 +6,12 @@
   Runs, in order:
     1. check_toolchain        (Quartus / Questa toolchain probe)
     2. check_device           (EP4CE10F17C8 recognised by Quartus)
-    3. Questa simulation      (requant 20384 + GAP exhaustive/golden vectors)
-    4. Quartus smoke compile  (project create + compile on the real device)
-    5. Python contract test   (golden vectors vs frozen Int8Reference semantics)
+    3. Questa simulation      (requant 20384 + GAP exhaustive/golden vectors
+                              + stem_conv_serial 12544 golden + padding专项)
+    4. Quartus smoke compile  (arithmetic baseline_cnn_smoke project)
+    5. Quartus stem compile   (full serial stem engine, stem_conv_smoke project)
+    6. Python contract test   (arithmetic golden vectors)
+    7. Python stem contract   (stem golden vectors / addresses / padding)
 
   Any failing step stops the run with a non-zero exit code.
 
@@ -22,16 +25,17 @@ $root     = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $scripts  = Join-Path $root "fpga\baseline_cnn\scripts"
 
 $failures = @()
+$totalSteps = 7
 
 function Invoke-Step {
     param([int]$Index, [string]$Name, [scriptblock]$Body)
-    Write-Host "`n===== [$Index/5] $Name =====" -ForegroundColor Cyan
+    Write-Host "`n===== [$Index/$totalSteps] $Name =====" -ForegroundColor Cyan
     & $Body
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[run_all] [$Index/5] $Name FAILED (exit=$LASTEXITCODE)" -ForegroundColor Red
+        Write-Host "[run_all] [$Index/$totalSteps] $Name FAILED (exit=$LASTEXITCODE)" -ForegroundColor Red
         $script:failures += $Name
     } else {
-        Write-Host "[run_all] [$Index/5] $Name OK" -ForegroundColor Green
+        Write-Host "[run_all] [$Index/$totalSteps] $Name OK" -ForegroundColor Green
     }
 }
 
@@ -55,22 +59,36 @@ Invoke-Step 3 "questa_sim" {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scripts "run_questa.ps1")
 }
 
-# ---- 4. Quartus smoke compile ----
+# ---- 4. Quartus arithmetic smoke compile ----
 Invoke-Step 4 "quartus_smoke" {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scripts "run_quartus_smoke.ps1")
 }
 
-# ---- 5. Python contract test ----
-Invoke-Step 5 "python_contract" {
+# ---- 5. Quartus stem engine smoke compile ----
+Invoke-Step 5 "quartus_stem" {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scripts "run_quartus_smoke.ps1") `
+        -ProjectName stem_conv_smoke -CreateScript create_stem_conv_project.tcl
+}
+
+# ---- 6. Python arithmetic contract test ----
+Invoke-Step 6 "python_contract" {
     $py = if (Test-Path env:ONN_PYTHON) { (Get-Item env:ONN_PYTHON).Value }
           elseif (Test-Path "D:\tools\anaconda3\envs\onn\python.exe") { "D:\tools\anaconda3\envs\onn\python.exe" }
           else { "python" }
     & $py -m pytest model\tests\test_rtl_vector_contract.py -q
 }
 
+# ---- 7. Python stem contract test ----
+Invoke-Step 7 "python_stem_contract" {
+    $py = if (Test-Path env:ONN_PYTHON) { (Get-Item env:ONN_PYTHON).Value }
+          elseif (Test-Path "D:\tools\anaconda3\envs\onn\python.exe") { "D:\tools\anaconda3\envs\onn\python.exe" }
+          else { "python" }
+    & $py -m pytest model\tests\test_stem_rtl_contract.py -q
+}
+
 Write-Host "`n=============================================" -ForegroundColor Cyan
 if ($failures.Count -eq 0) {
-    Write-Host "[run_all] ALL 5 STEPS PASSED" -ForegroundColor Green
+    Write-Host "[run_all] ALL $totalSteps STEPS PASSED" -ForegroundColor Green
     exit 0
 } else {
     Write-Host ("[run_all] FAILED STEPS: {0}" -f ($failures -join ", ")) -ForegroundColor Red
