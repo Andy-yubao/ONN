@@ -204,6 +204,24 @@ def _manual_conv2d(x, w, pad=1):
     return out
 
 
+def _manual_linear(x, w, qb):
+    """Exact integer fc: x [N, F] @ w^T [O, F] + bias [O], plain Python ints.
+
+    ``x``, ``w``, ``qb`` are nested lists / lists from ``tensor.tolist()``;
+    shapes are derived with ``len`` so the cross-check never reuses torch's matmul.
+    """
+    out = []
+    for n in range(len(x)):
+        row = []
+        for o in range(len(w)):
+            acc = 0
+            for f in range(len(w[o])):
+                acc += x[n][f] * w[o][f]
+            row.append(acc + qb[o])
+        out.append(row)
+    return out
+
+
 class TestIntegerConv:
     def test_small_hand_convolution_matches_manual(self):
         x = torch.tensor(
@@ -305,6 +323,70 @@ class TestOverflow:
         acc = check_accumulator(F.conv2d(x, w), "probe", stats)
         assert stats["overflow_count"]["probe"] == 0
         assert acc.item() == 20_000
+
+
+# ---------------------------------------------------------------------------
+#  FC (linear) accumulator: INT64 host, no INT32 wraparound
+# ---------------------------------------------------------------------------
+
+
+class TestFcAccumulator:
+    """The fc is a matmul; its accumulator must run on an INT64 host so a real
+    overflow is seen and saturated *before* any INT32 wraparound (see
+    ``Int8Reference._linear_acc``)."""
+
+    def test_fc_matches_manual_integer_dot_product(self):
+        ref = _make_reference(_fused_model())
+        # gap_q-like input [2, 32] uint8 against the model's real fc weights
+        x = torch.randint(0, 256, (2, 32), dtype=torch.uint8)
+        stats = {
+            "overflow_count": {"fc": 0},
+            "min": {"fc": float("inf")},
+            "max": {"fc": float("-inf")},
+        }
+        acc = ref._linear_acc(x, ref.wq["fc"], ref.qb["fc"], "fc", stats)
+        assert acc.dtype == torch.int32
+        assert acc.shape == (2, 10)
+        assert stats["overflow_count"]["fc"] == 0
+        manual = torch.tensor(
+            _manual_linear(x.tolist(), ref.wq["fc"].tolist(), ref.qb["fc"].tolist())
+        )
+        assert torch.equal(acc, manual)
+
+    def test_fc_overflow_saturates_without_int32_wraparound(self):
+        ref = _make_reference(_fused_model())
+        # x [2, 2] @ w^T [2, 2] + bias [2]: every dot product exceeds INT32.
+        x = torch.tensor([[2_000_000, 2_000_000], [-2_000_000, -2_000_000]], dtype=torch.int64)
+        w = torch.tensor([[2000, 0], [0, 2000]], dtype=torch.int64)
+        qb = torch.tensor([1000, -1000], dtype=torch.int64)
+        stats = {
+            "overflow_count": {"fc": 0},
+            "min": {"fc": float("inf")},
+            "max": {"fc": float("-inf")},
+        }
+        acc = ref._linear_acc(x, w, qb, "fc", stats)
+
+        # true INT64 sums before saturation
+        true_sums = torch.tensor(
+            _manual_linear(x.tolist(), w.tolist(), qb.tolist()), dtype=torch.int64
+        )
+        assert true_sums.tolist() == [
+            [4_000_001_000, 3_999_999_000],
+            [-3_999_999_000, -4_000_001_000],
+        ]
+        # every element overflows INT32
+        assert stats["overflow_count"]["fc"] == 4
+        # recorded min/max are the true pre-saturation INT64 values
+        assert stats["min"]["fc"] == -4_000_001_000.0
+        assert stats["max"]["fc"] == 4_000_001_000.0
+        # saturated to the INT32 bounds, never wrapped
+        expected = torch.tensor(
+            [[INT32_MAX, INT32_MAX], [INT32_MIN, INT32_MIN]], dtype=torch.int32
+        )
+        assert torch.equal(acc, expected)
+        # explicit no-wraparound: the INT32-wrapped values must not be returned
+        wrapped = torch.remainder(true_sums + 2**31, 2**32) - 2**31
+        assert not torch.equal(acc.to(torch.int64), wrapped)
 
 
 # ---------------------------------------------------------------------------

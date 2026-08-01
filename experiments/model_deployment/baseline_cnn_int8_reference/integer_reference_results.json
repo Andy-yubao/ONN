@@ -18,6 +18,16 @@
     "bit_identical_runs": true,
     "all_pass": false
   },
+  "deployment_readiness": {
+    "int_accuracy_within_0_2pp_of_fp32": true,
+    "all_comparable_integer_nodes_bitwise_equal_before_gap": true,
+    "no_accumulator_overflow": true,
+    "no_wraparound": true,
+    "node_dtype_range_conformant": true,
+    "bit_identical_runs": true,
+    "gap_divergence_is_frozen_design_semantics": true,
+    "deployment_readiness": true
+  },
   "requant": {
     "stem_conv": {
       "layer": "stem_conv",

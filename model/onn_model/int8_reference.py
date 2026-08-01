@@ -316,6 +316,20 @@ class Int8Reference:
         acc64 = acc64 + qb.to(torch.int64).view(1, -1, 1, 1)
         return check_accumulator(acc64, layer, stats)
 
+    def _linear_acc(
+        self, x: torch.Tensor, w: torch.Tensor, qb: torch.Tensor, layer: str, stats: Dict[str, Any]
+    ) -> torch.Tensor:
+        """Integer linear (fc): INT64 MAC host, verified + saturated to INT32.
+
+        The fc is a matmul over the flattened GAP output.  The dot product is
+        accumulated on an INT64 host so a true overflow is detected *before*
+        any INT32 wraparound could corrupt the value; ``check_accumulator``
+        then records the real pre-saturation range and saturates to INT32.
+        """
+        acc64 = x.to(torch.int64) @ w.to(torch.int64).t()
+        acc64 = acc64 + qb.to(torch.int64).view(1, -1)
+        return check_accumulator(acc64, layer, stats)
+
     # -- forward -----------------------------------------------------------
 
     @torch.no_grad()
@@ -369,14 +383,9 @@ class Int8Reference:
         gap_q = gap_q.clamp(UINT8_MIN, UINT8_MAX).to(torch.uint8)
 
         # ---- fc: UINT8 x INT8 -> INT32 logits (no requant, no dequant) ----
-        fc_acc = gap_q.to(torch.int32) @ self.wq["fc"].to(torch.int32).t()  # [N, 10]
-        fc_acc = fc_acc + self.qb["fc"].view(1, -1)
-        fc64 = fc_acc.to(torch.int64)
-        acc_stats["overflow_count"]["fc"] += int(
-            ((fc64 < INT32_MIN) | (fc64 > INT32_MAX)).sum().item()
-        )
-        acc_stats["min"]["fc"] = min(acc_stats["min"]["fc"], float(fc64.min().item()))
-        acc_stats["max"]["fc"] = max(acc_stats["max"]["fc"], float(fc64.max().item()))
+        # INT64 MAC host: a true overflow is seen before any INT32 wraparound;
+        # check_accumulator records the real range and saturates to INT32.
+        fc_acc = self._linear_acc(gap_q, self.wq["fc"], self.qb["fc"], "fc", acc_stats)
 
         prediction = fc_acc.argmax(dim=1)  # INT64
         logits = fc_acc.float() * (self.weight_scale["fc"] * self.act_scale["conv3_relu"])
