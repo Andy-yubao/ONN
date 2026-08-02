@@ -48,6 +48,7 @@ set_global_assignment -name VERILOG_INPUT_VERSION VERILOG_2001
 # in baseline_cnn_core, which instantiates every sub-block; all files are listed
 # so a single compile pass sees the whole hierarchy.
 set_global_assignment -name VERILOG_FILE ../rtl/requantize_u8.v
+set_global_assignment -name VERILOG_FILE ../rtl/requantize_u8_pipe.v
 set_global_assignment -name VERILOG_FILE ../rtl/gap_div49.v
 set_global_assignment -name VERILOG_FILE ../rtl/sync_ram_u8.v
 set_global_assignment -name VERILOG_FILE ../rtl/sync_rom_s8.v

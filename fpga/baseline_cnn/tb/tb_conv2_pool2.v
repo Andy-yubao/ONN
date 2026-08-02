@@ -118,6 +118,8 @@ module tb_conv2_pool2;
     integer busy_assn_bad;    // q_valid while pool_busy == 0
     integer illegal_addr_bad; // fm_raddr > 3135 during the run
     integer rom_ovr_bad;      // weight-ROM gating / out-of-depth read
+    integer post_bias_bad;    // ADD_BIAS edge captured pre-bias/stale S64
+    integer emit_valid_bad;   // S_EMIT and requant pipe out_valid misaligned
     integer done_count;       // pool_done pulse count (expect 1)
     integer conv_done_count;  // conv_done pulse count (expect 1)
     integer busy_cycles;      // cycles busy == 1
@@ -182,6 +184,25 @@ module tb_conv2_pool2;
                 rom_ovr_bad = rom_ovr_bad + 1;
             end
         end
+
+        // P=3 retiming invariants.  S_SAT32 holds the token captured on the
+        // preceding ADD_BIAS edge; for these frozen vectors it must equal the
+        // golden post-bias accumulator exactly (all values fit S32).  S_EMIT
+        // and the pipeline out_valid must be strictly one-to-one.
+        if (u_conv.state == 4'd4 && u_conv.token_addr < 6272 &&
+            u_conv.token_acc64 !== $signed(conv2_acc[u_conv.token_addr]))
+            post_bias_bad = post_bias_bad + 1;
+        if ((u_conv.state == 4'd7) !== u_conv.req_out_valid)
+            emit_valid_bad = emit_valid_bad + 1;
+        if (acc_valid !== ((u_conv.state == 4'd7) && u_conv.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (q_valid !== ((u_conv.state == 4'd7) && u_conv.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (!u_conv.req_out_valid &&
+            (acc_valid !== 1'b0 || q_valid !== 1'b0 ||
+             acc_addr !== 13'd0 || q_addr !== 13'd0 ||
+             acc_value !== 32'sd0 || q_value !== 8'd0))
+            emit_valid_bad = emit_valid_bad + 1;
 
         // ---- conv2 acc/q debug stream ----
         if (q_valid) begin
@@ -255,6 +276,7 @@ module tb_conv2_pool2;
         cmp_idx = 0; pool_cmp = 0; qcnt = 0; pcnt = 0;
         mismatches = 0; addr_bad = 0; pool_bad = 0; pool_addr_bad = 0;
         xz_bad = 0; busy_assn_bad = 0; illegal_addr_bad = 0; rom_ovr_bad = 0;
+        post_bias_bad = 0; emit_valid_bad = 0;
         done_count = 0; conv_done_count = 0; busy_cycles = 0; cyc = 0;
         start_cyc = 0; first_q_cyc = 0; first_pool_cyc = 0;
         conv_done_cyc = 0; pool_done_cyc = 0; done_cyc = 0;
@@ -292,16 +314,18 @@ module tb_conv2_pool2;
                  xz_bad, busy_assn_bad, illegal_addr_bad, done_count, conv_done_count, busy_cycles);
         $display("C2P2: start=%0d first_q=%0d first_pool=%0d conv_done=%0d pool_done=%0d done=%0d",
                  start_cyc, first_q_cyc, first_pool_cyc, conv_done_cyc, pool_done_cyc, done_cyc);
-        $display("C2P2: per-output=%0d (expect 146=147-1) start->done=%0d (expect 921985) busy_cycles=%0d",
-                 first_q_cyc - start_cyc, done_cyc - start_cyc, busy_cycles);
+        $display("C2P2: first-q=%0d (expect 149) start->done=%0d (expect 940801) busy_cycles=%0d post_bias_bad=%0d emit_valid_bad=%0d",
+                 first_q_cyc - start_cyc, done_cyc - start_cyc, busy_cycles,
+                 post_bias_bad, emit_valid_bad);
 
         // ---- verdict ----
         if (qcnt != 6272 || pcnt != 1568 || mismatches != 0 || addr_bad != 0 ||
             pool_bad != 0 || pool_addr_bad != 0 || xz_bad != 0 || busy_assn_bad != 0 ||
-            illegal_addr_bad != 0 || rom_ovr_bad != 0 || done_count != 1 || conv_done_count != 1 ||
+            illegal_addr_bad != 0 || rom_ovr_bad != 0 || post_bias_bad != 0 || emit_valid_bad != 0 ||
+            done_count != 1 || conv_done_count != 1 ||
             busy_cycles != done_cyc - start_cyc ||
             conv_done_cyc != pool_done_cyc || pool_done_cyc != done_cyc ||
-            first_q_cyc - start_cyc != 146 || done_cyc - start_cyc != 921985) begin
+            first_q_cyc - start_cyc != 149 || done_cyc - start_cyc != 940801) begin
             $fatal(1, "C2P2 FAILED (qcnt=%0d pcnt=%0d mism=%0d addr=%0d pool=%0d paddr=%0d xz=%0d busy=%0d ill=%0d rom=%0d done=%0d cdone=%0d)",
                    qcnt, pcnt, mismatches, addr_bad, pool_bad, pool_addr_bad,
                    xz_bad, busy_assn_bad, illegal_addr_bad, rom_ovr_bad, done_count, conv_done_count);

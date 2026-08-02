@@ -8,7 +8,7 @@
 //                                 must FAIL and show the 1010/0101 animation)
 // Both use shortened POR / display-divider parameters so the simulation shows
 // the result display without simulating real seconds (the CNN compute itself is
-// NOT shortened - each instance runs the full ~1.53 M-cycle inference).
+// NOT shortened - each instance runs the full 1,590,315-cycle inference).
 //
 // Assertions (any violation -> $fatal, non-zero vsim exit):
 //   1.  loader starts after POR and reaches the LOAD state;
@@ -20,7 +20,7 @@
 //   7.  start is a single-cycle pulse (count == 1);
 //   8.  start issued strictly after the last (784th) input write;
 //   9.  core done pulse exactly once;
-//   10. start->done cycle count matches the golden core result (1,529,163);
+//   10. start->done cycle count matches the A+ P=3 result (1,590,315);
 //   11. prediction == 8 (latched);
 //   12. selftest_pass latched 1 on the PASS instance, 0 on the FAIL instance;
 //   13. no watchdog timeout on either instance;
@@ -57,7 +57,7 @@ module tb_ac620_cnn_selftest;
         .EXPECTED_PRED      (4'd8),
         .POR_CYCLES         (8'd8),
         .DISP_DIV           (25'd4),
-        .WATCHDOG_LIMIT     (32'd2_000_000)   // > 1,529,163 run
+        .WATCHDOG_LIMIT     (32'd2_000_000)   // > 1,590,315 run
     ) u_pass (
         .clk_50m (clk_50m),
         .led     (led_pass)
@@ -212,7 +212,7 @@ module tb_ac620_cnn_selftest;
 
     // ================= whole-simulation timeout =================
     initial begin : sim_watchdog
-        // PASS+FAIL runs complete at ~1.53M cycles; display verification is a
+        // PASS+FAIL runs complete at ~1.59M cycles; display verification is a
         // few hundred more.  3M with a $fatal aborts a stuck run.
         repeat (3000000) @(posedge clk_50m);
         $display("SELFTEST TIMEOUT DEBUG: pass.state=%0d fail.state=%0d pass.busy=%b pass.done=%b pass.wd=%0d fail.wd=%0d pass.pred=%0d writes=%0d waddr_bad=%0d wdata_bad=%0d start=%0d done=%0d start->done=%0d",
@@ -270,8 +270,8 @@ module tb_ac620_cnn_selftest;
             $display("SELFTEST FAIL: start at cyc %0d not after last write cyc %0d",
                      start_cyc, last_write_cyc); ok = 0;
         end
-        if (done_cyc - start_cyc != 1529163) begin
-            $display("SELFTEST FAIL: start->done=%0d expect 1529163", done_cyc - start_cyc); ok = 0;
+        if (done_cyc - start_cyc != 1590315) begin
+            $display("SELFTEST FAIL: start->done=%0d expect 1590315", done_cyc - start_cyc); ok = 0;
         end
         if (u_pass.prediction_latched !== 4'd8) begin
             $display("SELFTEST FAIL: prediction_latched=%0d expect 8", u_pass.prediction_latched); ok = 0;

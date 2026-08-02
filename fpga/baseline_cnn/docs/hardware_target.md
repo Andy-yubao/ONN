@@ -154,7 +154,8 @@ input RAM → stem_conv_serial (STORE_OUTPUT_RAM=0) → 流式 MaxPool → pool1
   M9K 分项（Fitter 实测）：**conv2 weight ROM 8 + conv3 weight ROM 9 +
   两个 bias ROM 共享 2 + FM RAM 4 = 23 块 M9K（50%）**；两个 bias ROM 均映射
   M9K（与 stem bias 落逻辑不同）；无锁存器、无截断、无除法器/模运算器，
-  requant 64×64 乘法为唯一 DSP 消费者（9-bit 元素 9）；
+  该项为 retiming 前 conv23 smoke 结果；A+ 后完整 AC620 Fitter 实测为 9-bit
+  乘法器元素 19 / DSP blocks 11（见 §12）；
 - 本阶段**未做完整网络集成**（不接 stem_pool1_pipeline、不实现 GAP/FC/UART），
   conv2/conv3 的输入特征图由外部 FM RAM 提供（引擎驱动 `fm_raddr`）。
 
@@ -177,8 +178,7 @@ S0/S1/S2 按键引脚（板载主时钟与调试 LED 引脚已冻结，见 §10�
 - **Questa 全量验证**（`tb_baseline_cnn_core`）：digit8 完整黄金 trace 11 个节点
   全部逐位一致（12544/3136/6272/1568/1568/32/10/1），prediction=8；10 个 smoke
   样本 digit0..digit9 **无 reset 连续运行** prediction 0..9 全对、每帧 fc_acc 逐位
-  一致、每帧 done 恰一次；总周期 1,529,163（≈153 万，与理论一致，控制器过渡 5
-  周期已在报告说明）；
+  一致、每帧 done 恰一次；A+ P=3 后总周期 1,590,315（31.8063 ms @ 50 MHz）；
 - **Quartus 完整核心工程** `baseline_cnn_core_smoke` 在 **EP4CE10F17C8** 上 Flow
   Successful：LE **3,114**、寄存器 **928**、9-bit 乘法器 **19**、**M9K 29 块
   （63%）**、块内存位 160,512（38%）、物理引脚 0、虚拟引脚 69；
@@ -228,7 +228,7 @@ S0/S1/S2 按键引脚（板载主时钟与调试 LED 引脚已冻结，见 §10�
 > 本阶段不实现 UART、不将 `baseline_cnn_core` 接入板级顶层、不虚构复位引脚；
 > 完整 CNN 的板级顶层（input 装载 / 复位 / UART）留待后续阶段。
 
-## 11. 固定 digit8 CNN 板级自检（功能验证通过，50 MHz 时序阻塞，2026-08-02）
+## 11. 固定 digit8 CNN 板级自检（retiming 前基线，2026-08-02）
 
 `rtl/ac620_cnn_selftest_top.v` 是当前完整 CNN 的板级自检顶层。它仅导出
 `clk_50m` 与 `led[3:0]`：内部 POR 自动释放后，从
@@ -240,17 +240,53 @@ S0/S1/S2 按键引脚（板载主时钟与调试 LED 引脚已冻结，见 §10�
 - Questa 板级自检已通过；证据日志为
   `fpga/baseline_cnn/sim/tb_ac620_cnn_selftest.log`，其中含
   `AC620_CNN_SELFTEST_PASS ALL_PASS`。
-- `quartus/ac620_cnn_selftest` 面向 **EP4CE10F17C8** 的完整编译曾为
+- retiming 前，`quartus/ac620_cnn_selftest` 面向 **EP4CE10F17C8** 的完整编译曾为
   Flow Successful；资源为 LE **2,823**、寄存器 **962**、M9K **30**、9-bit
   乘法器 **19**、PLL **0**。相对 `baseline_cnn_core`，固定输入 ROM 额外占用
   **1 个 M9K**。
 - 顶层 QSF 只有时钟与四个 LED 共 5 个物理引脚，未使用 `VIRTUAL_PIN`；SDC 对
   `clk_50m` 施加 `20.000 ns` 时钟约束并调用 `derive_clock_uncertainty`。
-- 功能正确不等于可在 50 MHz 烧录运行：当前 STA 未收敛。Slow 85C setup slack 为
+- 该 retiming 前基线不能在 50 MHz 烧录运行：Slow 85C setup slack 为
   **-16.968 ns**，Slow 0C 为 **-13.826 ns**，Fast 0C 为 **+3.736 ns**；Slow
   85C Fmax 为 **27.05 MHz**。最差路径为
   `conv_u8_serial.acc64[42] -> gap_stream_u8.out_q_r[6]`。
-- 当前 `.sof` 仅作本地保留，**不得下载到 FPGA**；必须在独立后续阶段实施
-  retiming 后重新进行完整时序验证。UART、按键与 EPCS Flash 在本自检中均未使用。
+- 此旧 `.sof` 仅作本地历史基线，**不得下载到 FPGA**；A+ retiming 后的重新编译
+  结果见 §12。UART、按键与 EPCS Flash 在本自检中均未使用。
 - 本地 `.rpt`、`.log`、`.sof` 以及 Quartus 数据库均不是 Git 交付物；本条记录也
   不宣称完整 CNN 已在真实开发板上成功运行。
+
+## 12. A+ Requant retiming（功能与 50 MHz STA 均通过，2026-08-02）
+
+stem 与共享 conv2/conv3 的组合 requant 已替换为厂商无关的三级
+`requantize_u8_pipe`：SAT32 → signed S32×S32→S64 MUL → 固定 SHIFT 的
+ROUND_SHIFT_SAT；原 `requantize_u8.v` 保留为 oracle。ADD_BIAS 边沿显式锁存
+`acc64 + sign_extend(bias)`，地址/last 在引擎内保持，所有输出仅在
+`S_EMIT && pipe_out_valid` 有效。
+
+- stem/conv2/conv3 start→done 分别为 188,161 / 940,801 / 460,993；
+- 完整核心固定 **1,590,315 cycles = 31.8063 ms @ 50 MHz**；
+- 流水单元、conv2+pool2、conv3、conv3+GAP、stem、padding、stem+pool1、完整
+  digit8 trace、10 smoke、AC620 selftest 的 Questa 局部回归均通过；
+- digit0..9 prediction 全对，AC620 selftest prediction=8；`run_all.ps1` 14/14、
+  完整 pytest 219 passed；
+- MaxPool/GAP/FC/argmax 功能逻辑未改，三组 producer/consumer co-done 保持；
+- SDC 仍为 20.000 ns，未添加 false path 或 multicycle。
+
+唯一一次获批的 AC620 完整 Quartus 编译已执行，Flow Successful：
+
+- LE **2,933**、寄存器 **1,243**、M9K **30**、memory bits **166,784**；
+- 9-bit 乘法器元素 **19**、DSP blocks **11**、PLL **0**；
+- 物理引脚 **5**、虚拟引脚 **0**；
+- Slow 85C setup/hold **+2.274/+0.429 ns**；
+- Slow 0C setup/hold **+3.853/+0.400 ns**；
+- Fast 0C setup/hold **+12.380/+0.150 ns**；
+- 最小 Fmax **56.41 MHz**。
+
+retiming 前 `conv_u8_serial.acc64[42] → gap_stream_u8.out_q_r[6]` 的
+**-16.968 ns** 最差 setup 路径已消失；当前最差 setup 路径为 conv3 权重 ROM 地址
+寄存器到 `conv_u8_serial.acc64[63]`，仍有 **+2.274 ns** 裕量。未降低 SDC，未添加
+false path 或 multicycle。因此 RTL/STA 已满足 **50 MHz 烧录资格**。
+
+本次编译生成的 `.sof` 来自尚未提交的 dirty worktree，只作为本地验证证据；在提交前
+审查完成、形成可追溯提交并再次取得用户明确确认前，仍不得实际烧录。当前结果不宣称
+完整 CNN 已在真实 AC620 上运行。

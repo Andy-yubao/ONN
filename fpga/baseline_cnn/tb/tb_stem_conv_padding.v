@@ -60,6 +60,7 @@ module tb_stem_conv_padding;
     integer i, cyc, busy_cycles, done_count, illegal_addr;
     integer corner_acc_seen, corner_acc_ok;
     integer corner_expected;
+    integer emit_valid_bad;
 
     // monitor the DUT internals every clock edge
     always @(posedge clk) begin
@@ -97,6 +98,10 @@ module tb_stem_conv_padding;
             else
                 corner_acc_ok = corner_acc_ok + 1;
         end
+        if ((dut.state == 4'd7) !== dut.req_out_valid)
+            emit_valid_bad = emit_valid_bad + 1;
+        if (q_valid !== ((dut.state == 4'd7) && dut.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
     end
 
     // watchdog: fires $fatal if the FSM hangs (done never asserted).  The
@@ -129,6 +134,7 @@ module tb_stem_conv_padding;
 
         cyc = 0; busy_cycles = 0; done_count = 0; illegal_addr = 0;
         corner_acc_seen = 0; corner_acc_ok = 0;
+        emit_valid_bad = 0;
 
         // reset
         rst_n = 1'b0;
@@ -164,7 +170,8 @@ module tb_stem_conv_padding;
             tap_seen[0] != 9 || tap_seen[1] != 9 || tap_seen[2] != 9 || tap_seen[3] != 9 ||
             tap_seen[4] != 9 || tap_seen[5] != 9 || tap_seen[6] != 9 ||
             valid_cnt[0] != 4 || valid_cnt[1] != 4 || valid_cnt[2] != 4 || valid_cnt[3] != 4 ||
-            valid_cnt[4] != 6 || valid_cnt[5] != 6 || valid_cnt[6] != 9) begin
+            valid_cnt[4] != 6 || valid_cnt[5] != 6 || valid_cnt[6] != 9 ||
+            emit_valid_bad != 0) begin
             $fatal(1, "PAD: padding verification FAILED");
         end
 

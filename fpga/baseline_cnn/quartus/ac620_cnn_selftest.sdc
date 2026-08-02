@@ -6,7 +6,7 @@
 # keeps "Timing requirements not specified" out of the compile log and lets the
 # timing analyzer report setup/hold slack and Fmax.
 #
-# The self-test completes one ~1.53 M-cycle (30.6 ms) inference after POR, then
+# The self-test completes one 1,590,315-cycle (31.8063 ms) inference after POR, then
 # free-runs its LED display, so a single primary clock is all that is required;
 # derive_clock_uncertainty fills in realistic on-chip clock uncertainty for the
 # intra-clock transfers.

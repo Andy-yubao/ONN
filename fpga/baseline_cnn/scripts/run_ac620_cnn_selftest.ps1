@@ -7,7 +7,7 @@
   Part 1 - Questa end-to-end self-test of tb_ac620_cnn_selftest:
       real ac620_cnn_selftest_top -> baseline_cnn_core -> every sub-block,
       PASS instance (EXPECTED_PRED=8) + FAIL instance (EXPECTED_PRED=7),
-      full ~1.53 M-cycle digit-8 inference, all board-loader assertions,
+      full 1,590,315-cycle digit-8 inference, all board-loader assertions,
       prints AC620_CNN_SELFTEST_PASS.
 
   Part 2 - Quartus full board compile of ac620_cnn_selftest:
@@ -43,11 +43,23 @@
 
 .PARAMETER SkipQuesta
   Optional; set to $true to run only the Quartus part.
+
+.PARAMETER ValidateExistingReportsOnly
+  Read and validate the existing Quartus reports/SOF without invoking Questa,
+  project creation, Quartus compilation, or FPGA programming.  This mode is
+  intended for deterministic guard regression tests and engineering review.
+
+.PARAMETER ExistingReportDir
+  Optional report directory override for ValidateExistingReportsOnly.  It is
+  rejected in normal build mode and exists solely for read-only validation of
+  temporary report copies.
 #>
 param(
     [string]$ProjectName = "ac620_cnn_selftest",
     [switch]$SkipQuesta,    # pass -SkipQuesta to run only the Quartus part
-    [switch]$SkipQuartus    # pass -SkipQuartus to run only the Questa part
+    [switch]$SkipQuartus,   # pass -SkipQuartus to run only the Questa part
+    [switch]$ValidateExistingReportsOnly,
+    [string]$ExistingReportDir = ""
 )
 $ErrorActionPreference = "Continue"
 
@@ -76,31 +88,51 @@ function Test-Regex {
     return ""
 }
 
-# ---- tool resolution ----
-$quartus_sh = Resolve-Tool "QUARTUS_BIN" $DEFAULT_QUARTUS_BIN "quartus_sh.exe"
-if (-not $quartus_sh) { exit 1 }
-if (-not $SkipQuesta) {
-    $vlib = Resolve-Tool "QUESTA_BIN" $DEFAULT_QUESTA_BIN "vlib.exe"
-    $vlog = Resolve-Tool "QUESTA_BIN" $DEFAULT_QUESTA_BIN "vlog.exe"
-    $vsim = Resolve-Tool "QUESTA_BIN" $DEFAULT_QUESTA_BIN "vsim.exe"
-    if (-not $vlib -or -not $vlog -or -not $vsim) { exit 1 }
-}
-
 $root       = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $quartusDir = Join-Path $root "fpga\baseline_cnn\quartus"
 $scriptsDir = Join-Path $root "fpga\baseline_cnn\scripts"
 $rtlDir     = Join-Path $root "fpga\baseline_cnn\rtl"
 $tbDir      = Join-Path $root "fpga\baseline_cnn\tb"
 $outDir     = Join-Path $quartusDir "output_files"
-$compileLog = Join-Path $outDir "compile_$ProjectName.log"
-$sofPath    = Join-Path $quartusDir "$ProjectName.sof"
+$reportDir  = $quartusDir
+if ($ExistingReportDir -ne "") {
+    if (-not $ValidateExistingReportsOnly) {
+        Write-Host "[ac620_selftest] ERROR: ExistingReportDir requires ValidateExistingReportsOnly" -ForegroundColor Red
+        exit 1
+    }
+    if (-not (Test-Path -LiteralPath $ExistingReportDir -PathType Container)) {
+        Write-Host "[ac620_selftest] ERROR: report directory not found: $ExistingReportDir" -ForegroundColor Red
+        exit 1
+    }
+    $reportDir = (Resolve-Path -LiteralPath $ExistingReportDir).Path
+}
+$compileLog = if ($reportDir -eq $quartusDir) {
+    Join-Path $outDir "compile_$ProjectName.log"
+} else {
+    Join-Path $reportDir "compile_$ProjectName.log"
+}
+$sofPath    = Join-Path $reportDir "$ProjectName.sof"
 
 $fail = @()
+
+# ---- tool resolution (report-only mode must not touch either toolchain) ----
+if (-not $ValidateExistingReportsOnly) {
+    $quartus_sh = Resolve-Tool "QUARTUS_BIN" $DEFAULT_QUARTUS_BIN "quartus_sh.exe"
+    if (-not $quartus_sh) { exit 1 }
+    if (-not $SkipQuesta) {
+        $vlib = Resolve-Tool "QUESTA_BIN" $DEFAULT_QUESTA_BIN "vlib.exe"
+        $vlog = Resolve-Tool "QUESTA_BIN" $DEFAULT_QUESTA_BIN "vlog.exe"
+        $vsim = Resolve-Tool "QUESTA_BIN" $DEFAULT_QUESTA_BIN "vsim.exe"
+        if (-not $vlib -or -not $vlog -or -not $vsim) { exit 1 }
+    }
+} else {
+    Write-Host "[ac620_selftest] REPORT-ONLY: no Questa, project creation, Quartus compile, or FPGA programming" -ForegroundColor Cyan
+}
 
 # ============================================================ #
 # Part 1 - Questa end-to-end self-test
 # ============================================================ #
-if (-not $SkipQuesta) {
+if (-not $ValidateExistingReportsOnly -and -not $SkipQuesta) {
     Write-Host "`n===== [1/2] Questa end-to-end board self-test =====" -ForegroundColor Cyan
     $workRel  = "fpga/baseline_cnn/sim/work"       # forward slashes for Questa
     $workDir  = Join-Path $root "fpga\baseline_cnn\sim\work"
@@ -110,6 +142,7 @@ if (-not $SkipQuesta) {
 
     $srcs = @(
         (Join-Path $rtlDir "requantize_u8.v"),
+        (Join-Path $rtlDir "requantize_u8_pipe.v"),
         (Join-Path $rtlDir "gap_div49.v"),
         (Join-Path $rtlDir "sync_ram_u8.v"),
         (Join-Path $rtlDir "sync_rom_s8.v"),
@@ -141,12 +174,12 @@ if (-not $SkipQuesta) {
     } else {
         Write-Host "[ac620_selftest] Questa self-test OK (log: $logFile)" -ForegroundColor Green
     }
-} else {
+} elseif (-not $ValidateExistingReportsOnly) {
     Write-Host "[ac620_selftest] Skipping Questa part (SkipQuesta)" -ForegroundColor Yellow
 }
 
 # ---- early exit if only the Questa part was requested ----
-if ($SkipQuartus) {
+if (-not $ValidateExistingReportsOnly -and $SkipQuartus) {
     Write-Host "`n===== AC620 CNN SELFTEST QUESTA SUMMARY =====" -ForegroundColor Cyan
     if ($fail.Count -gt 0) {
         Write-Host "[ac620_selftest] Questa self-test FAILURE" -ForegroundColor Red
@@ -160,39 +193,44 @@ if ($SkipQuartus) {
 # ============================================================ #
 # Part 2 - Quartus full board compile + assertions
 # ============================================================ #
-Write-Host "`n===== [2/2] Quartus full board compile =====" -ForegroundColor Cyan
-if (-not (Test-Path $quartusDir)) { New-Item -ItemType Directory -Path $quartusDir | Out-Null }
-Push-Location $quartusDir
-try {
-    Write-Host "[ac620_selftest] 1/3 check_device.tcl" -ForegroundColor Cyan
-    & $quartus_sh -t (Join-Path $scriptsDir "check_device.tcl") 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ac620_selftest] check_device failed" -ForegroundColor Red; exit 1
-    }
+if (-not $ValidateExistingReportsOnly) {
+    Write-Host "`n===== [2/2] Quartus full board compile =====" -ForegroundColor Cyan
+    if (-not (Test-Path $quartusDir)) { New-Item -ItemType Directory -Path $quartusDir | Out-Null }
+    Push-Location $quartusDir
+    try {
+        Write-Host "[ac620_selftest] 1/3 check_device.tcl" -ForegroundColor Cyan
+        & $quartus_sh -t (Join-Path $scriptsDir "check_device.tcl") 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[ac620_selftest] check_device failed" -ForegroundColor Red; exit 1
+        }
 
-    Write-Host "[ac620_selftest] 2/3 create_ac620_cnn_selftest_project.tcl" -ForegroundColor Cyan
-    & $quartus_sh -t (Join-Path $scriptsDir "create_ac620_cnn_selftest_project.tcl") 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ac620_selftest] project creation failed" -ForegroundColor Red; exit 1
-    }
+        Write-Host "[ac620_selftest] 2/3 create_ac620_cnn_selftest_project.tcl" -ForegroundColor Cyan
+        & $quartus_sh -t (Join-Path $scriptsDir "create_ac620_cnn_selftest_project.tcl") 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[ac620_selftest] project creation failed" -ForegroundColor Red; exit 1
+        }
 
-    Write-Host "[ac620_selftest] 3/3 quartus_sh --flow compile $ProjectName" -ForegroundColor Cyan
-    if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
-    & $quartus_sh --flow compile $ProjectName 2>&1 | Tee-Object -FilePath $compileLog | Out-Null
-    $flowCode = $LASTEXITCODE
-    Write-Host "[ac620_selftest] compile exit code = $flowCode" -ForegroundColor $(if ($flowCode -eq 0) { "Green" } else { "Red" })
+        Write-Host "[ac620_selftest] 3/3 quartus_sh --flow compile $ProjectName" -ForegroundColor Cyan
+        if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
+        & $quartus_sh --flow compile $ProjectName 2>&1 | Tee-Object -FilePath $compileLog | Out-Null
+        $flowCode = $LASTEXITCODE
+        Write-Host "[ac620_selftest] compile exit code = $flowCode" -ForegroundColor $(if ($flowCode -eq 0) { "Green" } else { "Red" })
+    }
+    finally { Pop-Location }
+} else {
+    Write-Host "`n===== Existing AC620 report guard validation =====" -ForegroundColor Cyan
+    $flowCode = 0
 }
-finally { Pop-Location }
 
 # ---- report files ----
-$flowRpt   = Join-Path $quartusDir "$ProjectName.flow.rpt"
-$fitRpt    = Join-Path $quartusDir "$ProjectName.fit.rpt"
-$mapRpt    = Join-Path $quartusDir "$ProjectName.map.rpt"
-$fitSum    = Join-Path $quartusDir "$ProjectName.fit.summary"
-$mapSum    = Join-Path $quartusDir "$ProjectName.map.summary"
-$staSum    = Join-Path $quartusDir "$ProjectName.sta.summary"
-$staRpt    = Join-Path $quartusDir "$ProjectName.sta.rpt"
-$qsf       = Join-Path $quartusDir "$ProjectName.qsf"
+$flowRpt   = Join-Path $reportDir "$ProjectName.flow.rpt"
+$fitRpt    = Join-Path $reportDir "$ProjectName.fit.rpt"
+$mapRpt    = Join-Path $reportDir "$ProjectName.map.rpt"
+$fitSum    = Join-Path $reportDir "$ProjectName.fit.summary"
+$mapSum    = Join-Path $reportDir "$ProjectName.map.summary"
+$staSum    = Join-Path $reportDir "$ProjectName.sta.summary"
+$staRpt    = Join-Path $reportDir "$ProjectName.sta.rpt"
+$qsf       = Join-Path $reportDir "$ProjectName.qsf"
 
 $flowTxt = if (Test-Path $flowRpt) { Get-Content $flowRpt -Raw } else { "" }
 $fitTxt  = if (Test-Path $fitRpt)  { Get-Content $fitRpt  -Raw } else { "" }
@@ -211,6 +249,13 @@ if ($flowCode -ne 0 -or $flowStatus -ne "Successful") {
     $fail += "Flow not Successful (exit=$flowCode status='$flowStatus')"
     Write-Host "[ac620_selftest] FAIL Flow status = '$flowStatus'" -ForegroundColor Red
 } else { Write-Host "[ac620_selftest] OK  Flow = Successful" -ForegroundColor Green }
+
+# ---- 4a2. Fitter Successful ----
+$fitStatus = Test-Regex $fitSumT 'Fitter Status\s*[=:;]\s*(\S+)'
+if ($fitStatus -ne "Successful") {
+    $fail += "Fitter not Successful (status='$fitStatus')"
+    Write-Host "[ac620_selftest] FAIL Fitter status = '$fitStatus'" -ForegroundColor Red
+} else { Write-Host "[ac620_selftest] OK  Fitter = Successful" -ForegroundColor Green }
 
 # ---- 4b. device strictly EP4CE10F17C8 ----
 $device = Test-Regex $fitSumT 'Device\s*[=:;]\s*(\S+)'
@@ -275,12 +320,11 @@ if ($depthOv -gt 0) { $fail += "RAM/ROM depth overflow ($depthOv)"; Write-Host "
 else { Write-Host "[ac620_selftest] OK  No RAM/ROM depth overflow (Warning 127005 ROM-padding excluded)" -ForegroundColor Green }
 
 # ---- 4g. CNN hierarchy preserved (not optimised away) ----
-$hierNeeded = @("baseline_cnn_core", "stem_pool1_pipeline", "conv_u8_serial",
-                "maxpool2x2_stream", "gap_stream_u8", "fc_argmax_serial",
-                "u_input_rom")
+$hierNeeded = @("baseline_cnn_core", "stem_conv_serial", "conv_u8_serial",
+                "gap_stream_u8", "fc_argmax_serial", "requantize_u8_pipe")
 $hierMissing = @()
 foreach ($h in $hierNeeded) {
-    if (-not $allTxt.Contains($h)) { $hierMissing += $h }
+    if (-not $fitTxt.Contains($h)) { $hierMissing += $h }
 }
 if ($hierMissing.Count -gt 0) {
     $fail += "CNN hierarchy missing: $($hierMissing -join ',')"
@@ -301,43 +345,59 @@ $memBits = Test-Regex $fitTxt 'Total block memory bits\s*[=:;]\s*([\d,]+)'
 $implBits = Test-Regex $fitTxt 'Total block memory implementation bits\s*[=:;]\s*([\d,]+)'
 if ($implBits -ne "") { $m9k = [math]::Floor(([double]($implBits -replace ",","")) / 9216.0) } else { $m9k = "?" }
 
-# LE sanity: the bare core is 3114 LE; a "smartly optimised away" CNN would drop
-# far below that (nothing is unconnected here: prediction feeds the display).
-if ($le -ne "" -and [int]($le -replace ",","") -lt 3000) {
-    $fail += "Logic elements unexpectedly low ($le) - CNN may have been optimised away"
-    Write-Host "[ac620_selftest] FAIL LE=$le below 3000 (CNN optimised away?)" -ForegroundColor Red
-} else { Write-Host "[ac620_selftest] OK  LE sanity ($le)" -ForegroundColor Green }
+# Multi-evidence resource guard.  LE is deliberately not the preservation
+# criterion: retiming and fitter packing can legitimately move logic between
+# LEs, registers, DSP input registers and M9Ks.  The hierarchy plus the frozen
+# storage/compute lower bounds provide the real "CNN not optimised away" proof.
+$leN   = if ($le   -ne "") { [int]($le   -replace ",","") } else { -1 }
+$regsN = if ($regs -ne "") { [int]($regs -replace ",","") } else { -1 }
+$dspN  = if ($dsp  -ne "") { [int]($dsp  -replace ",","") } else { -1 }
+if ($leN -le 0) {
+    $fail += "Logic element report missing or invalid ('$le')"
+    Write-Host "[ac620_selftest] FAIL LE report invalid ('$le')" -ForegroundColor Red
+} else { Write-Host "[ac620_selftest] OK  LE reported ($leN; informational, no arbitrary 3000 threshold)" -ForegroundColor Green }
+if ($regsN -lt 900) {
+    $fail += "Register count below structural lower bound ($regsN < 900)"
+    Write-Host "[ac620_selftest] FAIL registers=$regsN below 900" -ForegroundColor Red
+} else { Write-Host "[ac620_selftest] OK  Register guard ($regsN >= 900)" -ForegroundColor Green }
+if ($m9k -eq "?" -or [int]$m9k -lt 29) {
+    $fail += "M9K count below structural lower bound ($m9k < 29)"
+    Write-Host "[ac620_selftest] FAIL M9K=$m9k below 29" -ForegroundColor Red
+} else { Write-Host "[ac620_selftest] OK  M9K guard ($m9k >= 29)" -ForegroundColor Green }
+if ($dspN -lt 19) {
+    $fail += "9-bit multiplier elements below structural lower bound ($dspN < 19)"
+    Write-Host "[ac620_selftest] FAIL 9-bit multipliers=$dspN below 19" -ForegroundColor Red
+} else { Write-Host "[ac620_selftest] OK  Multiplier guard ($dspN >= 19)" -ForegroundColor Green }
 
 # ---- 4h. every timing corner setup/hold >= 0 ----
-$cornerLines = if (Test-Path $staSum) { Get-Content $staSum } else { @() }
 $worstSetup = $null; $worstHold = $null
-$pendingKind = ""; $pendingCorner = ""
-foreach ($ln in $cornerLines) {
-    # sta.summary uses a two-line form:
-    #   Type  : Slow 1200mV 85C Model Setup 'clk_50m'
-    #   Slack : -16.968
-    $mt = [regex]::Match($ln, '^\s*Type\s*:\s*(.+?)\s(Setup|Hold)\s+[\x27]clk_50m[\x27]')
-    if ($mt.Success) {
-        $pendingKind   = $mt.Groups[2].Value
-        $pendingCorner = $mt.Groups[1].Value.Trim()
-        continue
+$timingPattern = "(?m)^\s*Type\s*:\s*([^\r\n]+?)\s+(Setup|Hold)\s+'clk_50m'\s*\r?\n\s*Slack\s*:\s*(-?[\d.]+)\s*\r?\n\s*TNS\s*:\s*(-?[\d.]+)"
+$timingMatches = [regex]::Matches($staSumT, $timingPattern)
+if ($timingMatches.Count -ne 6) {
+    $fail += "Expected exactly six setup/hold corner records, parsed $($timingMatches.Count)"
+    Write-Host "[ac620_selftest] FAIL timing corner records=$($timingMatches.Count), expect 6" -ForegroundColor Red
+}
+foreach ($tm in $timingMatches) {
+    $corner = $tm.Groups[1].Value.Trim()
+    $kind   = $tm.Groups[2].Value
+    $sl     = [double]$tm.Groups[3].Value
+    $tns    = [double]$tm.Groups[4].Value
+    Write-Host "[ac620_selftest] timing $kind | $corner | slack=$sl ns TNS=$tns ns" -ForegroundColor Gray
+    if ($kind -eq "Setup") { if ($worstSetup -eq $null -or $sl -lt $worstSetup) { $worstSetup = $sl } }
+    else { if ($worstHold -eq $null -or $sl -lt $worstHold) { $worstHold = $sl } }
+    if ($sl -lt 0) {
+        $fail += "$kind slack negative ($sl ns) at corner $corner"
+        Write-Host "[ac620_selftest] FAIL $kind slack=$sl ns at $corner" -ForegroundColor Red
     }
-    $ms = [regex]::Match($ln, '^\s*Slack\s*:\s*(-?[\d.]+)')
-    if ($ms.Success -and $pendingKind -ne "") {
-        $sl = [double]$ms.Groups[1].Value
-        Write-Host "[ac620_selftest] timing $pendingKind | $pendingCorner | slack=$sl ns" -ForegroundColor Gray
-        if ($pendingKind -eq "Setup") { if ($worstSetup -eq $null -or $sl -lt $worstSetup) { $worstSetup = $sl } }
-        else { if ($worstHold -eq $null -or $sl -lt $worstHold) { $worstHold = $sl } }
-        if ($sl -lt 0) {
-            $fail += "$pendingKind slack negative ($sl ns) at corner $pendingCorner"
-            Write-Host "[ac620_selftest] FAIL $pendingKind slack=$sl ns at $pendingCorner" -ForegroundColor Red
-        }
-        $pendingKind = ""
+    if ([math]::Abs($tns) -gt 0.0000001) {
+        $fail += "$kind TNS non-zero ($tns ns) at corner $corner"
+        Write-Host "[ac620_selftest] FAIL $kind TNS=$tns ns at $corner" -ForegroundColor Red
     }
 }
-if ($worstSetup -eq $null) {
-    Write-Host "[ac620_selftest] WARN no Setup corner lines parsed in sta.summary" -ForegroundColor Yellow
-} else { Write-Host "[ac620_selftest] worst Setup slack=$worstSetup ns, worst Hold slack=$worstHold ns" -ForegroundColor Cyan }
+if ($worstSetup -ne $null -and $worstHold -ne $null) {
+    Write-Host "[ac620_selftest] OK  Timing guard (all parsed setup/hold slack >= 0 and TNS = 0)" -ForegroundColor Green
+    Write-Host "[ac620_selftest] worst Setup slack=$worstSetup ns, worst Hold slack=$worstHold ns" -ForegroundColor Cyan
+}
 
 # ---- Fmax (from the worst setup slack against 20 ns) ----
 if ($worstSetup -ne $null) {
@@ -381,6 +441,7 @@ if (Test-Path $sofPath) {
 # ---- summary ----
 Write-Host "`n===== AC620 CNN SELFTEST SUMMARY =====" -ForegroundColor Cyan
 Write-Host "Flow        : $flowStatus"
+Write-Host "Fitter      : $fitStatus"
 Write-Host "Device      : $device"
 Write-Host "Pins        : physical=$pins virtual=$virtPins"
 Write-Host "Resources   : LE=$le regs=$regs M9K=$m9k blockMemBits=$memBits 9bitMult=$dsp PLL=$pll"
@@ -394,5 +455,9 @@ if ($fail.Count -gt 0) {
     foreach ($f in $fail) { Write-Host "  - $f" -ForegroundColor Red }
     exit 1
 }
-Write-Host "[ac620_selftest] AC620_CNN_SELFTEST_BUILD_OK" -ForegroundColor Green
+if ($ValidateExistingReportsOnly) {
+    Write-Host "[ac620_selftest] AC620_CNN_SELFTEST_REPORT_GUARDS_OK" -ForegroundColor Green
+} else {
+    Write-Host "[ac620_selftest] AC620_CNN_SELFTEST_BUILD_OK" -ForegroundColor Green
+}
 exit 0

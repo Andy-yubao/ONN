@@ -148,6 +148,7 @@ module tb_baseline_cnn_core;
     integer done_seen;        // done observed (per run)
     integer same_start_bad;   // conv2/pool2 or conv3/gap not co-started
     integer same_done_bad;    // conv2/pool2 or conv3/gap not co-done
+    integer retime_bad;       // engine EMIT / pipe out_valid misalignment
     integer cyc;              // global cycle counter
     integer start_cyc;
     integer core_done_cyc;
@@ -233,6 +234,20 @@ module tb_baseline_cnn_core;
         if (conv_layer && (u_core.u_conv.done != u_core.u_gap.done))
             same_done_bad = same_done_bad + 1;
 
+        // A+ retiming contract: neither engine may expose a state-count-only
+        // EMIT.  EMIT, pipe out_valid and both debug valids are one-to-one.
+        if ((u_core.u_stem_pipe.u_stem.state == 4'd7) !==
+            u_core.u_stem_pipe.u_stem.req_out_valid)
+            retime_bad = retime_bad + 1;
+        if (stem_q_valid !== ((u_core.u_stem_pipe.u_stem.state == 4'd7) &&
+                              u_core.u_stem_pipe.u_stem.req_out_valid))
+            retime_bad = retime_bad + 1;
+        if ((u_core.u_conv.state == 4'd7) !== u_core.u_conv.req_out_valid)
+            retime_bad = retime_bad + 1;
+        if (conv_q_valid !== ((u_core.u_conv.state == 4'd7) &&
+                              u_core.u_conv.req_out_valid))
+            retime_bad = retime_bad + 1;
+
         // ---- stage completion cycle capture ----
         if (u_core.u_stem_pipe.done && stem_done_cyc == 0) stem_done_cyc = cyc;
         if (dbg_stage == 4'd3 && conv2_start_cyc == 0)     conv2_start_cyc = cyc;
@@ -242,7 +257,7 @@ module tb_baseline_cnn_core;
         if (dbg_stage == 4'd7 && fc_start_cyc == 0)        fc_start_cyc = cyc;
         if (u_core.u_fc.done && fc_done_cyc == 0)          fc_done_cyc = cyc;
 
-        // ---- stem acc/q stream (both pulse on the same S_REQ cycle) ----
+        // ---- stem acc/q stream (both pulse on valid-qualified S_EMIT) ----
         if (stem_q_valid && golden_mode) begin
             if (s_cnt < 12544) begin
                 if (stem_acc_value !== $signed(conv1_acc[s_cnt]) ||
@@ -399,6 +414,7 @@ module tb_baseline_cnn_core;
             c3_bad = 0; c3_addr_bad = 0; g_bad = 0; g_ch_bad = 0;
             fc_bad = 0; fc_cls_bad = 0; xz_bad = 0; ill_addr_bad = 0;
             done_count = 0; stage_bad = 0; gap_bad = 0; same_start_bad = 0; same_done_bad = 0;
+            retime_bad = 0;
             start_cyc = 0; core_done_cyc = 0; stem_done_cyc = 0; conv2_start_cyc = 0;
             pool2_done_cyc = 0; conv3_start_cyc = 0; gap_done_cyc = 0; fc_start_cyc = 0; fc_done_cyc = 0;
             last_stage = -1; stage_seen = 0;
@@ -430,7 +446,11 @@ module tb_baseline_cnn_core;
             if (f_cnt != 10 || fc_bad != 0 || fc_cls_bad != 0) ok = 0;
             if (prediction !== expect_pred) ok = 0;
             if (done_count != 1 || xz_bad != 0 || ill_addr_bad != 0 ||
-                stage_bad != 0 || gap_bad != 0 || same_start_bad != 0 || same_done_bad != 0) ok = 0;
+                stage_bad != 0 || gap_bad != 0 || same_start_bad != 0 ||
+                same_done_bad != 0 || retime_bad != 0) ok = 0;
+            // Every frame has a data-independent schedule under the serial
+            // engines; explicitly assert the A+ P=3 end-to-end contract.
+            if (core_done_cyc - start_cyc != 1590315) ok = 0;
 
             $display("CORE RUN[%0d] golden=%0d s=%0d/12544 p1=%0d/3136 c2=%0d/6272 p2=%0d/1568 c3=%0d/1568 g=%0d/32 f=%0d/10 pred=%0d (expect %0d)",
                      run_no, golden_mode, s_cnt, p1_cnt, c2_cnt, p2_cnt, c3_cnt, g_cnt, f_cnt, prediction, expect_pred);
@@ -439,6 +459,8 @@ module tb_baseline_cnn_core;
                      p2_bad, p2_addr_bad, c3_bad, c3_addr_bad, g_bad, g_ch_bad, fc_bad, fc_cls_bad, xz_bad, ill_addr_bad);
             $display("CORE RUN[%0d] status done=%0d stage_bad=%0d gap_bad=%0d same_start=%0d same_done=%0d",
                      run_no, done_count, stage_bad, gap_bad, same_start_bad, same_done_bad);
+            $display("CORE RUN[%0d] retime_bad=%0d start->done=%0d (expect 1590315)",
+                     run_no, retime_bad, core_done_cyc - start_cyc);
             if (golden_mode) begin
                 $display("CORE RUN[%0d] cycles start->stem_done=%0d conv2_start->pool2_done=%0d conv3_start->gap_done=%0d fc_start->fc_done=%0d start->core_done=%0d",
                          run_no, stem_done_cyc - start_cyc, pool2_done_cyc - conv2_start_cyc,

@@ -144,7 +144,8 @@
   -ProjectName conv23_smoke -CreateScript create_conv23_project.tcl` 编译
 - conv23 smoke M9K 分项（Fitter 实测）：**conv2 weight ROM 8 + conv3 weight ROM 9
   + 两个 bias ROM 共享 2 + FM RAM 4 = 23 块（50%）**；无 latch、无截断、无除法器/
-  模运算器，requant 64×64 乘法为唯一 DSP 消费者（9-bit 元素 9）
+  模运算器；该 9-bit 元素 9 为 retiming 前 conv23 smoke 结果，A+ 后完整 AC620
+  Fitter 实测为 9-bit 元素 19 / DSP blocks 11（见本文件 A+ 小节）
 - **修复（2026-08-02）**：未选权重 ROM 地址按层门控（`wt2_read = issuing &&
   !layer`、`wt3_read = issuing && layer`，conv3 运行期 conv2 ROM 地址原可达 4751
   超深 4608，现固定 0）；multiplier hex 注释勘误为 `32'h416335B9`/`32'h4D6CC8EC`
@@ -195,8 +196,8 @@
 - Questa 验证：`tb/tb_baseline_cnn_core.v` —— digit8 完整黄金 trace 11 节点全部
   逐位一致（12544/3136/6272/1568/1568/32/10/1，prediction=8）+ **10 smoke 样本
   digit0..digit9 无 reset 连续运行**（prediction 0..9 全对、每帧 fc_acc 逐位一致、
-  每帧 done 恰一次）；总周期 **1,529,163**（≈153 万，理论 150529+921985+456289
-  +351+5 控制器过渡，实测一致）；已并入 `run_questa.ps1`
+  每帧 done 恰一次）；A+ P=3 后总周期 **1,590,315**（旧值 1,529,163 +
+  20,384×3，50 MHz 下 31.8063 ms），实测一致；已并入 `run_questa.ps1`
 - Quartus smoke 工程：`baseline_cnn_core_smoke`（`quartus/baseline_cnn_core_smoke.
   {qpf,qsf}` 提交）；由 `scripts/create_full_core_project.tcl` 创建，
   `run_quartus_smoke.ps1 -ProjectName baseline_cnn_core_smoke -CreateScript
@@ -210,6 +211,27 @@
   maxpool/集成/conv2-pool2/conv3/GAP流/FC/完整核心）→ 算术 smoke → stem smoke →
   Python 契约 → stem 契约 → maxpool smoke → maxpool 契约 → 集成 smoke → conv23
   smoke → conv23 契约 → 完整核心 smoke → 完整核心契约
+
+### A+ Requant 三级流水化（2026-08-02，50 MHz STA 通过）
+
+- 新增 `rtl/requantize_u8_pipe.v`：固定 SAT32→S32×S32→S64 MUL→
+  ROUND_SHIFT_SAT 三级；原 `requantize_u8.v` 不变并保留为 oracle
+- stem/conv 在 ADD_BIAS 离开沿显式锁存 `acc64 + sign_extend(bias)` 及地址/last；
+  EMIT、pipe out_valid、acc/q valid/data/address 严格同周期
+- 周期：stem 188161（first q 14）、conv2 940801（first q 149）、conv3 460993
+  （first q 293）、完整核心 1590315；三组 pool/GAP co-done 保持
+- 局部 Questa：流水 requant、conv2+pool2、conv3、conv3+GAP、stem、padding、
+  stem+pool1、完整核心 digit8+10 smoke、AC620 selftest（prediction=8）均通过
+- `run_all.ps1` 14/14、完整 pytest 219 passed（1 条既有 PyTorch FutureWarning）
+  均通过；未新增 false path 或 multicycle，SDC 仍为 20.000 ns
+- 唯一一次 AC620 完整编译 Flow Successful：LE 2,933、寄存器 1,243、M9K 30、
+  memory bits 166,784、9-bit 乘法器 19、DSP blocks 11、PLL 0、物理/虚拟引脚 5/0
+- STA setup/hold：Slow 85C +2.274/+0.429 ns、Slow 0C +3.853/+0.400 ns、Fast 0C
+  +12.380/+0.150 ns；最小 Fmax 56.41 MHz。retiming 前 `acc64[42] → GAP out_q[6]`
+  的 -16.968 ns 长路径已消失；新最差 setup 为 conv3 权重 ROM 地址寄存器到
+  `conv_u8_serial.acc64[63]`
+- 设计已满足 50 MHz 时序烧录资格，但当前 `.sof` 来自未提交的 dirty worktree，
+  仅作本地验证产物；提交前审查和用户再次确认前不得烧录，也不宣称已在真板运行
 
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 

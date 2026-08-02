@@ -284,3 +284,34 @@ def test_full_pool2_recompute_matches_golden() -> None:
                 got = max(window)
                 assert got == pool2_q[idx], (
                     f"pool2_q[{idx}] oc={oc} py={py} px={px}: got {got}, golden {pool2_q[idx]}")
+
+
+def test_conv_p3_requant_and_emit_contract() -> None:
+    """Shared conv captures explicit post-bias S64 and valid-qualifies EMIT."""
+    src = (REPO_ROOT / "fpga" / "baseline_cnn" / "rtl" /
+           "conv_u8_serial.v").read_text(encoding="utf-8")
+    assert "wire signed [63:0] post_bias_acc64 = acc64 + bias64_w;" in src
+    assert "token_acc64 <= post_bias_acc64;" in src
+    assert "requantize_u8_pipe #(.SHIFT(CONV_SHIFT)) u_req_pipe" in src
+    assert "req_in_valid = (state == S_SAT32)" in src
+    assert "wire emit_valid = (state == S_EMIT) && req_out_valid;" in src
+    assert "acc_valid = emit_valid" in src
+    assert "q_valid   = emit_valid" in src
+    assert "acc_addr  = emit_valid ? token_addr : 13'd0" in src
+    assert "q_addr    = emit_valid ? token_addr : 13'd0" in src
+    for name, value in (("S_SAT32", 4), ("S_MUL", 5),
+                        ("S_ROUND_SHIFT_SAT", 6), ("S_EMIT", 7), ("S_DONE", 8)):
+        assert f"localparam {name}" in src and f"4'd{value}" in src
+
+    tb2 = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+           "tb_conv2_pool2.v").read_text(encoding="utf-8")
+    tb3 = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+           "tb_conv3_serial.v").read_text(encoding="utf-8")
+    tb_gap = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+              "tb_conv3_gap.v").read_text(encoding="utf-8")
+    assert "first_q_cyc - start_cyc != 149" in tb2 and "940801" in tb2
+    assert "first_q_cyc - start_cyc == 293" in tb3 and "460993" in tb3
+    assert "C3GAP_ALL_PASS" in tb_gap and "last_gap_cyc != last_q_cyc + 1" in tb_gap
+    assert "post_bias_bad" in tb2 + tb3 + tb_gap
+    assert "emit_valid_bad" in tb2 + tb3 + tb_gap
+    assert "!u_conv.req_out_valid" in tb2 and "!u_conv.req_out_valid" in tb3

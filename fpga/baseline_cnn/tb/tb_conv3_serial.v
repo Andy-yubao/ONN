@@ -17,8 +17,8 @@
 //   6. pass 1 records every output; pass 2 (full reset + rerun) must be
 //      bit-identical to pass 1
 //
-// Cycle budget: per-output 1+288+1+1 = 291 (Cin=32); first q at start+290;
-// start->done = 1568*291 + 1 = 456289 (the +1 is the S_DONE cycle; the done
+// Cycle budget: per-output 1+288+1+4 = 294 (Cin=32); first q at start+293;
+// start->done = 1568*294 + 1 = 460993 (the +1 is the S_DONE cycle; the done
 // pulse itself is the cycle after busy drops).
 //
 // Any mismatch prints the first 20 failures and terminates with $fatal (non-zero
@@ -90,6 +90,8 @@ module tb_conv3_serial;
     integer xz_bad;          // X/Z on the streams / status
     integer illegal_addr_bad;// fm_raddr > 1567 during the run
     integer rom_ovr_bad;     // weight-ROM gating / out-of-depth read
+    integer post_bias_bad;   // ADD_BIAS edge captured pre-bias/stale S64
+    integer emit_valid_bad;  // S_EMIT and requant pipe out_valid misaligned
     integer cross_bad;       // pass 2 output != pass 1 output
     integer done_count;      // done pulse count (expect 1)
     integer busy_cycles;     // cycles busy == 1
@@ -151,6 +153,21 @@ module tb_conv3_serial;
             end
         end
 
+        if (u_conv.state == 4'd4 && u_conv.token_addr < 1568 &&
+            u_conv.token_acc64 !== $signed(conv3_acc[u_conv.token_addr]))
+            post_bias_bad = post_bias_bad + 1;
+        if ((u_conv.state == 4'd7) !== u_conv.req_out_valid)
+            emit_valid_bad = emit_valid_bad + 1;
+        if (acc_valid !== ((u_conv.state == 4'd7) && u_conv.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (q_valid !== ((u_conv.state == 4'd7) && u_conv.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (!u_conv.req_out_valid &&
+            (acc_valid !== 1'b0 || q_valid !== 1'b0 ||
+             acc_addr !== 13'd0 || q_addr !== 13'd0 ||
+             acc_value !== 32'sd0 || q_value !== 8'd0))
+            emit_valid_bad = emit_valid_bad + 1;
+
         // conv3 acc/q stream
         if (q_valid) begin
             qcnt = qcnt + 1;
@@ -208,6 +225,7 @@ module tb_conv3_serial;
             passid = passno - 1;
             cmp_idx = 0; qcnt = 0; mismatches = 0; addr_bad = 0;
             xz_bad = 0; illegal_addr_bad = 0; rom_ovr_bad = 0; cross_bad = 0;
+            post_bias_bad = 0; emit_valid_bad = 0;
             done_count = 0; busy_cycles = 0; cyc = 0;
             start_cyc = 0; first_q_cyc = 0; done_cyc = 0;
 
@@ -237,12 +255,14 @@ module tb_conv3_serial;
             $display("C3 PASS[%0d] start=%0d first_q=%0d done=%0d per-output=%0d start->done=%0d busy_cycles=%0d",
                      passno, start_cyc, first_q_cyc, done_cyc,
                      first_q_cyc - start_cyc, done_cyc - start_cyc, busy_cycles);
+            $display("C3 PASS[%0d] post_bias_bad=%0d emit_valid_bad=%0d", passno, post_bias_bad, emit_valid_bad);
 
             ok = (qcnt == 1568 && mismatches == 0 && addr_bad == 0 &&
                   xz_bad == 0 && illegal_addr_bad == 0 && rom_ovr_bad == 0 && cross_bad == 0 &&
+                  post_bias_bad == 0 && emit_valid_bad == 0 &&
                   done_count == 1 && busy_cycles > 0 &&
                   busy_cycles == done_cyc - start_cyc &&
-                  first_q_cyc - start_cyc == 290 && done_cyc - start_cyc == 456289);
+                  first_q_cyc - start_cyc == 293 && done_cyc - start_cyc == 460993);
             if (!ok)
                 $fatal(1, "C3 PASS[%0d] FAILED (qcnt=%0d mism=%0d addr=%0d xz=%0d ill=%0d rom=%0d cross=%0d done=%0d)",
                        passno, qcnt, mismatches, addr_bad, xz_bad, illegal_addr_bad, rom_ovr_bad, cross_bad, done_count);

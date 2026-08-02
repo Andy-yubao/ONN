@@ -36,7 +36,7 @@
 //   - done is accepted exactly once; prediction is latched on that cycle.
 //   - The self-test runs ONCE per power-up (single-shot, no looping).
 //   - A watchdog aborts a stuck inference into the FAIL display; the limit is
-//     far above the 1,529,163-cycle digit-8 run.
+//     far above the 1,590,315-cycle digit-8 run.
 //   - Register power-up initialization is used ONLY for the POR counter /
 //     rst_n (declared with an initial value); Quartus synthesises this as a
 //     deterministic power-up state.  Every other register is reset by rst_n.
@@ -75,7 +75,7 @@ module ac620_cnn_selftest_top #(
     parameter POR_W              = 8,        // POR counter width (>= log2(POR_CYCLES+1))
     parameter DISP_DIV           = 25'd12_500_000, // 0.25 s per display half-period
     parameter DISP_W             = 25,       // display divider width
-    parameter WATCHDOG_LIMIT     = 32'd5_000_000, // 100 ms @50 MHz (>> 1.53 M run)
+    parameter WATCHDOG_LIMIT     = 32'd5_000_000, // 100 ms @50 MHz (>> 1.590315 M run)
     parameter WATCHDOG_W         = 32        // watchdog counter width
 ) (
     input  wire       clk_50m,

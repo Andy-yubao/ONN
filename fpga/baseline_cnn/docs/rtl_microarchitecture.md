@@ -108,7 +108,7 @@ IDLE ──start──▶ PROLOGUE ──▶ ACC ──(tap==8)──▶ ADD_BIA
 
 - 每输出元素：PROLOGUE 1 + ACC 9 + ADD_BIAS 1 + REQ 1 = **12 周期**；
 - 全图 12544 输出 = 150,528 周期（compute）+ 1（S_DONE 状态周期）= **150,529**；
-  `busy` 覆盖 S_DONE，故 `busy_cycles == done 周期 − start 周期 == 150529`；
+  `busy` 覆盖 S_DONE；A+ P=3 后 `busy_cycles == done 周期 − start 周期 == 188161`；
 - 单 MAC lane、单输出串行，此为正确性优先的第一版，不追求吞吐。
 
 ## 7. 同步存储约定
@@ -328,7 +328,7 @@ done = maxpool_done              # 完成条件以 maxpool_done 为准
 - **busy**：状态信号，非背压。`busy = stem_busy || maxpool_busy`；
   `maxpool_busy` 在 `stem_q_valid` 期间必须恒为 1（仿真断言）。
 - **done**：`done = maxpool_done`。实测 `stem_done` 与 `maxpool_done` **同周期**
-  触发（stem 的 S_DONE 紧跟最后一个 S_REQ，MaxPool 的 S_DONE 紧跟最后一个
+  触发（stem 的 S_DONE 紧跟最后一个 valid-qualified S_EMIT，MaxPool 的 S_DONE 紧跟最后一个
   输入消费），但完成条件以 `maxpool_done` 为准。最后一个 pool1 写入在
   `maxpool_done` 前一周期完成，故 done 后可安全读回全部 3136 项。
 - **busy 期间额外 start 被忽略**（stem 与 MaxPool 的 FSM 均只在 IDLE 响应 start）。
@@ -339,9 +339,9 @@ done = maxpool_done              # 完成条件以 maxpool_done 为准
 |---|---|
 | start → 第一项 stem_q | 11 |
 | start → 第一项 pool1_q | 360 |
-| start → 最终 done | 150529 |
-| busy 总周期 | 150529 |
-| stem_done 与 maxpool_done | 同周期（均落在 start+150529） |
+| start → 最终 done | 188161 |
+| busy 总周期 | 188161 |
+| stem_done 与 maxpool_done | 同周期（均落在 start+188161） |
 
 `150528 = 12544 × 12`（stem 每输出 12 周期）为 compute 周期，另 +1 为 S_DONE
 状态周期；**busy 覆盖 S_DONE**，故 `busy_cycles == done 周期 − start 周期`。
@@ -402,7 +402,7 @@ conv3 (layer_sel=1): pool2_q 32×7×7  → Conv2d 32→32,3×3,pad1 → conv3_q 
 | 权重（SINT8，OIHW） | 32×16×3×3 = 4608 | 32×32×3×3 = 9216 |
 | bias（SINT32） | 32 | 32 |
 | 输出（CHW） | conv2_q 32×14×14（6272） | conv3_q 32×7×7（1568） |
-| requant multiplier | 1097020857（0x4162F7B9） | 1298974956（0x4D6C5DEC） |
+| requant multiplier | 1097020857（0x416335B9） | 1298974956（0x4D6CC8EC） |
 | requant shift | 38 | 38 |
 
 ### 11.2 接口与连接（冻结）
@@ -465,10 +465,10 @@ q       = requantize_u8(acc32, layer_mult, 38)
 
 | 层 | 每输出周期 | 首项 q | start → done | busy 总周期 |
 |---|---|---|---|---|
-| conv2 | 1+144+1+1 = **147**（16×9+3） | 146 | **921985** | 921985 |
-| conv3 | 1+288+1+1 = **291**（32×9+3） | 290 | **456289** | 456289 |
+| conv2 | 1+144+1+4 = **150** | 149 | **940801** | 940801 |
+| conv3 | 1+288+1+4 = **294** | 293 | **460993** | 460993 |
 
-`6272×147 + 1 = 921985`、`1568×291 + 1 = 456289`（+1 为 S_DONE 状态周期；done
+`6272×150 + 1 = 940801`、`1568×294 + 1 = 460993`（+1 为 S_DONE 状态周期；done
 脉冲在其后一周期，busy 覆盖 S_DONE 故 `busy_cycles == done − start`）。conv2 与
 conv3 的固定首尾开销即这 1 个 S_DONE 周期。
 
@@ -510,9 +510,8 @@ M9K 分项（Fitter RAM Summary，最终数字以此为准）：
 - 总内存位 137,728 = 36864+73728+1024+1024+25088；
 - **无锁存器、无截断**（0 条 Warning 10230）、无实际 signed 警告（20 条匹配均为
   LPM 参数显示）、**无除法器/模运算器**；
-- requantize_u8 的 64×64 乘法为唯一的嵌入式乘法器消费者（MAP 9-bit 元素 9），
-  是最大的组合逻辑块（requant 层次 ~252 LE）；本阶段未加时钟约束（板载时钟未
-  冻结），Fitter 未做时序收敛分析（"Timing requirements not specified"）。
+- 该表对应 retiming 前资源；A+ 后改为明确 S32×S32→S64 流水乘法，完整 AC620
+  Fitter 实测为 9-bit 乘法器元素 19 / DSP blocks 11（见 §15.4）；
 
 ### 11.8 引擎修复（2026-08-02，集成前置）
 
@@ -640,15 +639,15 @@ done 周期 busy 可为 0；prediction 在 done 时有效并保持到下次 star
 
 | 段 | 周期 |
 |---|---|
-| start → stem_done | 150,530 |
-| conv2_start → pool2_done | 921,986 |
-| conv3_start → gap_done | 456,290 |
+| start → stem_done | 188,162 |
+| conv2_start → pool2_done | 940,802 |
+| conv3_start → gap_done | 460,994 |
 | fc_start → fc_done | 352 |
-| start → core_done | **1,529,163** |
+| start → core_done | **1,590,315** |
 
-各子块比理论值（150,529 / 921,985 / 456,289 / 351）多 1 为 start 周期计数约定；
-总周期比四段之和（1,529,158）多 5 = STEM_START / CONV2_START / CONV3_START /
-FC_START / DONE 五个控制器过渡状态周期。理论约 153 万周期，实测一致。
+各子块比理论值（188,161 / 940,801 / 460,993 / 351）多 1 为控制器阶段计数口径。
+端到端值相对旧设计精确增加 `20,384 × 3 = 61,152` 周期：
+`1,529,163 + 61,152 = 1,590,315`；50 MHz 下为 **31.8063 ms**。
 
 ### 14.5 验证（tb_baseline_cnn_core）
 
@@ -692,3 +691,90 @@ M9K 分项（Fitter RAM Summary，最终数字以此为准）：
 - **无除法器/模运算器**；无厂商 IP；
 - 本阶段仍未加时钟约束（板载时钟未冻结），Fitter 未做时序收敛
   （"Timing requirements not specified"）。
+
+## 15. A+ Requant 三级流水化（P=3，2026-08-02）
+
+为切断 AC620 50 MHz 下的 `acc64 → requant → pool/GAP` 长组合路径，stem 与共享
+conv2/conv3 引擎改用厂商无关的 `rtl/requantize_u8_pipe.v`。原组合
+`rtl/requantize_u8.v` 保留不变，继续作为 20,384 项 bit-exact oracle。
+
+### 15.1 固定三级边界与数值语义
+
+```text
+SAT32                  MUL                         ROUND_SHIFT_SAT
+S64 post-bias ─reg→ S32 × S32 signed ─reg→ S64 ─reg→ magnitude round/shift/U8 sat
+```
+
+- `SHIFT` 是编译期参数（stem/conv 均为 38），不是运行时输入；
+- multiplier 与 token 在 SAT32 同拍锁存；只推断一个明确的 S32×S32→S64 乘法；
+- 负积先取 magnitude，加 half 后逻辑右移，再恢复符号，禁止直接对负数 `>>>`；
+- acc32 伴随 MUL/ROUND 两级前推，与 q 在同一 out_valid token 输出；
+- `rst_n` 清空全部 valid，数据寄存器无 valid 时保持；可连续每拍接受 token；
+- 单元 TB 覆盖 20,384 黄金 token、连续 token、伪随机空拍、中途 reset、正负
+  multiplier、INT32 上下界、负 half 边界及 SHIFT=0，结果 `REQUANT_PIPE_ALL_PASS`。
+
+### 15.2 引擎 token 与 FSM
+
+stem/conv 均采用：
+
+```text
+IDLE → PROLOGUE → MAC/ACC → ADD_BIAS
+     → SAT32 → MUL → ROUND_SHIFT_SAT → EMIT → PROLOGUE/DONE
+```
+
+离开 ADD_BIAS 的边沿锁存：
+
+```verilog
+bias64_w          = sign_extend_32_to_64(bias_rdata);
+post_bias_acc64   = acc64 + bias64_w;
+token_acc64      <= post_bias_acc64;
+token_addr/last  <= current_addr/last_output;
+```
+
+因此不会因同一 always 块中的非阻塞赋值而误用加 bias 前的旧 acc64。通用 requant
+模块不携带 metadata；地址/last 在引擎内保持到 EMIT。EMIT、pipe out_valid、
+acc_valid、q_valid、acc/q/address 严格同周期；若 pipe valid 未到，FSM 停留 EMIT，
+不推进坐标、不写 RAM。无效周期的 acc/q valid、data 和 address 全部钳为 0，局部 TB
+同时断言 EMIT 必须与 pipe out_valid 一一对应且无效周期不得泄漏旧 token。stem 的
+`STORE_OUTPUT_RAM=1` 也只在 valid-qualified EMIT 写入。
+
+最后一个 EMIT 的 q 被 MaxPool/GAP 在同一边沿消费，producer 与 consumer 同时进入
+S_DONE，下一周期仍保持 stem/pool1、conv2/pool2、conv3/GAP co-done。
+
+### 15.3 P=3 周期与功能回归
+
+| 引擎 | first q | start→done | 公式 |
+|---|---:|---:|---|
+| stem | 14 | 188,161 | `12544 × (1+9+1+4) + 1` |
+| conv2 | 149 | 940,801 | `6272 × (1+144+1+4) + 1` |
+| conv3 | 293 | 460,993 | `1568 × (1+288+1+4) + 1` |
+| 完整核心 | — | **1,590,315** | `1,529,163 + 20,384×3` |
+
+局部 Questa 已通过流水 requant、conv2+pool2、conv3 两遍、真实 conv3+GAP、stem
+两遍、padding、stem+pool1 两遍；完整核心 digit8 11 节点与无 reset 连续 digit0..9
+全部通过；板级 loader/prediction/LED 自检确认 prediction=8 并输出
+`AC620_CNN_SELFTEST_PASS ALL_PASS`。此外 `run_all.ps1` 14/14、完整 pytest 219 passed。
+
+### 15.4 资源、STA 与下载状态
+
+唯一一次 AC620 Quartus 25.1std 完整编译已完成，Flow Successful。实测资源为：
+
+- LE 2,933、寄存器 1,243、M9K 30、memory bits 166,784；
+- 9-bit 乘法器元素 19、DSP blocks 11、PLL 0；
+- 物理引脚 5、虚拟引脚 0。
+
+20.000 ns 约束下所有分析 corner 均通过，setup/hold 分别为：Slow 85C
+`+2.274/+0.429 ns`、Slow 0C `+3.853/+0.400 ns`、Fast 0C
+`+12.380/+0.150 ns`；最小 Fmax 为 **56.41 MHz**。retiming 前 Slow 85C 的
+`conv_u8_serial.acc64[42] → gap_stream_u8.out_q_r[6]`、`-16.968 ns` 长路径已
+消失；新最差 setup 路径为 conv3 权重 ROM 地址寄存器到
+`conv_u8_serial.acc64[63]`，slack `+2.274 ns`。
+
+因此该实现已达到 **50 MHz timing-qualified**。编译生成的 `.sof` 来自尚未提交的
+dirty worktree，只作为本地工程验证证据，不是正式可追溯烧录件；提交前审查完成并
+再次获得用户明确确认前不得 JTAG 下载。本记录不宣称已在真实 AC620 上运行。
+
+收尾后的 `run_ac620_cnn_selftest.ps1 -ValidateExistingReportsOnly` 可在不调用 Questa、
+Quartus compile 或 Programmer 的情况下复核现有报告：要求 Flow Successful、关键层级
+（含 `requantize_u8_pipe`）、资源下界、六条 setup/hold 且 slack 非负/TNS 为 0，以及
+非空 SOF。缺层级、M9K/DSP 降低或负 setup 的副本负向用例均能以非零退出。

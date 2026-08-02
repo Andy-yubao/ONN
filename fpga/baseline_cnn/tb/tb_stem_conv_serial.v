@@ -59,6 +59,9 @@ module tb_stem_conv_serial;
     integer start_cyc, done_cyc;
     integer readback_bad;   // output RAM readback mismatches
     integer busy_gap_bad;   // busy dropped to 0 before done (protocol violation)
+    integer post_bias_bad;  // ADD_BIAS edge captured pre-bias/stale S64
+    integer emit_valid_bad; // S_EMIT and pipe out_valid misaligned
+    integer first_q_cyc;
     reg     run_active;     // 1 between start and done (per-run)
 
     integer i;
@@ -91,6 +94,7 @@ module tb_stem_conv_serial;
         end
         if (q_valid) begin
             qcnt = qcnt + 1;
+            if (qcnt == 1) first_q_cyc = cyc;
             if (cmp_idx < 12544) begin
                 if (acc_value !== $signed(conv1_acc[cmp_idx]) ||
                     q_value    !== stem_q[cmp_idx]) begin
@@ -109,6 +113,20 @@ module tb_stem_conv_serial;
                 cmp_idx = cmp_idx + 1;
             end
         end
+        if (dut.state == 4'd4 && dut.token_addr < 12544 &&
+            dut.token_acc64 !== $signed(conv1_acc[dut.token_addr]))
+            post_bias_bad = post_bias_bad + 1;
+        if ((dut.state == 4'd7) !== dut.req_out_valid)
+            emit_valid_bad = emit_valid_bad + 1;
+        if (acc_valid !== ((dut.state == 4'd7) && dut.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (q_valid !== ((dut.state == 4'd7) && dut.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (!dut.req_out_valid &&
+            (acc_valid !== 1'b0 || q_valid !== 1'b0 ||
+             acc_addr !== 14'd0 || q_addr !== 14'd0 ||
+             acc_value !== 32'sd0 || q_value !== 8'd0))
+            emit_valid_bad = emit_valid_bad + 1;
     end
 
     initial begin
@@ -125,6 +143,7 @@ module tb_stem_conv_serial;
         cmp_idx = 0; mismatches = 0; addr_bad = 0; qcnt = 0;
         done_count = 0; busy_cycles = 0; cyc = 0; readback_bad = 0;
         busy_gap_bad = 0; run_active = 1'b0;
+        post_bias_bad = 0; emit_valid_bad = 0; first_q_cyc = 0;
 
         // ---- 1. reset ----
         rst_n = 1'b0;
@@ -172,10 +191,13 @@ module tb_stem_conv_serial;
         $display("STEM RUN1: output RAM readback mismatches=%0d / 12544", readback_bad);
         $display("STEM RUN1: done_count=%0d busy_cycles=%0d busy_gap_bad=%0d", done_count, busy_cycles, busy_gap_bad);
         $display("STEM RUN1: start_cyc=%0d done_cyc=%0d total_cycles=%0d", start_cyc, done_cyc, done_cyc - start_cyc);
+        $display("STEM RUN1: first_q=%0d post_bias_bad=%0d emit_valid_bad=%0d", first_q_cyc-start_cyc, post_bias_bad, emit_valid_bad);
 
         if (mismatches != 0 || addr_bad != 0 || qcnt != 12544 ||
             done_count != 1 || readback_bad != 0 || busy_gap_bad != 0 ||
-            busy_cycles != done_cyc - start_cyc || busy_cycles == 0) begin
+            busy_cycles != done_cyc - start_cyc || busy_cycles == 0 ||
+            first_q_cyc-start_cyc != 14 || done_cyc-start_cyc != 188161 ||
+            post_bias_bad != 0 || emit_valid_bad != 0) begin
             $fatal(1, "STEM RUN1: %0d mismatches, %0d addr bad, qcnt=%0d, done=%0d, readback=%0d, busy_gap=%0d",
                    mismatches, addr_bad, qcnt, done_count, readback_bad, busy_gap_bad);
         end
@@ -188,6 +210,7 @@ module tb_stem_conv_serial;
         cmp_idx = 0; mismatches = 0; addr_bad = 0; qcnt = 0;
         done_count = 0; busy_cycles = 0; cyc = 0; readback_bad = 0;
         busy_gap_bad = 0; run_active = 1'b0;
+        post_bias_bad = 0; emit_valid_bad = 0; first_q_cyc = 0;
 
         start = 1'b1;
         @(posedge clk);
@@ -211,10 +234,13 @@ module tb_stem_conv_serial;
         $display("STEM RUN2: q_valid_pulses=%0d mismatches=%0d addr_bad=%0d readback_bad=%0d done=%0d busy_cycles=%0d busy_gap_bad=%0d",
                  qcnt, mismatches, addr_bad, readback_bad, done_count, busy_cycles, busy_gap_bad);
         $display("STEM RUN2: start_cyc=%0d done_cyc=%0d total_cycles=%0d", start_cyc, done_cyc, done_cyc - start_cyc);
+        $display("STEM RUN2: first_q=%0d post_bias_bad=%0d emit_valid_bad=%0d", first_q_cyc-start_cyc, post_bias_bad, emit_valid_bad);
 
         if (mismatches != 0 || addr_bad != 0 || qcnt != 12544 ||
             done_count != 1 || readback_bad != 0 || busy_gap_bad != 0 ||
-            busy_cycles != done_cyc - start_cyc || busy_cycles == 0) begin
+            busy_cycles != done_cyc - start_cyc || busy_cycles == 0 ||
+            first_q_cyc-start_cyc != 14 || done_cyc-start_cyc != 188161 ||
+            post_bias_bad != 0 || emit_valid_bad != 0) begin
             $fatal(1, "STEM RUN2: %0d mismatches, %0d addr bad, qcnt=%0d, done=%0d, readback=%0d, busy_gap=%0d",
                    mismatches, addr_bad, qcnt, done_count, readback_bad, busy_gap_bad);
         end

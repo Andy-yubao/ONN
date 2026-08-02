@@ -88,19 +88,18 @@ module stem_conv_serial #(
     localparam STEM_MULT  = 32'sd2056884242;  // 32'h7A999012
     localparam STEM_SHIFT = 6'd38;
 
-    // INT32 saturation bounds (clamp, no wraparound).
-    localparam signed [63:0] INT32_MAX =  64'sd2147483647;
-    localparam signed [63:0] INT32_MIN = -64'sd2147483648;
-
     // ================= FSM states =================
-    localparam S_IDLE     = 3'd0;
-    localparam S_PROLOGUE = 3'd1;
-    localparam S_ACC      = 3'd2;
-    localparam S_ADD_BIAS = 3'd3;
-    localparam S_REQ      = 3'd4;
-    localparam S_DONE     = 3'd5;
+    localparam S_IDLE            = 4'd0;
+    localparam S_PROLOGUE        = 4'd1;
+    localparam S_ACC             = 4'd2;
+    localparam S_ADD_BIAS        = 4'd3;
+    localparam S_SAT32           = 4'd4;
+    localparam S_MUL             = 4'd5;
+    localparam S_ROUND_SHIFT_SAT = 4'd6;
+    localparam S_EMIT            = 4'd7;
+    localparam S_DONE            = 4'd8;
 
-    reg [2:0] state;
+    reg [3:0] state;
     // current output element (oc -> y -> x)
     reg [3:0] oc;
     reg [4:0] y;
@@ -110,6 +109,9 @@ module stem_conv_serial #(
     reg [3:0] tap;
     reg       tap_valid_r;
     reg signed [63:0] acc64;           // exact accumulator (S64)
+    reg signed [63:0] token_acc64;     // exact post-bias S64 requant token
+    reg        [13:0] token_addr;
+    reg               token_last;
 
     // ================= combinational addressing =================
     // Tap index being ISSUED this cycle: tap0 in PROLOGUE, tap+1 in ACC
@@ -155,25 +157,33 @@ module stem_conv_serial #(
     wire signed [15:0] tap_product = $signed({{8{in_rdata[7]}}, in_rdata}) *
                                      $signed({{8{wt_rdata[7]}}, wt_rdata});
 
-    // INT32 saturation AFTER bias is folded into acc64 (no wraparound).
-    wire signed [31:0] acc32 = (acc64 > INT32_MAX) ? 32'sh7FFFFFFF :
-                               (acc64 < INT32_MIN) ? 32'sh80000000 :
-                               acc64[31:0];
+    // Exact post-bias S64 token.  The explicit sign extension and combinational
+    // add are captured on the edge leaving S_ADD_BIAS, so a nonblocking update
+    // can never accidentally pass the old pre-bias acc64 into requant.
+    wire signed [63:0] bias64_w = $signed({{32{bias_rdata[31]}}, bias_rdata});
+    wire signed [63:0] post_bias_acc64 = acc64 + bias64_w;
 
-    // Reuse the frozen, already-verified requantize_u8 (never reimplement).
-    wire [7:0] q_w;
-    requantize_u8 u_req (
-        .acc        (acc32),
-        .multiplier (STEM_MULT),
-        .shift      (STEM_SHIFT),
-        .q          (q_w)
+    wire req_in_valid = (state == S_SAT32);
+    wire req_out_valid;
+    wire signed [31:0] req_acc32;
+    wire [7:0] req_q;
+    wire emit_valid = (state == S_EMIT) && req_out_valid;
+    requantize_u8_pipe #(.SHIFT(STEM_SHIFT)) u_req_pipe (
+        .clk           (clk),
+        .rst_n         (rst_n),
+        .in_valid      (req_in_valid),
+        .in_acc64      (token_acc64),
+        .in_multiplier (STEM_MULT),
+        .out_valid     (req_out_valid),
+        .out_acc32     (req_acc32),
+        .out_q         (req_q)
     );
 
-    // output RAM write (sampled at the REQ posedge; coords advance at the same
-    // edge via nonblocking assignment, so the write targets the current output).
-    wire out_we    = (state == S_REQ);
-    wire [13:0] out_waddr = out_addr;
-    wire [7:0]  out_wdata = q_w;
+    // Output RAM writes only a valid EMIT token; address/data are the latched
+    // token metadata and registered requant result, never live coordinates.
+    wire out_we    = (state == S_EMIT) && req_out_valid;
+    wire [13:0] out_waddr = token_addr;
+    wire [7:0]  out_wdata = req_q;
 
     // ================= memory instances =================
     // input RAM: write port from outside, read port from the tap logic.
@@ -221,15 +231,17 @@ module stem_conv_serial #(
     // as they observed busy==0 on the previous cycle).
     always @* begin
         busy = (state == S_PROLOGUE) || (state == S_ACC) ||
-               (state == S_ADD_BIAS) || (state == S_REQ) || (state == S_DONE);
+               (state == S_ADD_BIAS) || (state == S_SAT32) ||
+               (state == S_MUL) || (state == S_ROUND_SHIFT_SAT) ||
+               (state == S_EMIT) || (state == S_DONE);
     end
     always @* begin
-        acc_valid = (state == S_REQ);
-        acc_addr  = out_addr;
-        acc_value = acc32;
-        q_valid   = (state == S_REQ);
-        q_addr    = out_addr;
-        q_value   = q_w;
+        acc_valid = emit_valid;
+        acc_addr  = emit_valid ? token_addr : 14'd0;
+        acc_value = emit_valid ? req_acc32 : 32'sd0;
+        q_valid   = emit_valid;
+        q_addr    = emit_valid ? token_addr : 14'd0;
+        q_value   = emit_valid ? req_q : 8'd0;
     end
 
     // ================= FSM =================
@@ -242,6 +254,9 @@ module stem_conv_serial #(
             tap    <= 4'd0;
             tap_valid_r <= 1'b0;
             acc64  <= 64'sd0;
+            token_acc64 <= 64'sd0;
+            token_addr <= 14'd0;
+            token_last <= 1'b0;
             done   <= 1'b0;
         end else begin
             case (state)
@@ -276,23 +291,31 @@ module stem_conv_serial #(
                     end
                 end
                 S_ADD_BIAS: begin
-                    // bias ROM sampled oc last cycle -> data valid now; add it
-                    // once, after all MACs.
-                    acc64 <= acc64 + $signed(bias_rdata);
-                    state <= S_REQ;
+                    token_acc64 <= post_bias_acc64;
+                    token_addr  <= out_addr;
+                    token_last  <= last_output;
+                    state <= S_SAT32;
                 end
-                S_REQ: begin
-                    // combinational acc32 = saturate(acc64) and q = requant
-                    // are valid this whole cycle; output RAM write is sampled
-                    // at this posedge; advance to the next output element.
-                    if (last_output) begin
-                        state <= S_DONE;
-                    end else begin
-                        oc  <= oc_next;
-                        y   <= y_next;
-                        x   <= x_next;
-                        tap <= 4'd0;
-                        state <= S_PROLOGUE;
+                S_SAT32: begin
+                    state <= S_MUL;
+                end
+                S_MUL: begin
+                    state <= S_ROUND_SHIFT_SAT;
+                end
+                S_ROUND_SHIFT_SAT: begin
+                    state <= S_EMIT;
+                end
+                S_EMIT: begin
+                    if (req_out_valid) begin
+                        if (token_last) begin
+                            state <= S_DONE;
+                        end else begin
+                            oc  <= oc_next;
+                            y   <= y_next;
+                            x   <= x_next;
+                            tap <= 4'd0;
+                            state <= S_PROLOGUE;
+                        end
                     end
                 end
                 S_DONE: begin

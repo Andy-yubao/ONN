@@ -12,7 +12,7 @@
 // (same sampled edge).  The maxpool must already be in RUN when the first
 // stem_q_valid arrives; the current interface guarantees start and the first
 // in_valid are NEVER on the same sampling edge, because the stem's first output
-// is ~12 cycles after start (PROLOGUE + 9xACC + ADD_BIAS + REQ).  stem_done must
+// is 14 cycles after start (PROLOGUE + 9xACC + ADD_BIAS + P=3 requant + EMIT).  stem_done must
 // NOT be used to start the maxpool - it fires only after ALL stem_q have been
 // emitted.
 //
@@ -23,7 +23,7 @@
 //
 // done semantics (frozen): completion is `maxpool_done` (last pooled result has
 // been written to pool1 RAM).  stem_done fires on the same cycle (the stem's
-// S_DONE follows the last S_REQ exactly like the maxpool's S_DONE), so both can
+// S_DONE follows the last valid-qualified S_EMIT exactly like the maxpool's S_DONE), so both can
 // be observed together, but the pipeline-level `done` is maxpool_done.
 //
 // Feature-map storage: only pool1_q (16x14x14 = 3136 x UINT8) is stored here.

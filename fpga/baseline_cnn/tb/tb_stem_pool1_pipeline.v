@@ -56,7 +56,11 @@ module tb_stem_pool1_pipeline;
     wire             maxpool_busy;
     wire             stem_done;
     wire             maxpool_done;
+    wire             stem_acc_valid;
+    wire [13:0]      stem_acc_addr;
+    wire signed [31:0] stem_acc_value;
     wire             stem_q_valid;
+    wire [13:0]      stem_q_addr;
     wire [7:0]       stem_q_value;
 
     stem_pool1_pipeline dut (
@@ -77,7 +81,11 @@ module tb_stem_pool1_pipeline;
         .maxpool_busy  (maxpool_busy),
         .stem_done     (stem_done),
         .maxpool_done  (maxpool_done),
+        .stem_acc_valid(stem_acc_valid),
+        .stem_acc_addr (stem_acc_addr),
+        .stem_acc_value(stem_acc_value),
         .stem_q_valid  (stem_q_valid),
+        .stem_q_addr   (stem_q_addr),
         .stem_q_value  (stem_q_value)
     );
 
@@ -111,6 +119,8 @@ module tb_stem_pool1_pipeline;
     integer maxpool_done_cyc;
     integer done_cyc;
     integer readback_bad;    // pool1 RAM readback mismatches
+    integer post_bias_bad;
+    integer emit_valid_bad;
     integer p;
     reg [7:0] poolA [0:3135];    // pass-1 recorded pool outputs (cross-check)
 
@@ -177,6 +187,20 @@ module tb_stem_pool1_pipeline;
                 stem_cmp = stem_cmp + 1;
             end
         end
+        if (dut.u_stem.state == 4'd4 && dut.u_stem.token_addr < 12544 &&
+            dut.u_stem.token_acc64 !== $signed(conv1_acc[dut.u_stem.token_addr]))
+            post_bias_bad = post_bias_bad + 1;
+        if ((dut.u_stem.state == 4'd7) !== dut.u_stem.req_out_valid)
+            emit_valid_bad = emit_valid_bad + 1;
+        if (dut.u_stem.acc_valid !== ((dut.u_stem.state == 4'd7) && dut.u_stem.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (stem_q_valid !== ((dut.u_stem.state == 4'd7) && dut.u_stem.req_out_valid))
+            emit_valid_bad = emit_valid_bad + 1;
+        if (!dut.u_stem.req_out_valid &&
+            (dut.u_stem.acc_valid !== 1'b0 || dut.u_stem.q_valid !== 1'b0 ||
+             dut.u_stem.acc_addr !== 14'd0 || dut.u_stem.q_addr !== 14'd0 ||
+             dut.u_stem.acc_value !== 32'sd0 || dut.u_stem.q_value !== 8'd0))
+            emit_valid_bad = emit_valid_bad + 1;
 
         // ---- pool1 stream ----
         if (pool_valid) begin
@@ -238,6 +262,7 @@ module tb_stem_pool1_pipeline;
             start_cyc = 0; first_stem_q_cyc = 0; first_pool_cyc = 0;
             stem_done_cyc = 0; maxpool_done_cyc = 0; done_cyc = 0;
             readback_bad = 0;
+            post_bias_bad = 0; emit_valid_bad = 0;
 
             // ---- load input (784 bytes through the write port) ----
             for (p = 0; p < 784; p = p + 1) begin
@@ -293,6 +318,7 @@ module tb_stem_pool1_pipeline;
             $display("PIPE PASS[%0d] cyc start->first_stem_q=%0d start->first_pool1_q=%0d start->done=%0d busy_cycles=%0d",
                      passno, first_stem_q_cyc - start_cyc, first_pool_cyc - start_cyc,
                      maxpool_done_cyc - start_cyc, busy_cycles);
+            $display("PIPE PASS[%0d] post_bias_bad=%0d emit_valid_bad=%0d", passno, post_bias_bad, emit_valid_bad);
 
             // ---- verdict ----
             ok = (qcnt == 12544 && pcnt == 3136 && mismatches == 0 && addr_bad == 0 &&
@@ -301,7 +327,10 @@ module tb_stem_pool1_pipeline;
                   readback_bad == 0 && busy_cycles > 0 &&
                   first_stem_q_cyc >= start_cyc + 2 &&      // start & first in_valid never same edge
                   stem_done_cyc == maxpool_done_cyc &&      // stem_done == maxpool_done cycle
-                  maxpool_done_cyc == done_cyc);            // top-level done == maxpool_done
+                  maxpool_done_cyc == done_cyc &&            // top-level done == maxpool_done
+                  first_stem_q_cyc - start_cyc == 14 &&
+                  maxpool_done_cyc - start_cyc == 188161 &&
+                  post_bias_bad == 0 && emit_valid_bad == 0);
             if (!ok)
                 $fatal(1, "PIPE PASS[%0d] FAILED (qcnt=%0d pcnt=%0d stem=%0d addr=%0d pool=%0d paddr=%0d xz=%0d cross=%0d busy=%0d done=%0d sdone=%0d readback=%0d)",
                        passno, qcnt, pcnt, mismatches, addr_bad, pool_bad, pool_addr_bad,

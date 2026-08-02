@@ -188,3 +188,29 @@ def test_full_convolution_matches_golden() -> None:
                 q = requant(acc, STEM_MULT, STEM_SHIFT)
                 assert q == stem_q[idx], (
                     f"stem_q[{idx}] oc={oc} y={y} x={x}: got {q}, golden {stem_q[idx]}")
+
+
+def test_stem_p3_requant_and_emit_contract() -> None:
+    """Stem captures explicit post-bias S64 and emits only with pipe valid."""
+    src = (REPO_ROOT / "fpga" / "baseline_cnn" / "rtl" /
+           "stem_conv_serial.v").read_text(encoding="utf-8")
+    assert "wire signed [63:0] post_bias_acc64 = acc64 + bias64_w;" in src
+    assert "token_acc64 <= post_bias_acc64;" in src
+    assert "requantize_u8_pipe #(.SHIFT(STEM_SHIFT)) u_req_pipe" in src
+    assert "req_in_valid = (state == S_SAT32)" in src
+    assert "wire emit_valid = (state == S_EMIT) && req_out_valid;" in src
+    assert "acc_valid = emit_valid" in src
+    assert "q_valid   = emit_valid" in src
+    assert "acc_addr  = emit_valid ? token_addr : 14'd0" in src
+    assert "q_addr    = emit_valid ? token_addr : 14'd0" in src
+    assert "out_we    = (state == S_EMIT) && req_out_valid" in src
+    for name, value in (("S_SAT32", 4), ("S_MUL", 5),
+                        ("S_ROUND_SHIFT_SAT", 6), ("S_EMIT", 7), ("S_DONE", 8)):
+        assert f"localparam {name}" in src and f"4'd{value}" in src
+
+    tb = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+          "tb_stem_conv_serial.v").read_text(encoding="utf-8")
+    assert "first_q_cyc-start_cyc != 14" in tb
+    assert "done_cyc-start_cyc != 188161" in tb
+    assert "post_bias_bad" in tb and "emit_valid_bad" in tb
+    assert "!dut.req_out_valid" in tb

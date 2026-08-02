@@ -6,12 +6,13 @@
   Runs, in order:
     1. check_toolchain        (Quartus / Questa toolchain probe)
     2. check_device           (EP4CE10F17C8 recognised by Quartus)
-    3. Questa simulation      (requant 20384 + GAP exhaustive/golden vectors
+    3. Questa simulation      (original requant 20384 + pipelined requant
+                              fixed-latency/gap/reset coverage + GAP vectors
                               + stem_conv_serial 12544 golden + padding专项
                               + maxpool2x2_stream 3136 x3 golden + gap/X-Z
                               + stem_pool1 integration golden, two passes
                               + conv2+pool2 golden, two passes
-                              + conv3 golden, two passes
+                              + conv3 golden, two passes + conv3/GAP co-done
                               + streaming GAP 32 x3 passes
                               + FC/argmax 10 x3 passes incl. tie
                               + complete core: digit8 full trace + 10 smoke)
@@ -41,16 +42,23 @@ $scripts  = Join-Path $root "fpga\baseline_cnn\scripts"
 
 $failures = @()
 $totalSteps = 14
+$runStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 function Invoke-Step {
     param([int]$Index, [string]$Name, [scriptblock]$Body)
     Write-Host "`n===== [$Index/$totalSteps] $Name =====" -ForegroundColor Cyan
+    $stepStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     & $Body
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[run_all] [$Index/$totalSteps] $Name FAILED (exit=$LASTEXITCODE)" -ForegroundColor Red
+    $stepExit = $LASTEXITCODE
+    $stepStopwatch.Stop()
+    $stepElapsed = $stepStopwatch.Elapsed.ToString("hh\:mm\:ss\.fff")
+    if ($stepExit -ne 0) {
+        Write-Host "[run_all] [$Index/$totalSteps] $Name FAILED (exit=$stepExit, elapsed=$stepElapsed)" -ForegroundColor Red
         $script:failures += $Name
+        Write-Host ("[run_all] TOTAL ELAPSED={0}" -f $script:runStopwatch.Elapsed.ToString("hh\:mm\:ss\.fff")) -ForegroundColor Red
+        exit $stepExit
     } else {
-        Write-Host "[run_all] [$Index/$totalSteps] $Name OK" -ForegroundColor Green
+        Write-Host "[run_all] [$Index/$totalSteps] $Name OK (elapsed=$stepElapsed)" -ForegroundColor Green
     }
 }
 
@@ -150,6 +158,8 @@ Invoke-Step 14 "python_full_core_contract" {
 }
 
 Write-Host "`n=============================================" -ForegroundColor Cyan
+$runStopwatch.Stop()
+Write-Host ("[run_all] TOTAL ELAPSED={0}" -f $runStopwatch.Elapsed.ToString("hh\:mm\:ss\.fff")) -ForegroundColor Cyan
 if ($failures.Count -eq 0) {
     Write-Host "[run_all] ALL $totalSteps STEPS PASSED" -ForegroundColor Green
     exit 0

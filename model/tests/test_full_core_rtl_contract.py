@@ -279,3 +279,16 @@ def test_gap_fc_rtl_interfaces() -> None:
     assert "best       <= acc32;" in fc
     assert "acc32 > best" in fc
     assert ">=" not in re.sub(r"//.*", "", fc)
+
+
+def test_a_plus_p3_end_to_end_cycle_contract() -> None:
+    """Full-core and board TBs assert the new 1,590,315-cycle schedule."""
+    core_tb = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+               "tb_baseline_cnn_core.v").read_text(encoding="utf-8")
+    board_tb = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+                "tb_ac620_cnn_selftest.v").read_text(encoding="utf-8")
+    assert "core_done_cyc - start_cyc != 1590315" in core_tb
+    assert "retime_bad" in core_tb
+    assert "done_cyc - start_cyc != 1590315" in board_tb
+    assert "AC620_CNN_SELFTEST_PASS ALL_PASS" in board_tb
+    assert "1529163" not in core_tb and "1529163" not in board_tb

@@ -45,6 +45,7 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "23:57:30  AUGUST 01, 202
 set_global_assignment -name LAST_QUARTUS_VERSION "25.1std.0 Lite Edition"
 set_global_assignment -name VERILOG_INPUT_VERSION VERILOG_2001
 set_global_assignment -name VERILOG_FILE ../rtl/requantize_u8.v
+set_global_assignment -name VERILOG_FILE ../rtl/requantize_u8_pipe.v
 set_global_assignment -name VERILOG_FILE ../rtl/sync_ram_u8.v
 set_global_assignment -name VERILOG_FILE ../rtl/sync_rom_s8.v
 set_global_assignment -name VERILOG_FILE ../rtl/sync_rom_s32.v

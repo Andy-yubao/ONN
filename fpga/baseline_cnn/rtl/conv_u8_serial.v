@@ -42,9 +42,11 @@
 // start until the done pulse; `done` is a single-cycle pulse.  A start while
 // busy is ignored; the next start after done is accepted reliably.
 //
-// Cycle budget: PROLOGUE(1) + Cin*9 MAC + ADD_BIAS(1) + REQUANT(1) per output
-//   conv2: 1+144+1+1 = 147 cyc/output -> 6272*147 + 1 (DONE state) = 921985 cyc
-//   conv3: 1+288+1+1 = 291 cyc/output -> 1568*291 + 1 (DONE state) = 456289 cyc
+// Cycle budget after the P=3 requant retiming:
+//   PROLOGUE(1) + Cin*9 MAC + ADD_BIAS(1)
+//   + SAT32(1) + MUL(1) + ROUND_SHIFT_SAT(1) + EMIT(1) per output
+//   conv2: 1+144+1+4 = 150 cyc/output -> 6272*150 + 1 = 940801 cyc
+//   conv3: 1+288+1+4 = 294 cyc/output -> 1568*294 + 1 = 460993 cyc
 // (the +1 is the single S_DONE cycle before the done pulse; the done pulse
 // itself is the cycle after busy drops, so busy_cycles == done_cyc - start_cyc).
 //
@@ -99,19 +101,18 @@ module conv_u8_serial #(
     localparam signed [31:0] C3_MULT = 32'sd1298974956;  // 32'h4D6CC8EC
     localparam [5:0]         CONV_SHIFT = 6'd38;
 
-    // INT32 saturation bounds (clamp, no wraparound).
-    localparam signed [63:0] INT32_MAX =  64'sd2147483647;
-    localparam signed [63:0] INT32_MIN = -64'sd2147483648;
-
     // ================= FSM states =================
-    localparam S_IDLE    = 3'd0;
-    localparam S_PROLOGUE = 3'd1;
-    localparam S_MAC     = 3'd2;
-    localparam S_ADD_BIAS = 3'd3;
-    localparam S_REQUANT = 3'd4;
-    localparam S_DONE    = 3'd5;
+    localparam S_IDLE            = 4'd0;
+    localparam S_PROLOGUE        = 4'd1;
+    localparam S_MAC             = 4'd2;
+    localparam S_ADD_BIAS        = 4'd3;
+    localparam S_SAT32           = 4'd4;
+    localparam S_MUL             = 4'd5;
+    localparam S_ROUND_SHIFT_SAT = 4'd6;
+    localparam S_EMIT            = 4'd7;
+    localparam S_DONE            = 4'd8;
 
-    reg [2:0] state;
+    reg [3:0] state;
     reg       layer;         // layer_sel latched at start (0=conv2, 1=conv3)
     // current output element (oc -> y -> x)
     reg [4:0] oc;
@@ -123,6 +124,12 @@ module conv_u8_serial #(
     reg [1:0] kx;
     reg       tap_valid_r;   // validity of the tap data currently in the pipeline
     reg signed [63:0] acc64; // exact accumulator (S64)
+
+    // One requant token at a time.  The post-bias value and metadata are
+    // captured on the edge leaving S_ADD_BIAS and held through S_EMIT.
+    reg signed [63:0] token_acc64;
+    reg        [12:0] token_addr;
+    reg               token_last;
 
     // ================= layer-dependent bounds =================
     wire [3:0] hw_max  = layer ? 4'd6  : 4'd13;   // y/x max index (IN_H-1)
@@ -205,18 +212,31 @@ module conv_u8_serial #(
     wire signed [16:0] tap_product = $signed({9'd0, fm_rdata}) *
                                      $signed({{9{wt_rdata[7]}}, wt_rdata});
 
-    // INT32 saturation AFTER bias is folded into acc64 (no wraparound).
-    wire signed [31:0] acc32 = (acc64 > INT32_MAX) ? 32'sh7FFFFFFF :
-                               (acc64 < INT32_MIN) ? 32'sh80000000 :
-                               acc64[31:0];
+    // IMPORTANT: this is the exact post-bias S64 token.  It is combinational
+    // acc64 + an explicit S32->S64 sign extension, then captured on the edge
+    // leaving S_ADD_BIAS.  It never relies on seeing a nonblocking acc64 update
+    // from the same edge (which would incorrectly capture the pre-bias value).
+    wire signed [63:0] bias64_w = $signed({{32{bias_rdata[31]}}, bias_rdata});
+    wire signed [63:0] post_bias_acc64 = acc64 + bias64_w;
 
-    // Reuse the frozen, already-verified requantize_u8 (never reimplement).
-    wire [7:0] q_w;
-    requantize_u8 u_req (
-        .acc        (acc32),
-        .multiplier (layer ? C3_MULT : C2_MULT),
-        .shift      (CONV_SHIFT),
-        .q          (q_w)
+    // Shared conv2/conv3 P=3 requant pipeline.  The input token is launched in
+    // S_SAT32 from the post-bias register captured above.  With the following
+    // S_MUL and S_ROUND_SHIFT_SAT states, pipe out_valid is high exactly in
+    // S_EMIT; all externally visible stream signals are gated by both.
+    wire req_in_valid = (state == S_SAT32);
+    wire req_out_valid;
+    wire signed [31:0] req_acc32;
+    wire [7:0] req_q;
+    wire emit_valid = (state == S_EMIT) && req_out_valid;
+    requantize_u8_pipe #(.SHIFT(CONV_SHIFT)) u_req_pipe (
+        .clk           (clk),
+        .rst_n         (rst_n),
+        .in_valid      (req_in_valid),
+        .in_acc64      (token_acc64),
+        .in_multiplier (layer ? C3_MULT : C2_MULT),
+        .out_valid     (req_out_valid),
+        .out_acc32     (req_acc32),
+        .out_q         (req_q)
     );
 
     // ================= weight-ROM read gating =================
@@ -250,12 +270,12 @@ module conv_u8_serial #(
         busy = (state != S_IDLE);
     end
     always @* begin
-        acc_valid = (state == S_REQUANT);
-        acc_addr  = out_addr[12:0];
-        acc_value = acc32;
-        q_valid   = (state == S_REQUANT);
-        q_addr    = out_addr[12:0];
-        q_value   = q_w;
+        acc_valid = emit_valid;
+        acc_addr  = emit_valid ? token_addr : 13'd0;
+        acc_value = emit_valid ? req_acc32 : 32'sd0;
+        q_valid   = emit_valid;
+        q_addr    = emit_valid ? token_addr : 13'd0;
+        q_value   = emit_valid ? req_q : 8'd0;
     end
     always @* begin
         if (issuing)
@@ -277,6 +297,9 @@ module conv_u8_serial #(
             layer       <= 1'b0;
             tap_valid_r <= 1'b0;
             acc64       <= 64'sd0;
+            token_acc64 <= 64'sd0;
+            token_addr  <= 13'd0;
+            token_last  <= 1'b0;
             done        <= 1'b0;
         end else begin
             case (state)
@@ -310,22 +333,36 @@ module conv_u8_serial #(
                     end
                 end
                 S_ADD_BIAS: begin
-                    // bias ROM sampled oc long ago -> data valid now; add once
-                    // after all MACs.
-                    acc64 <= acc64 + $signed(bias_rdata);
-                    state <= S_REQUANT;
+                    // Capture the exact post-bias S64 token and its metadata.
+                    // post_bias_acc64 explicitly includes bias on THIS edge.
+                    token_acc64 <= post_bias_acc64;
+                    token_addr  <= out_addr[12:0];
+                    token_last  <= last_output;
+                    state <= S_SAT32;
                 end
-                S_REQUANT: begin
-                    // acc32 = saturate(acc64) and q = requant are combinational
-                    // and valid this whole cycle; advance to the next output.
-                    if (last_output) begin
-                        state <= S_DONE;
-                    end else begin
-                        oc  <= oc_next;
-                        y   <= y_next;
-                        x   <= x_next;
-                        ic  <= 6'd0; ky <= 2'd0; kx <= 2'd0;
-                        state <= S_PROLOGUE;
+                S_SAT32: begin
+                    state <= S_MUL;
+                end
+                S_MUL: begin
+                    state <= S_ROUND_SHIFT_SAT;
+                end
+                S_ROUND_SHIFT_SAT: begin
+                    state <= S_EMIT;
+                end
+                S_EMIT: begin
+                    // Never advance or emit merely because the fixed state
+                    // count elapsed: the pipe valid is the authoritative token
+                    // qualifier.  In the frozen P=3 schedule it is high here.
+                    if (req_out_valid) begin
+                        if (token_last) begin
+                            state <= S_DONE;
+                        end else begin
+                            oc  <= oc_next;
+                            y   <= y_next;
+                            x   <= x_next;
+                            ic  <= 6'd0; ky <= 2'd0; kx <= 2'd0;
+                            state <= S_PROLOGUE;
+                        end
                     end
                 end
                 S_DONE: begin

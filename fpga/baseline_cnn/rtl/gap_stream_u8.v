@@ -17,7 +17,7 @@
 //   - `done` is a single-cycle pulse AFTER the last output's value has been
 //     presented (the last out_valid cycle precedes the done cycle by one).
 //   - start and the first in_valid are never on the same sampling edge: in the
-//     integration the conv3 engine's first q_valid is ~290 cycles after start.
+//     integration the retimed conv3 engine's first q_valid is 293 cycles after start.
 //
 // The accumulator is a 14-bit unsigned register (49*255 = 12495 < 2^14).
 // No division / modulo anywhere: gap_div49.v is a constant-division multiply

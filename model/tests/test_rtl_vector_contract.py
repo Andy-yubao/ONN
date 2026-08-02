@@ -20,6 +20,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PARAMS = REPO_ROOT / "fpga" / "baseline_cnn" / "params"
 TRACE = REPO_ROOT / "fpga" / "baseline_cnn" / "sim" / "vectors" / "golden_trace"
+RTL = REPO_ROOT / "fpga" / "baseline_cnn" / "rtl"
 
 GAP_DIVISOR = 49
 REQUANT_LAYERS = {
@@ -100,3 +101,31 @@ def test_gap_golden_trace() -> None:
     for c in range(32):
         s = sum(conv3_q[c * 49:(c + 1) * 49])
         assert gap_div(s) == gap_q[c], f"channel {c}: sum={s} -> {gap_div(s)}, golden {gap_q[c]}"
+
+
+def test_pipelined_requant_structure() -> None:
+    """A+ requant is fixed P=3, S32xS32->S64, and keeps the old oracle."""
+    old = (RTL / "requantize_u8.v").read_text(encoding="utf-8")
+    pipe = (RTL / "requantize_u8_pipe.v").read_text(encoding="utf-8")
+    assert "module requantize_u8 (" in old
+    assert "module requantize_u8_pipe #(\n    parameter [5:0] SHIFT = 6'd38" in pipe
+    assert "input  wire signed [63:0] in_acc64" in pipe
+    assert "input  wire signed [31:0] in_multiplier" in pipe
+    assert "output wire signed [31:0] out_acc32" in pipe
+    assert "sat_valid_r" in pipe and "mul_valid_r" in pipe and "round_valid_r" in pipe
+    assert "$signed(sat_acc32_r) * $signed(sat_multiplier_r)" in pipe
+    assert "reg signed [63:0]  mul_product_r" in pipe
+    assert "parameter [5:0] SHIFT" in pipe and "input" not in pipe.split("SHIFT", 1)[0][-20:]
+    assert ">>>" not in pipe
+
+
+def test_pipelined_requant_tb_contract() -> None:
+    """The local TB covers latency, token alignment, reset, gaps and shift=0."""
+    tb = (REPO_ROOT / "fpga" / "baseline_cnn" / "tb" /
+          "tb_requantize_u8_pipe.v").read_text(encoding="utf-8")
+    assert "localparam PIPE_STAGES = 3" in tb
+    assert "valid_history[PIPE_STAGES-1]" in tb
+    assert "20384" in tb
+    assert "dut_shift0" in tb
+    assert "reset_leak_bad" in tb
+    assert "REQUANT_PIPE_ALL_PASS" in tb
