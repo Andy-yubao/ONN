@@ -755,9 +755,10 @@ S_DONE，下一周期仍保持 stem/pool1、conv2/pool2、conv3/GAP co-done。
 全部通过；板级 loader/prediction/LED 自检确认 prediction=8 并输出
 `AC620_CNN_SELFTEST_PASS ALL_PASS`。此外 `run_all.ps1` 14/14、完整 pytest 219 passed。
 
-### 15.4 资源、STA 与下载状态
+### 15.4 资源、STA 与板级下载状态
 
-唯一一次 AC620 Quartus 25.1std 完整编译已完成，Flow Successful。实测资源为：
+AC620 Quartus 25.1std 验收编译及从可追溯提交执行的正式 SOF 构建均已完成，
+Flow/Fitter Successful。实测资源为：
 
 - LE 2,933、寄存器 1,243、M9K 30、memory bits 166,784；
 - 9-bit 乘法器元素 19、DSP blocks 11、PLL 0；
@@ -770,9 +771,16 @@ S_DONE，下一周期仍保持 stem/pool1、conv2/pool2、conv3/GAP co-done。
 消失；新最差 setup 路径为 conv3 权重 ROM 地址寄存器到
 `conv_u8_serial.acc64[63]`，slack `+2.274 ns`。
 
-因此该实现已达到 **50 MHz timing-qualified**。编译生成的 `.sof` 来自尚未提交的
-dirty worktree，只作为本地工程验证证据，不是正式可追溯烧录件；提交前审查完成并
-再次获得用户明确确认前不得 JTAG 下载。本记录不宣称已在真实 AC620 上运行。
+因此该实现已达到 **50 MHz timing-qualified**。正式 SOF 已从 tracked-clean commit
+`8948e78fb12ae0e1ae2981691396545256cf437c` 重新生成：大小 358,717 bytes，SHA256
+`EE1A5B93504EBBCFF0954D4F99D7B504E2E0FF81DE8412EBF7EB255F13E03DE8`，构建脚本
+退出码 0，Flow/Fitter 与报告守卫全部通过。
+
+AC620 V2 实板使用 `USB-Blaster [USB-0]` 在 JTAG 链位置 1 完成 SRAM 配置；IDCODE
+`0x020F10DD`，Programmer 识别 `EP4CE10F17@1`、退出码 0、0 errors / 0 warnings，
+SOF checksum `0x004216F2`。实板 LED 观察到 prediction=8 的 `1000` 阶段与 PASS 的
+`0000/1111` 同步全闪阶段交替，确认固定 digit8 完整 CNN selftest 为
+**prediction=8、PASS**。本次未写入或擦除 EPCS Flash，断电后 SRAM 配置消失。
 
 收尾后的 `run_ac620_cnn_selftest.ps1 -ValidateExistingReportsOnly` 可在不调用 Questa、
 Quartus compile 或 Programmer 的情况下复核现有报告：要求 Flow Successful、关键层级

@@ -224,14 +224,18 @@
   stem+pool1、完整核心 digit8+10 smoke、AC620 selftest（prediction=8）均通过
 - `run_all.ps1` 14/14、完整 pytest 219 passed（1 条既有 PyTorch FutureWarning）
   均通过；未新增 false path 或 multicycle，SDC 仍为 20.000 ns
-- 唯一一次 AC620 完整编译 Flow Successful：LE 2,933、寄存器 1,243、M9K 30、
-  memory bits 166,784、9-bit 乘法器 19、DSP blocks 11、PLL 0、物理/虚拟引脚 5/0
+- AC620 完整编译与从可追溯提交重新执行的正式 SOF 构建均 Flow/Fitter Successful：
+  LE 2,933、寄存器 1,243、M9K 30、memory bits 166,784、9-bit 乘法器 19、
+  DSP blocks 11、PLL 0、物理/虚拟引脚 5/0
 - STA setup/hold：Slow 85C +2.274/+0.429 ns、Slow 0C +3.853/+0.400 ns、Fast 0C
   +12.380/+0.150 ns；最小 Fmax 56.41 MHz。retiming 前 `acc64[42] → GAP out_q[6]`
   的 -16.968 ns 长路径已消失；新最差 setup 为 conv3 权重 ROM 地址寄存器到
   `conv_u8_serial.acc64[63]`
-- 设计已满足 50 MHz 时序烧录资格，但当前 `.sof` 来自未提交的 dirty worktree，
-  仅作本地验证产物；提交前审查和用户再次确认前不得烧录，也不宣称已在真板运行
+- 正式 SOF 已从 commit `8948e78fb12ae0e1ae2981691396545256cf437c` 重新生成，大小
+  358,717 bytes，SHA256 `EE1A5B93504EBBCFF0954D4F99D7B504E2E0FF81DE8412EBF7EB255F13E03DE8`；
+  `USB-Blaster [USB-0]`、JTAG IDCODE `0x020F10DD`、链位置 1 配置成功，Programmer
+  退出码 0。AC620 V2 实板观察到 prediction=8 的 `1000` 阶段与 PASS 的
+  `0000/1111` 同步全闪交替，板级验证通过；本次只配置 FPGA SRAM，未写 EPCS Flash
 
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 

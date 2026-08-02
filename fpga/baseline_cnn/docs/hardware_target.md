@@ -255,7 +255,7 @@ S0/S1/S2 按键引脚（板载主时钟与调试 LED 引脚已冻结，见 §10�
 - 本地 `.rpt`、`.log`、`.sof` 以及 Quartus 数据库均不是 Git 交付物；本条记录也
   不宣称完整 CNN 已在真实开发板上成功运行。
 
-## 12. A+ Requant retiming（功能与 50 MHz STA 均通过，2026-08-02）
+## 12. A+ Requant retiming（功能、50 MHz STA 与实板 JTAG 均通过，2026-08-02）
 
 stem 与共享 conv2/conv3 的组合 requant 已替换为厂商无关的三级
 `requantize_u8_pipe`：SAT32 → signed S32×S32→S64 MUL → 固定 SHIFT 的
@@ -272,7 +272,8 @@ ROUND_SHIFT_SAT；原 `requantize_u8.v` 保留为 oracle。ADD_BIAS 边沿显式
 - MaxPool/GAP/FC/argmax 功能逻辑未改，三组 producer/consumer co-done 保持；
 - SDC 仍为 20.000 ns，未添加 false path 或 multicycle。
 
-唯一一次获批的 AC620 完整 Quartus 编译已执行，Flow Successful：
+AC620 完整 Quartus 验收编译及从可追溯提交执行的正式 SOF 构建均为 Flow/Fitter
+Successful：
 
 - LE **2,933**、寄存器 **1,243**、M9K **30**、memory bits **166,784**；
 - 9-bit 乘法器元素 **19**、DSP blocks **11**、PLL **0**；
@@ -287,6 +288,26 @@ retiming 前 `conv_u8_serial.acc64[42] → gap_stream_u8.out_q_r[6]` 的
 寄存器到 `conv_u8_serial.acc64[63]`，仍有 **+2.274 ns** 裕量。未降低 SDC，未添加
 false path 或 multicycle。因此 RTL/STA 已满足 **50 MHz 烧录资格**。
 
-本次编译生成的 `.sof` 来自尚未提交的 dirty worktree，只作为本地验证证据；在提交前
-审查完成、形成可追溯提交并再次取得用户明确确认前，仍不得实际烧录。当前结果不宣称
-完整 CNN 已在真实 AC620 上运行。
+### 12.1 正式 SOF 与 AC620 V2 实板验证
+
+retiming 已以 commit `8948e78fb12ae0e1ae2981691396545256cf437c` 提交并推送至
+`origin/fpga/retime-requant-50mhz`。随后从该 tracked-clean commit 执行正式构建：
+
+- `run_ac620_cnn_selftest.ps1` 退出码 **0**，Flow/Fitter Successful，报告守卫输出
+  `AC620_CNN_SELFTEST_REPORT_GUARDS_OK`；正式构建资源与上述验收编译一致；
+- 正式 SOF 路径为 `fpga/baseline_cnn/quartus/ac620_cnn_selftest.sof`，大小
+  **358,717 bytes**，SHA256 为
+  `EE1A5B93504EBBCFF0954D4F99D7B504E2E0FF81DE8412EBF7EB255F13E03DE8`；
+- Windows 检测到 `Altera USB-Blaster` 状态 OK；实际 cable 为
+  `USB-Blaster [USB-0]`，JTAG 链位置 **1**，IDCODE **`0x020F10DD`**。该 IDCODE 在
+  Quartus 中显示共享候选字符串，结合已确认的 AC620 V2 板型、板载
+  EP4CE10F17C8 及同板 LED bring-up 历史接受该识别；正式配置时 Programmer 进一步
+  报告 `EP4CE10F17@1`；
+- JTAG SRAM 配置于 2026-08-02 成功完成：Programmer 退出码 **0**、SOF checksum
+  **`0x004216F2`**、IDCODE `0x020F10DD`、`1 device(s) configured`、0 errors / 0
+  warnings；
+- 实板结果显示 prediction=8 的原始 `1000` 阶段与 PASS 动画 `0000/1111` 交替：
+  用户观察到“一颗与三颗不同”中间穿插“四颗全同”，与 RTL 协议完全一致。因此固定
+  digit8 完整 CNN selftest 的实板结果为 **prediction=8、PASS**；
+- 本次仅写入 FPGA SRAM，**未写入或擦除 EPCS Flash**；断电后配置消失。`.sof`、
+  Quartus 报告和日志仍为本地忽略产物，正式 SOF 通过 commit、大小和 SHA256 追溯。
