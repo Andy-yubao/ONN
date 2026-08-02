@@ -70,7 +70,13 @@ module stem_pool1_pipeline #(
     output wire              stem_done,
     output wire              maxpool_done,
     output wire              stem_q_valid,
-    output wire [7:0]        stem_q_value
+    output wire [7:0]        stem_q_value,
+    // optional stem debug streams, passed straight through from the stem engine
+    // (for full-golden-trace verification; numeric path unchanged, no extra RAM)
+    output wire              stem_acc_valid,
+    output wire [13:0]       stem_acc_addr,
+    output wire signed [31:0] stem_acc_value,
+    output wire [13:0]       stem_q_addr
 );
     // ================= frozen geometry =================
     localparam POOL1_DEPTH  = 3136;      // 16*14*14
@@ -79,8 +85,11 @@ module stem_pool1_pipeline #(
     // ================= stem engine (no full output RAM) =================
     wire              stem_busy_w;
     wire              stem_done_w;
+    wire              stem_acc_valid_w;
+    wire       [13:0] stem_acc_addr_w;  // CHW 0..12543
+    wire signed [31:0] stem_acc_value_w; // INT32 accumulator (post-bias)
     wire              stem_q_valid_w;
-    wire       [13:0] stem_q_addr_w;    // CHW 0..12543 (kept for observability)
+    wire       [13:0] stem_q_addr_w;    // CHW 0..12543
     wire        [7:0] stem_q_value_w;
 
     stem_conv_serial #(
@@ -96,9 +105,9 @@ module stem_pool1_pipeline #(
         .start         (start),
         .busy          (stem_busy_w),
         .done          (stem_done_w),
-        .acc_valid     (),              // debug streams not routed out of the pipeline
-        .acc_addr      (),
-        .acc_value     (),
+        .acc_valid     (stem_acc_valid_w),
+        .acc_addr      (stem_acc_addr_w),
+        .acc_value     (stem_acc_value_w),
         .q_valid       (stem_q_valid_w),
         .q_addr        (stem_q_addr_w),
         .q_value       (stem_q_value_w),
@@ -156,4 +165,8 @@ module stem_pool1_pipeline #(
     assign maxpool_done  = mp_done_w;
     assign stem_q_valid  = stem_q_valid_w;
     assign stem_q_value  = stem_q_value_w;
+    assign stem_acc_valid = stem_acc_valid_w;
+    assign stem_acc_addr  = stem_acc_addr_w;
+    assign stem_acc_value = stem_acc_value_w;
+    assign stem_q_addr    = stem_q_addr_w;
 endmodule

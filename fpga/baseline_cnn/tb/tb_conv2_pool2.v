@@ -117,6 +117,7 @@ module tb_conv2_pool2;
     integer xz_bad;           // X/Z on the streams / status
     integer busy_assn_bad;    // q_valid while pool_busy == 0
     integer illegal_addr_bad; // fm_raddr > 3135 during the run
+    integer rom_ovr_bad;      // weight-ROM gating / out-of-depth read
     integer done_count;       // pool_done pulse count (expect 1)
     integer conv_done_count;  // conv_done pulse count (expect 1)
     integer busy_cycles;      // cycles busy == 1
@@ -162,6 +163,24 @@ module tb_conv2_pool2;
             if (illegal_addr_bad < 20)
                 $display("C2P2 ILLEGAL-FM cyc=%0d fm_raddr=%0d (>3135)", cyc, fm_raddr);
             illegal_addr_bad = illegal_addr_bad + 1;
+        end
+
+        // weight-ROM gating / out-of-depth (hierarchical into u_conv):
+        //   - the conv3 weight ROM must be fixed at 0 during a conv2 run
+        //     (layer-gated reads, never a stray address)
+        //   - no weight ROM may ever be addressed beyond its own depth
+        //     (conv2 4608, conv3 9216)
+        if (conv_busy) begin
+            if (u_conv.u_wt2_rom.addr > 13'd4607) begin
+                if (rom_ovr_bad < 20)
+                    $display("C2P2 WT2-OVR cyc=%0d wt2_addr=%0d (>4607)", cyc, u_conv.u_wt2_rom.addr);
+                rom_ovr_bad = rom_ovr_bad + 1;
+            end
+            if (u_conv.u_wt3_rom.addr !== 14'd0) begin
+                if (rom_ovr_bad < 20)
+                    $display("C2P2 WT3-GATE cyc=%0d wt3_addr=%0d (expect 0 during conv2)", cyc, u_conv.u_wt3_rom.addr);
+                rom_ovr_bad = rom_ovr_bad + 1;
+            end
         end
 
         // ---- conv2 acc/q debug stream ----
@@ -235,7 +254,7 @@ module tb_conv2_pool2;
 
         cmp_idx = 0; pool_cmp = 0; qcnt = 0; pcnt = 0;
         mismatches = 0; addr_bad = 0; pool_bad = 0; pool_addr_bad = 0;
-        xz_bad = 0; busy_assn_bad = 0; illegal_addr_bad = 0;
+        xz_bad = 0; busy_assn_bad = 0; illegal_addr_bad = 0; rom_ovr_bad = 0;
         done_count = 0; conv_done_count = 0; busy_cycles = 0; cyc = 0;
         start_cyc = 0; first_q_cyc = 0; first_pool_cyc = 0;
         conv_done_cyc = 0; pool_done_cyc = 0; done_cyc = 0;
@@ -279,13 +298,13 @@ module tb_conv2_pool2;
         // ---- verdict ----
         if (qcnt != 6272 || pcnt != 1568 || mismatches != 0 || addr_bad != 0 ||
             pool_bad != 0 || pool_addr_bad != 0 || xz_bad != 0 || busy_assn_bad != 0 ||
-            illegal_addr_bad != 0 || done_count != 1 || conv_done_count != 1 ||
+            illegal_addr_bad != 0 || rom_ovr_bad != 0 || done_count != 1 || conv_done_count != 1 ||
             busy_cycles != done_cyc - start_cyc ||
             conv_done_cyc != pool_done_cyc || pool_done_cyc != done_cyc ||
             first_q_cyc - start_cyc != 146 || done_cyc - start_cyc != 921985) begin
-            $fatal(1, "C2P2 FAILED (qcnt=%0d pcnt=%0d mism=%0d addr=%0d pool=%0d paddr=%0d xz=%0d busy=%0d ill=%0d done=%0d cdone=%0d)",
+            $fatal(1, "C2P2 FAILED (qcnt=%0d pcnt=%0d mism=%0d addr=%0d pool=%0d paddr=%0d xz=%0d busy=%0d ill=%0d rom=%0d done=%0d cdone=%0d)",
                    qcnt, pcnt, mismatches, addr_bad, pool_bad, pool_addr_bad,
-                   xz_bad, busy_assn_bad, illegal_addr_bad, done_count, conv_done_count);
+                   xz_bad, busy_assn_bad, illegal_addr_bad, rom_ovr_bad, done_count, conv_done_count);
         end
 
         $display("C2P2_ALL_PASS");

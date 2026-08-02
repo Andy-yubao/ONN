@@ -11,7 +11,10 @@
                               + maxpool2x2_stream 3136 x3 golden + gap/X-Z
                               + stem_pool1 integration golden, two passes
                               + conv2+pool2 golden, two passes
-                              + conv3 golden, two passes)
+                              + conv3 golden, two passes
+                              + streaming GAP 32 x3 passes
+                              + FC/argmax 10 x3 passes incl. tie
+                              + complete core: digit8 full trace + 10 smoke)
     4. Quartus smoke compile  (arithmetic baseline_cnn_smoke project)
     5. Quartus stem compile   (full serial stem engine, stem_conv_smoke project)
     6. Python contract test   (arithmetic golden vectors)
@@ -21,6 +24,9 @@
    10. Quartus integration    (stem+pool1, stem_pool1_smoke project)
    11. Quartus conv23 compile (shared conv2/conv3 engine, conv23_smoke project)
    12. Python conv23 contract (conv2/conv3 golden / OIHW+CHW / pool2 recompute)
+   13. Quartus full-core comp (complete compute core, baseline_cnn_core_smoke)
+   14. Python full-core contr (stage order / GAP+FC recompute / argmax tie /
+                               storage limits / ROM gating / node counts)
 
   Any failing step stops the run with a non-zero exit code.
 
@@ -34,7 +40,7 @@ $root     = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $scripts  = Join-Path $root "fpga\baseline_cnn\scripts"
 
 $failures = @()
-$totalSteps = 12
+$totalSteps = 14
 
 function Invoke-Step {
     param([int]$Index, [string]$Name, [scriptblock]$Body)
@@ -127,6 +133,20 @@ Invoke-Step 12 "python_conv23_contract" {
           elseif (Test-Path "D:\tools\anaconda3\envs\onn\python.exe") { "D:\tools\anaconda3\envs\onn\python.exe" }
           else { "python" }
     & $py -m pytest model\tests\test_conv23_rtl_contract.py -q
+}
+
+# ---- 13. Quartus complete-core compile ----
+Invoke-Step 13 "quartus_full_core" {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scripts "run_quartus_smoke.ps1") `
+        -ProjectName baseline_cnn_core_smoke -CreateScript create_full_core_project.tcl
+}
+
+# ---- 14. Python full-core contract test ----
+Invoke-Step 14 "python_full_core_contract" {
+    $py = if (Test-Path env:ONN_PYTHON) { (Get-Item env:ONN_PYTHON).Value }
+          elseif (Test-Path "D:\tools\anaconda3\envs\onn\python.exe") { "D:\tools\anaconda3\envs\onn\python.exe" }
+          else { "python" }
+    & $py -m pytest model\tests\test_full_core_rtl_contract.py -q
 }
 
 Write-Host "`n=============================================" -ForegroundColor Cyan

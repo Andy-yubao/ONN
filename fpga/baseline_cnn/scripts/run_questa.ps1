@@ -7,7 +7,8 @@
   1. vlib  -> fpga/baseline_cnn/sim/work (gitignored)
   2. vlog  -> rtl/{requantize_u8,gap_div49,arithmetic_smoke_top,
             sync_ram_u8,sync_rom_s8,sync_rom_s32,stem_conv_serial,
-            maxpool2x2_stream,stem_pool1_pipeline,conv_u8_serial}.v + tb/*.v
+            maxpool2x2_stream,stem_pool1_pipeline,conv_u8_serial,
+            gap_stream_u8,fc_argmax_serial,baseline_cnn_core}.v + tb/*.v
   3. vsim  -> tb_requantize_u8      (20384 golden comparisons)
   4. vsim  -> tb_gap_div49          (12496 exhaustive + 32-channel golden)
   5. vsim  -> tb_stem_conv_serial   (digit8 golden: conv1_acc/stem_q stream
@@ -28,6 +29,15 @@
  10. vsim  -> tb_conv3_serial       (digit8 golden of conv3 on the shared
                                      engine: conv3_acc/conv3_q 1568 x2 passes,
                                      reset-rerun determinism)
+ 11. vsim  -> tb_gap_stream_u8      (streaming GAP: conv3_q 1568 -> gap_q 32
+                                     x3 passes: continuous / no-reset rerun /
+                                     fixed gaps)
+ 12. vsim  -> tb_fc_argmax_serial   (FC + argmax: gap 32 -> fc_acc 10 x3 passes:
+                                     golden / no-reset rerun / artificial 5-7 tie)
+ 13. vsim  -> tb_baseline_cnn_core  (complete core end-to-end: digit8 full
+                                     golden trace - every node bit-exact - plus
+                                     10 smoke samples digit0..digit9, no reset
+                                     between frames)
 
   Any compile error, simulation fatal or mismatch sets a non-zero exit code.
   $readmemh paths inside the testbenches are relative to the repo root, so
@@ -90,6 +100,9 @@ $srcs = @(
     (Join-Path $rtlDir "maxpool2x2_stream.v"),
     (Join-Path $rtlDir "stem_pool1_pipeline.v"),
     (Join-Path $rtlDir "conv_u8_serial.v"),
+    (Join-Path $rtlDir "gap_stream_u8.v"),
+    (Join-Path $rtlDir "fc_argmax_serial.v"),
+    (Join-Path $rtlDir "baseline_cnn_core.v"),
     (Join-Path $tbDir  "tb_requantize_u8.v"),
     (Join-Path $tbDir  "tb_gap_div49.v"),
     (Join-Path $tbDir  "tb_stem_conv_serial.v"),
@@ -97,7 +110,10 @@ $srcs = @(
     (Join-Path $tbDir  "tb_maxpool2x2_stream.v"),
     (Join-Path $tbDir  "tb_stem_pool1_pipeline.v"),
     (Join-Path $tbDir  "tb_conv2_pool2.v"),
-    (Join-Path $tbDir  "tb_conv3_serial.v")
+    (Join-Path $tbDir  "tb_conv3_serial.v"),
+    (Join-Path $tbDir  "tb_gap_stream_u8.v"),
+    (Join-Path $tbDir  "tb_fc_argmax_serial.v"),
+    (Join-Path $tbDir  "tb_baseline_cnn_core.v")
 )
 Write-Host "[run_questa] vlog -work $workRel" -ForegroundColor Cyan
 & $vlog -work $workRel $srcs 2>&1
@@ -107,7 +123,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "[run_questa] vlog failed ($LASTEXITCODE)"
 Push-Location $root
 $allOk = $true
 try {
-    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream", "tb_stem_pool1_pipeline", "tb_conv2_pool2", "tb_conv3_serial")) {
+    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream", "tb_stem_pool1_pipeline", "tb_conv2_pool2", "tb_conv3_serial", "tb_gap_stream_u8", "tb_fc_argmax_serial", "tb_baseline_cnn_core")) {
         $logFile = Join-Path $logDir "$tb.log"
         Write-Host "[run_questa] vsim -c -work $workRel $tb (log: $logFile)" -ForegroundColor Cyan
         & $vsim -c -work $workRel -do "run -all; quit -f" -l $logFile "$tb" 2>&1

@@ -150,3 +150,33 @@ input RAM → stem_conv_serial (STORE_OUTPUT_RAM=0) → 流式 MaxPool → pool1
 下一步：将该引擎接入完整网络（input→stem→pool1→conv2→pool2→conv3→GAP→FC）
 前，仍需以下板级资料（见 §2 尚待冻结）：板载主时钟频率与引脚、复位引脚与
 有效电平、UART RX/TX 引脚、调试 LED 引脚。
+
+## 9. 完整纯计算核心阶段（已完成，2026-08-02）
+
+在共享 conv2/conv3 引擎之上落地**完整 BaselineCNN 纯计算核心**
+`rtl/baseline_cnn_core.v`（冻结设计见 `docs/rtl_microarchitecture.md` §14，
+无 UART / 无真实引脚 / 无多 MAC）：
+
+- **端到端流水线** `input_q → stem → pool1 → conv2 → pool2 → conv3 → GAP → FC
+  → Argmax → prediction`；控制器状态机
+  `IDLE→STEM_START→STEM_WAIT→CONV2_START→CONV2_WAIT→CONV3_START→CONV3_WAIT
+  →FC_START→FC_WAIT→DONE`，conv2+pool2 同启、conv3+GAP 同启、done 搭档同周期；
+- **存储上限**：仅 input_q / pool1_q / pool2_q RAM + gap_mem 寄存器，**不实例化**
+  完整 stem_q / conv2_q / conv3_q RAM；
+- **Questa 全量验证**（`tb_baseline_cnn_core`）：digit8 完整黄金 trace 11 个节点
+  全部逐位一致（12544/3136/6272/1568/1568/32/10/1），prediction=8；10 个 smoke
+  样本 digit0..digit9 **无 reset 连续运行** prediction 0..9 全对、每帧 fc_acc 逐位
+  一致、每帧 done 恰一次；总周期 1,529,163（≈153 万，与理论一致，控制器过渡 5
+  周期已在报告说明）；
+- **Quartus 完整核心工程** `baseline_cnn_core_smoke` 在 **EP4CE10F17C8** 上 Flow
+  Successful：LE **3,114**、寄存器 **928**、9-bit 乘法器 **19**、**M9K 29 块
+  （63%）**、块内存位 160,512（38%）、物理引脚 0、虚拟引脚 69；
+  M9K 分项：input RAM 1 + stem weight ROM 1 + pool1 RAM 4 + conv2 weight ROM 8 +
+  conv3 weight ROM 9 + conv2/conv3 bias ROM 各 2 + pool2 RAM 1 + fc weight ROM 1
+  = 29；**fc bias ROM 落入逻辑（10 LC）**（同 stem bias 12 LC）；无锁存、无截断、
+  无实际 signed 警告、无除法器/模运算器；
+- 本阶段核心顶层为寄存器包装 + 全部 VIRTUAL_PIN（压缩观测：stage/计数器/XOR/
+  最后地址/最后值/prediction/done），**不是最终板级顶层**。
+
+下一步进入 AC620 上板前，仍需冻结（见 §2）：板载主时钟频率与引脚、复位引脚与
+有效电平、UART RX/TX 引脚、调试 LED 引脚。

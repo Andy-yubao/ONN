@@ -3,8 +3,7 @@
 > 适用对象：`fpga/baseline_cnn/` 参数包、ModelSim 黄金测试向量与 RTL。
 > 唯一数值标准：冻结的 `Int8Reference`（`model/onn_model/int8_reference.py`）及其
 > `candidate_quant_config.json`（方案 A，per-tensor 权重）。本文件不推导任何量化公式。
-> 当前 RTL 状态：算术 smoke、stem 卷积引擎、流式 MaxPool、stem+pool1 集成与
-> 共享 conv2/conv3 引擎阶段已落地——
+> 当前 RTL 状态：**完整纯计算核心已落地**——
 > `requantize_u8.v` / `gap_div49.v` 通过 Questa 黄金向量验证；`stem_conv_serial.v`
 > （单 MAC 串行 stem 卷积，冻结设计见 `docs/rtl_microarchitecture.md`）通过 digit8
 > 黄金 trace 全量验证并在 EP4CE10F17C8 上完成综合/Fitter（新增 `STORE_OUTPUT_RAM`
@@ -16,7 +15,12 @@
 > EP4CE10F17C8 上完成综合/Fitter；`conv_u8_serial.v`（§11 共享 conv2/conv3 单
 > MAC 引擎）通过 `conv2+pool2` 与 `conv3` 黄金验证（conv2_acc/conv2_q 6272、
 > pool2_q 1568、conv3_acc/conv3_q 1568 全部逐位一致）并在 EP4CE10F17C8 上完成
-> 综合/Fitter（无 UART，无 GAP/FC，未做完整网络集成）。
+> 综合/Fitter，且已修复未选权重 ROM 越界读取与 multiplier hex 注释；
+> `gap_stream_u8.v`（§12 流式 GAP）与 `fc_argmax_serial.v`（§13 FC+Argmax）各自
+> 通过黄金验证（GAP 32/32、FC 10/10、人工 tie 选较小类）；
+> `baseline_cnn_core.v`（§14 完整纯计算核心）在 Questa 上完成 digit8 全节点黄金
+> trace + 10 smoke 样本端到端验证，并在 EP4CE10F17C8 上完成综合/Fitter
+> （无 UART，无真实引脚，未做板级 top）。
 
 ## 1. 整数类型与补码表示
 

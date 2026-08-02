@@ -145,6 +145,71 @@
 - conv23 smoke M9K 分项（Fitter 实测）：**conv2 weight ROM 8 + conv3 weight ROM 9
   + 两个 bias ROM 共享 2 + FM RAM 4 = 23 块（50%）**；无 latch、无截断、无除法器/
   模运算器，requant 64×64 乘法为唯一 DSP 消费者（9-bit 元素 9）
+- **修复（2026-08-02）**：未选权重 ROM 地址按层门控（`wt2_read = issuing &&
+  !layer`、`wt3_read = issuing && layer`，conv3 运行期 conv2 ROM 地址原可达 4751
+  超深 4608，现固定 0）；multiplier hex 注释勘误为 `32'h416335B9`/`32'h4D6CC8EC`
+  （十进制值本就正确）；`tb_conv2_pool2`/`tb_conv3_serial` 新增 ROM 越界/门控断言
+
+### 流式 GAP 流程（gap_stream_u8，2026-08-02 落地）
+
+- 独立可综合流式 GAP：`rtl/gap_stream_u8.v`，直接消费 conv3_q 流（32×7×7、
+  channel→y→x、每通道连续 49 项），每通道产出 1 个结果；**复用已冻结的
+  `gap_div49.v`**（`q = floor((sum+24)/49)`，14 位无符号累加，max 12495）；冻结
+  设计见 `docs/rtl_microarchitecture.md` §12
+- 流式契约与 MaxPool 一致：输入计数/累加仅在 `busy && in_valid` 推进、支持任意
+  空拍；每 49 项一个 `out_valid`；`out_channel` 严格 0..31、共 32 项；**与 conv3
+  同启**（不由 conv3_done 启动）；busy 覆盖 S_DONE、done 单周期
+- Questa 验证：`tb/tb_gap_stream_u8.v` 三遍（连续 32/32、无 reset 背靠背逐位
+  相同、固定空拍 32/32），已并入 `run_questa.ps1`
+
+### FC + Argmax 流程（fc_argmax_serial，2026-08-02 落地）
+
+- 序列化 FC + signed argmax：`rtl/fc_argmax_serial.v`；`gap_mem[0:31]`（32×UINT8
+  寄存器阵列，`gap_we` 写入）、`fc_weight` ROM 320×SINT8（OI）、`fc_bias` ROM
+  10×SINT32；冻结设计见 `docs/rtl_microarchitecture.md` §13
+- 数值：`fc_acc[o] = Σ gap_q[f]·fc_weight[o][f] + fc_bias[o]`，S64 精确累加、bias
+  后 INT32 饱和、**不做 requant**；**tie 规则（冻结）**：class0 无条件初始化，
+  后续仅 `acc32 > best` 更新（绝不用 `>=`），并列选更小类别号
+- `prediction` done 时有效并保持到下次 start；支持无 reset 连续运行；每类
+  PROLOGUE+32 MAC+ADD_BIAS+FC_VALID=35，10 类 + S_DONE = **351** 周期
+- Questa 验证：`tb/tb_fc_argmax_serial.v` 三遍（golden 10/10 + prediction=8、
+  无 reset 背靠背、**人工 tie** gap[0]=82 使类别 5/7 并列 6891 → 选 5），并重算
+  signed argmax 比对；已并入 `run_questa.ps1`
+
+### 完整纯计算核心流程（baseline_cnn_core，2026-08-02 落地）
+
+- 完整端到端核心：`rtl/baseline_cnn_core.v`，实现 `input_q → stem → pool1 →
+  conv2 → pool2 → conv3 → GAP → FC → Argmax → prediction`；控制器状态机
+  `IDLE→STEM_START→STEM_WAIT→CONV2_START→CONV2_WAIT→CONV3_START→CONV3_WAIT
+  →FC_START→FC_WAIT→DONE`；冻结设计见 `docs/rtl_microarchitecture.md` §14
+- **启动规则（冻结）**：conv2+pool2 同一周期同启（layer_sel=0）、conv3+GAP 同一
+  周期同启（layer_sel=1）、FC 在 32 个 gap 值写入后启动；conv2_done==pool2_done、
+  conv3_done==gap_done 同周期；conv 引擎 `fm_raddr` 按控制器阶段选读 pool1/pool2
+  RAM（每 RAM 非自身阶段读地址钳 0、数据 mux 阶段稳定）；conv2 q 直入 pool2、
+  conv3 q 仅在 CONV3 阶段进 GAP
+- **存储限制**：仅 input_q/pool1_q/pool2_q RAM + gap_mem 寄存器；**不实例化**完整
+  stem_q/conv2_q/conv3_q RAM
+- 核心级 busy/done：start 仅 IDLE 接受；busy 覆盖全部非 IDLE 状态；done 单周期；
+  prediction done 时有效保持到下次 start；一次推理后无需 reset 可再次装载输入并
+  start
+- Questa 验证：`tb/tb_baseline_cnn_core.v` —— digit8 完整黄金 trace 11 节点全部
+  逐位一致（12544/3136/6272/1568/1568/32/10/1，prediction=8）+ **10 smoke 样本
+  digit0..digit9 无 reset 连续运行**（prediction 0..9 全对、每帧 fc_acc 逐位一致、
+  每帧 done 恰一次）；总周期 **1,529,163**（≈153 万，理论 150529+921985+456289
+  +351+5 控制器过渡，实测一致）；已并入 `run_questa.ps1`
+- Quartus smoke 工程：`baseline_cnn_core_smoke`（`quartus/baseline_cnn_core_smoke.
+  {qpf,qsf}` 提交）；由 `scripts/create_full_core_project.tcl` 创建，
+  `run_quartus_smoke.ps1 -ProjectName baseline_cnn_core_smoke -CreateScript
+  create_full_core_project.tcl` 编译
+- 完整核心 smoke M9K 分项（Fitter 实测）：**input RAM 1 + stem weight ROM 1 +
+  pool1 RAM 4 + conv2 weight ROM 8 + conv3 weight ROM 9 + conv2 bias 2 + conv3
+  bias 2 + pool2 RAM 1 + fc weight ROM 1 = 29 块（63%）**；fc bias ROM 落入逻辑
+  （10 LC，同 stem bias）；LE 3,114、寄存器 928、9-bit 乘法器 19、无 latch、无
+  截断、无实际 signed 警告、无除法器/模运算器
+- `run_all.ps1` 现为 **14 步**：工具链 → 器件 → Questa（requant/GAP/stem/padding/
+  maxpool/集成/conv2-pool2/conv3/GAP流/FC/完整核心）→ 算术 smoke → stem smoke →
+  Python 契约 → stem 契约 → maxpool smoke → maxpool 契约 → 集成 smoke → conv23
+  smoke → conv23 契约 → 完整核心 smoke → 完整核心契约
 
 ## FPGA 硬件目标与开发约定（BaselineCNN）
 

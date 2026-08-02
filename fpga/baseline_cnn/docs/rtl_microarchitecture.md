@@ -513,3 +513,182 @@ M9K 分项（Fitter RAM Summary，最终数字以此为准）：
 - requantize_u8 的 64×64 乘法为唯一的嵌入式乘法器消费者（MAP 9-bit 元素 9），
   是最大的组合逻辑块（requant 层次 ~252 LE）；本阶段未加时钟约束（板载时钟未
   冻结），Fitter 未做时序收敛分析（"Timing requirements not specified"）。
+
+### 11.8 引擎修复（2026-08-02，集成前置）
+
+在接入完整核心前修复两处：
+
+- **未选权重 ROM 越界读取**：两个权重 ROM 原先都以 `issuing` 门控；但 conv3
+  运行期间 conv2 ROM 的地址可达到 4751（oc·144 + ic·9 + ky·3 + kx，ic 上到 31），
+  超过 conv2 ROM 深度 4608。改为**按层门控**：
+  `wt2_read = issuing && !layer`、`wt3_read = issuing && layer`，未选中层的 ROM
+  地址固定为 0（非 issuing 周期同样为 0）。`layer` 在 start 时锁存、整次运行稳定。
+- **multiplier 十六进制注释勘误**：conv2/conv3 的正确 hex 为 `32'h416335B9` /
+  `32'h4D6CC8EC`（与 `baseline_cnn_params.vh` 一致）；原注释 `4162F7B9`/
+  `4D6C5DEC` 错误，已修正（十进制 localparam 值本就正确、未改动）。
+
+两个测试向量（`tb_conv2_pool2` / `tb_conv3_serial`）新增层级仿真断言：
+conv2 运行期间 conv3 ROM 地址恒为 0、conv3 运行期间 conv2 ROM 地址恒为 0、
+任何权重 ROM 不得收到超出自身 DEPTH 的地址。conv2/conv3 全部黄金结果保持不变。
+
+## 12. 流式全局平均池（gap_stream_u8，2026-08-02）
+
+独立可综合的流式 GAP，直接消费 conv3_q 流（32×7×7、channel→y→x、每通道连续
+49 项），每通道产出 1 个结果：
+
+```text
+sum[c]   = 该通道 49 个 UINT8 之和（14 位无符号寄存器，max 12495）
+gap_q[c] = round_half_away_from_zero(sum[c]/49) = floor((sum[c]+24)/49)，饱和到 [0,255]
+```
+
+- **复用已冻结的 `gap_div49.v`**（常数除法 `n*2675 >> 17`，穷举验证过，不重实现）；
+- 流式契约与 MaxPool 一致：输入计数/累加仅在 `busy && in_valid` 推进，支持任意
+  空拍；每 49 项产生一个 `out_valid`；`out_channel` 严格 0..31，共 32 项；
+- **与 conv3 同启**（控制器 CONV3_START 同时拉高 `conv_start` 与 `gap_start`），
+  不由 conv3_done 启动；start 与第一项 in_valid 天然不同采样沿（conv3 首项 q 在
+  start 后 ~290 周期）；
+- busy 覆盖 S_DONE（`busy = RUN || DONE`），无 `busy=0 && done=0` 窗口；done
+  单周期，且严格在最后一个 out_valid 之后 1 周期；
+- 周期（无空拍）：1568 项消费完，done 在最后一项后 2 周期（1 周期到最后一个
+  out_valid，1 周期 S_DONE）。实测（tb_gap_stream_u8）：连续 1570、固定空拍 2196，
+  busy_cycles 一致。
+
+### 12.1 验证（tb_gap_stream_u8，digit8 / test index 61）
+
+三遍：连续输入（32/32）、**无 reset 连续第二次运行逐位相同**、固定空拍
+（每 5 发插 2 空拍，32/32）。gap_q 与 `gap_q.mem` 逐位一致；out_channel 严格
+0..31；done 单脉冲；busy 保持到 done；无 X/Z。
+
+## 13. 全连接 + Argmax（fc_argmax_serial，2026-08-02）
+
+序列化 FC 层 + signed argmax。内部保存 `gap_mem[0:31]`（32×UINT8 寄存器阵列，
+由 `gap_we/gap_waddr/gap_wdata` 写入）、`fc_weight` ROM（320×SINT8，OI）、
+`fc_bias` ROM（10×SINT32）。
+
+数值语义（冻结，`data_format.md` §5.5）：
+
+```text
+fc_acc[o]   = Σ_f gap_q[f]·fc_weight[o][f] + fc_bias[o]     # S64 精确累加
+fc_acc[o]   = saturate_int32(...)                            # INT32 饱和在 bias 之后
+prediction  = signed argmax(fc_acc)，并列取更小类别号
+```
+
+- gap_q 按 UINT8、权重按 SINT8 解释，乘积加宽到 17 位 signed；
+- bias 在所有 32 次 MAC 结束后一次性加入；**不做 requant**；
+- **tie 规则（冻结，PyTorch first-max 语义）**：class0 无条件初始化 `best`；
+  后续仅在 `acc32 > best` 时更新，**绝不用 `>=`** —— 并列时保留更早类别；
+- 每类别产生一个 `fc_valid/fc_class/fc_acc`，共 10 项、地址 0..9；
+- `prediction` 在 done 时有效并**保持到下一次 start**；支持无 reset 连续运行；
+- 权重地址 `{oc,f}`（= oc·32+f，位拼接无乘法器）；ROM 采用与卷积引擎相同的
+  software-pipeline 读取（`wt_raddr` 指向下一 tap 的 issued 地址）；
+- 周期：每类 PROLOGUE(1)+MAC(32)+ADD_BIAS(1)+FC_VALID(1)=35；10 类 = 350，
+  +1（S_DONE）= **351** start→done。实测 351。
+
+### 13.1 验证（tb_fc_argmax_serial，digit8 / test index 61）
+
+三遍：golden（gap 写入 32/32 层级读回核对、fc_acc 10/10、prediction=8）、
+**无 reset 连续第二次逐位相同**、**人工 tie**（gap[0]=82，使类别 5 与 7 并列
+6891 且高于其余类别，argmax 选较小类别 5）。TB 同时用观测到的 10 个 fc_acc
+重算 signed argmax 并与 prediction 比对（argmax_bad=0），验证 signed 比较与
+tie 规则。
+
+## 14. 完整纯计算核心（baseline_cnn_core，2026-08-02）
+
+端到端整数流水线（无 UART）：
+
+```text
+input_q RAM → stem_conv_serial → 流式 MaxPool → pool1_q RAM
+→ conv_u8_serial (layer_sel=0) → 流式 MaxPool → pool2_q RAM
+→ conv_u8_serial (layer_sel=1) → gap_stream_u8 → gap_mem
+→ fc_argmax_serial → prediction
+```
+
+### 14.1 控制器与启动规则（冻结）
+
+状态机 `IDLE → STEM_START → STEM_WAIT → CONV2_START → CONV2_WAIT →
+CONV3_START → CONV3_WAIT → FC_START → FC_WAIT → DONE`：
+
+- **STEM_START** 只拉高 `stem_start`（stem 引擎与 pool1 MaxPool 在流水线内部同启）；
+- **CONV2_START** 同一周期拉高 `conv_start` 与 `pool2_start`（layer_sel=0），
+  pool2 不由 conv2_done 启动；等待 pool2_done，**断言 conv2_done 与 pool2_done
+  同周期**；
+- **CONV3_START** 同一周期拉高 `conv_start` 与 `gap_start`（layer_sel=1），
+  GAP 不由 conv3_done 启动；等待 gap_done，**断言 conv3_done 与 gap_done 同周期**；
+- **FC_START** 在全部 32 个 gap 值写入 gap_mem 后拉高 `fc_start`；等待 fc_done，
+  锁存 prediction。
+
+### 14.2 存储与数据流（冻结）
+
+- **仅允许** input_q RAM（784，stem 引擎内）、pool1_q RAM（3136，流水线内）、
+  pool2_q RAM（1568，核心内）、gap_mem（32×8 寄存器，FC 内）；
+- **不实例化**完整 stem_q（12544）/ conv2_q（6272）/ conv3_q（1568）RAM：
+  stem_q 直入 MaxPool、conv2_q 直入 pool2、conv3_q 直入 GAP；
+- conv 引擎的 `fm_raddr` 在 CONV2 阶段读 pool1 RAM、CONV3 阶段读 pool2 RAM；
+  每个 RAM 的读地址在非自身阶段被钳到 0（防止 pool2 RAM 被读到 3135 越界），
+  数据 mux 按控制器阶段选择，**阶段全程稳定**、中途不切换；
+- conv2 的 q 流经参数化 MaxPool 写入 pool2 RAM；conv3 的 q 流**仅在 CONV3 阶段**
+  使能进入 GAP（`gap_in_valid = conv_q_valid && conv3_phase`）。
+
+### 14.3 核心级 busy/done 协议（冻结）
+
+`start` 只在 IDLE 接受；busy 覆盖全部非 IDLE 状态（含 DONE），从 start 到 done
+脉冲之间无 `busy=0 && done=0` 窗口；done 单周期（DONE 状态的下一个 IDLE 周期）；
+done 周期 busy 可为 0；prediction 在 done 时有效并保持到下次 start；一次推理后
+无需 reset 即可装载下一张图并再次 start（10 smoke 样本无 reset 连续运行验证）。
+
+### 14.4 周期（digit8 / test index 61 实测）
+
+| 段 | 周期 |
+|---|---|
+| start → stem_done | 150,530 |
+| conv2_start → pool2_done | 921,986 |
+| conv3_start → gap_done | 456,290 |
+| fc_start → fc_done | 352 |
+| start → core_done | **1,529,163** |
+
+各子块比理论值（150,529 / 921,985 / 456,289 / 351）多 1 为 start 周期计数约定；
+总周期比四段之和（1,529,158）多 5 = STEM_START / CONV2_START / CONV3_START /
+FC_START / DONE 五个控制器过渡状态周期。理论约 153 万周期，实测一致。
+
+### 14.5 验证（tb_baseline_cnn_core）
+
+**A. digit8 完整黄金 trace（test index 61）**：`input_q→conv1_acc→stem_q→
+pool1_q→conv2_acc→conv2_q→pool2_q→conv3_acc→conv3_q→gap_q→fc_acc→prediction`
+逐项 100% 逐位一致（12544/12544、3136/3136、6272/6272、1568/1568、1568/1568、
+32/32、10/10、prediction=8）；所有流地址严格连续；控制器 stage 顺序
+IDLE..DONE..IDLE 正确；conv2+pool2 同启、conv3+GAP 同启、done 搭档同周期；
+GAP 写 FC 恰 32 项、FC 恰 10 项；无 X/Z；无非法 RAM/ROM 地址；done 恰 1 次。
+
+**B. 10 smoke 样本（digit0..digit9，无全局 reset）**：每帧 IDLE 状态重写 784 字节
+输入并 start；10 个 fc_acc 与 smoke 黄金逐位一致；prediction == digit（0..9 全对）；
+每帧 done 恰 1 次；后帧不残留前帧 pool/gap/argmax 状态（fc_acc 一致即为残留检查）。
+
+### 14.6 综合资源（baseline_cnn_core_smoke，EP4CE10F17C8，2026-08-02 Fitter 实测）
+
+Flow Successful，LE **3,114**、寄存器 **928**、9-bit 嵌入式乘法器 **19**、
+**M9K 29 块（63%）**、块内存位 160,512/423,936（38%）、实现位 267,264（63%）、
+物理引脚 0、虚拟引脚 69。
+
+M9K 分项（Fitter RAM Summary，最终数字以此为准）：
+
+| 存储 | 模板 | 容量 | M9K |
+|---|---|---|---|
+| input_q RAM | `sync_ram_u8` | 784×8 = 6272 bit | **1** |
+| stem weight ROM | `sync_rom_s8` | 144×8 = 1152 bit | **1** |
+| pool1_q RAM | `sync_ram_u8` | 3136×8 = 25088 bit | **4** |
+| conv2 weight ROM | `sync_rom_s8` | 4608×8 = 36864 bit | **8** |
+| conv3 weight ROM | `sync_rom_s8` | 9216×8 = 73728 bit | **9** |
+| conv2 bias ROM | `sync_rom_s32` | 32×32 = 1024 bit | **2** |
+| conv3 bias ROM | `sync_rom_s32` | 32×32 = 1024 bit | **2** |
+| pool2_q RAM | `sync_ram_u8` | 1568×8 = 12544 bit | **1** |
+| fc weight ROM | `sync_rom_s8` | 320×8 = 2560 bit | **1** |
+| **fc bias ROM** | `sync_rom_s32` | 10×32 = 320 bit | **逻辑**（10 LC） |
+
+- stem bias 同样落入逻辑（12 LC/12 reg，512 bit 太小）；其余 M9K 分项合计 29；
+- **不存在完整 stem_q / conv2_q / conv3_q RAM**（Fitter RAM Summary 只列出上表
+  存储，无 12544/6272 深度 RAM，conv3_q 无独立 RAM）；
+- 无锁存器、无截断（0 条 Warning 10230）、无实际 signed 警告（77 条匹配均为
+  LPM 参数显示/Signed Integer 参数，DSP 乘法器 5 有符号 + 2 无符号）；
+- **无除法器/模运算器**；无厂商 IP；
+- 本阶段仍未加时钟约束（板载时钟未冻结），Fitter 未做时序收敛
+  （"Timing requirements not specified"）。

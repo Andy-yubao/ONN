@@ -89,6 +89,7 @@ module tb_conv3_serial;
     integer addr_bad;        // acc_addr/q_addr ordering mismatches
     integer xz_bad;          // X/Z on the streams / status
     integer illegal_addr_bad;// fm_raddr > 1567 during the run
+    integer rom_ovr_bad;     // weight-ROM gating / out-of-depth read
     integer cross_bad;       // pass 2 output != pass 1 output
     integer done_count;      // done pulse count (expect 1)
     integer busy_cycles;     // cycles busy == 1
@@ -130,6 +131,24 @@ module tb_conv3_serial;
             if (illegal_addr_bad < 20)
                 $display("C3 ILLEGAL-FM cyc=%0d fm_raddr=%0d (>1567)", cyc, fm_raddr);
             illegal_addr_bad = illegal_addr_bad + 1;
+        end
+
+        // weight-ROM gating / out-of-depth (hierarchical into u_conv):
+        //   - the conv2 weight ROM must be fixed at 0 during a conv3 run
+        //     (layer-gated reads, never a stray address)
+        //   - no weight ROM may ever be addressed beyond its own depth
+        //     (conv2 4608, conv3 9216)
+        if (busy) begin
+            if (u_conv.u_wt2_rom.addr !== 13'd0) begin
+                if (rom_ovr_bad < 20)
+                    $display("C3 WT2-GATE cyc=%0d wt2_addr=%0d (expect 0 during conv3)", cyc, u_conv.u_wt2_rom.addr);
+                rom_ovr_bad = rom_ovr_bad + 1;
+            end
+            if (u_conv.u_wt3_rom.addr > 14'd9215) begin
+                if (rom_ovr_bad < 20)
+                    $display("C3 WT3-OVR cyc=%0d wt3_addr=%0d (>9215)", cyc, u_conv.u_wt3_rom.addr);
+                rom_ovr_bad = rom_ovr_bad + 1;
+            end
         end
 
         // conv3 acc/q stream
@@ -188,7 +207,7 @@ module tb_conv3_serial;
             // ---- reset statistics ----
             passid = passno - 1;
             cmp_idx = 0; qcnt = 0; mismatches = 0; addr_bad = 0;
-            xz_bad = 0; illegal_addr_bad = 0; cross_bad = 0;
+            xz_bad = 0; illegal_addr_bad = 0; rom_ovr_bad = 0; cross_bad = 0;
             done_count = 0; busy_cycles = 0; cyc = 0;
             start_cyc = 0; first_q_cyc = 0; done_cyc = 0;
 
@@ -220,13 +239,13 @@ module tb_conv3_serial;
                      first_q_cyc - start_cyc, done_cyc - start_cyc, busy_cycles);
 
             ok = (qcnt == 1568 && mismatches == 0 && addr_bad == 0 &&
-                  xz_bad == 0 && illegal_addr_bad == 0 && cross_bad == 0 &&
+                  xz_bad == 0 && illegal_addr_bad == 0 && rom_ovr_bad == 0 && cross_bad == 0 &&
                   done_count == 1 && busy_cycles > 0 &&
                   busy_cycles == done_cyc - start_cyc &&
                   first_q_cyc - start_cyc == 290 && done_cyc - start_cyc == 456289);
             if (!ok)
-                $fatal(1, "C3 PASS[%0d] FAILED (qcnt=%0d mism=%0d addr=%0d xz=%0d ill=%0d cross=%0d done=%0d)",
-                       passno, qcnt, mismatches, addr_bad, xz_bad, illegal_addr_bad, cross_bad, done_count);
+                $fatal(1, "C3 PASS[%0d] FAILED (qcnt=%0d mism=%0d addr=%0d xz=%0d ill=%0d rom=%0d cross=%0d done=%0d)",
+                       passno, qcnt, mismatches, addr_bad, xz_bad, illegal_addr_bad, rom_ovr_bad, cross_bad, done_count);
         end
     endtask
 

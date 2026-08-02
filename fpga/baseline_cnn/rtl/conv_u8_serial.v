@@ -3,10 +3,10 @@
 // Implements exactly, for both layers:
 //     conv2 (layer_sel=0):  pool1_q 16x14x14 (UINT8) -> Conv2d 16->32, 3x3, pad1
 //                           -> +INT32 bias -> saturate INT32 -> requantize_u8
-//                           (0x4162F7B9 = 1097020857, shift 38) -> conv2_q 32x14x14
+//                           (0x416335B9 = 1097020857, shift 38) -> conv2_q 32x14x14
 //     conv3 (layer_sel=1):  pool2_q 32x7x7  (UINT8) -> Conv2d 32->32, 3x3, pad1
 //                           -> +INT32 bias -> saturate INT32 -> requantize_u8
-//                           (0x4D6C5DEC = 1298974956, shift 38) -> conv3_q 32x7x7
+//                           (0x4D6CC8EC = 1298974956, shift 38) -> conv3_q 32x7x7
 //
 // This engine ONLY serves conv2/conv3; the verified stem engine
 // (stem_conv_serial.v) is NOT replaced.  The input feature map lives in an
@@ -95,8 +95,8 @@ module conv_u8_serial #(
     localparam C3_WT_D = 9216;
 
     // Frozen requant constants (params/baseline_cnn_params.vh).
-    localparam signed [31:0] C2_MULT = 32'sd1097020857;  // 32'h4162F7B9
-    localparam signed [31:0] C3_MULT = 32'sd1298974956;  // 32'h4D6C5DEC
+    localparam signed [31:0] C2_MULT = 32'sd1097020857;  // 32'h416335B9
+    localparam signed [31:0] C3_MULT = 32'sd1298974956;  // 32'h4D6CC8EC
     localparam [5:0]         CONV_SHIFT = 6'd38;
 
     // INT32 saturation bounds (clamp, no wraparound).
@@ -219,14 +219,25 @@ module conv_u8_serial #(
         .q          (q_w)
     );
 
+    // ================= weight-ROM read gating =================
+    // Each weight ROM is only addressed while issuing THAT layer's taps; the
+    // OTHER layer's ROM is forced to address 0 so it can never be read
+    // out-of-range.  This matters because the two layers run the same counters:
+    // during a conv3 run `wt2_addr` would climb to oc*144 + ic*9 + ... = 4751,
+    // beyond the conv2 ROM depth of 4608; during a conv2 run `wt3_addr` would
+    // climb to 4607 (still < 9216 but forced to 0 per the frozen gating rule).
+    // Outside issuing cycles both ROMs are addressed at 0 too.  `layer` is
+    // latched at start, so the gate is stable for the whole run.
+    wire wt2_read = issuing && !layer;
+    wire wt3_read = issuing &&  layer;
+
     // ================= memory instances =================
     // Weight ROMs for BOTH layers (conv2 4608 S8, conv3 9216 S8); bias ROMs for
-    // BOTH layers (32 S32 each).  Addresses are guarded to 0 when not issuing so
-    // the last-MAC tap never reads an out-of-range ROM cell.
+    // BOTH layers (32 S32 each).
     sync_rom_s8 #(.DEPTH(C2_WT_D), .ADDR_W(13), .FILE(WT2_MEM_FILE))
-        u_wt2_rom (.clk(clk), .addr(issuing ? wt2_addr : 13'd0), .rdata(wt2_rdata));
+        u_wt2_rom (.clk(clk), .addr(wt2_read ? wt2_addr : 13'd0), .rdata(wt2_rdata));
     sync_rom_s8 #(.DEPTH(C3_WT_D), .ADDR_W(14), .FILE(WT3_MEM_FILE))
-        u_wt3_rom (.clk(clk), .addr(issuing ? wt3_addr : 14'd0), .rdata(wt3_rdata));
+        u_wt3_rom (.clk(clk), .addr(wt3_read ? wt3_addr : 14'd0), .rdata(wt3_rdata));
     sync_rom_s32 #(.DEPTH(32), .ADDR_W(5), .FILE(BIAS2_MEM_FILE))
         u_bias2_rom (.clk(clk), .addr(oc[4:0]), .rdata(bias2_rdata));
     sync_rom_s32 #(.DEPTH(32), .ADDR_W(5), .FILE(BIAS3_MEM_FILE))
