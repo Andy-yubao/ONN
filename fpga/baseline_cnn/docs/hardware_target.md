@@ -227,3 +227,30 @@ S0/S1/S2 按键引脚（板载主时钟与调试 LED 引脚已冻结，见 §10�
 
 > 本阶段不实现 UART、不将 `baseline_cnn_core` 接入板级顶层、不虚构复位引脚；
 > 完整 CNN 的板级顶层（input 装载 / 复位 / UART）留待后续阶段。
+
+## 11. 固定 digit8 CNN 板级自检（功能验证通过，50 MHz 时序阻塞，2026-08-02）
+
+`rtl/ac620_cnn_selftest_top.v` 是当前完整 CNN 的板级自检顶层。它仅导出
+`clk_50m` 与 `led[3:0]`：内部 POR 自动释放后，从
+`sim/vectors/golden_trace/input_q.mem` 的同步 ROM 装载固定 digit8 的 784 字节
+`input_q`，随后发出单周期 `start`，等待 `baseline_cnn_core` 的 `done`，并检查
+`prediction == 8`。加载期间和运算期间 LED 同步心跳；结果阶段以同步全闪表示 PASS、
+以 `1010/0101` 交替表示 FAIL，故不依赖 LED 的有效电平极性。
+
+- Questa 板级自检已通过；证据日志为
+  `fpga/baseline_cnn/sim/tb_ac620_cnn_selftest.log`，其中含
+  `AC620_CNN_SELFTEST_PASS ALL_PASS`。
+- `quartus/ac620_cnn_selftest` 面向 **EP4CE10F17C8** 的完整编译曾为
+  Flow Successful；资源为 LE **2,823**、寄存器 **962**、M9K **30**、9-bit
+  乘法器 **19**、PLL **0**。相对 `baseline_cnn_core`，固定输入 ROM 额外占用
+  **1 个 M9K**。
+- 顶层 QSF 只有时钟与四个 LED 共 5 个物理引脚，未使用 `VIRTUAL_PIN`；SDC 对
+  `clk_50m` 施加 `20.000 ns` 时钟约束并调用 `derive_clock_uncertainty`。
+- 功能正确不等于可在 50 MHz 烧录运行：当前 STA 未收敛。Slow 85C setup slack 为
+  **-16.968 ns**，Slow 0C 为 **-13.826 ns**，Fast 0C 为 **+3.736 ns**；Slow
+  85C Fmax 为 **27.05 MHz**。最差路径为
+  `conv_u8_serial.acc64[42] -> gap_stream_u8.out_q_r[6]`。
+- 当前 `.sof` 仅作本地保留，**不得下载到 FPGA**；必须在独立后续阶段实施
+  retiming 后重新进行完整时序验证。UART、按键与 EPCS Flash 在本自检中均未使用。
+- 本地 `.rpt`、`.log`、`.sof` 以及 Quartus 数据库均不是 Git 交付物；本条记录也
+  不宣称完整 CNN 已在真实开发板上成功运行。
