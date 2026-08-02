@@ -5,6 +5,7 @@
 | **状态** | Accepted |
 | **提出日期** | 2026-07-19 |
 | **最后更新** | 2026-07-19 |
+| **部分被替代** | [ADR 008](008-device-model-driven-training-and-temporal-acquisition.md)（2026-08-02）：FPGA 数字 CNN 推理已完成；RGB 经器件模型转换成为新训练输入方向 |
 
 ## 问题
 
@@ -41,3 +42,5 @@ FPGA 推理目标是什么？网络结构、输入和使用器件信息吗？
 - 输入来自数字数据源，不来自 4×4 采集电路
 - 硬件平台为小梅哥 AC620（Cyclone IV），工具为 Quartus + ModelSim/Questa
 - 不使用 Vivado / FINN / PYNQ / Xilinx 工具链
+
+> **后续状态（2026-08-02）**：FPGA 28×28 数字 CNN 推理已实现并完成固定 digit8 板级自检。组会新增"RGB 经器件模型转换为电导/电流表示后训练"方向（仍属于路线 B 训练侧，不影响已完成的 FPGA 数字推理），见 [ADR 008](008-device-model-driven-training-and-temporal-acquisition.md)。

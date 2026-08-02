@@ -12,7 +12,7 @@
 
 ### 设计目的
 
-作为无残差连接的普通 CNN 基线，轻量、硬件友好，便于与 Tiny-ResNet 结构对照。
+作为无残差连接的普通 CNN 基线，轻量、硬件友好，便于与 Tiny-ResNet 结构对照。**BaselineCNN 是已完成的 INT8 FPGA 部署模型**（冻结，见 [data_format.md](../fpga/baseline_cnn/docs/data_format.md)）。
 
 ### 架构表
 
@@ -31,7 +31,7 @@
 
 - **无残差连接**：作为普通 CNN 基线对照
 - **避免大型全连接层**：使用全局平均池化替代展平+大 FC
-- **BatchNorm**：加速收敛，后续可融合进卷积层以简化 FPGA 实现
+- **BatchNorm**：加速收敛，后续融合进卷积层以简化 FPGA 实现（**已完成 BN 融合**，见 [BN 融合实验](../experiments/model_deployment/baseline_cnn_bn_fusion/README.md)）
 - **无 Dropout**：第一版保持最简单配置
 - **无数据增强**：建立干净、易解释的基线
 
@@ -41,7 +41,7 @@
 
 ### 设计目的
 
-适合 MNIST 和资源受限 FPGA 的浅层残差网络，结构参考 ResNet 但大幅简化。
+适合 MNIST 和资源受限 FPGA 的浅层残差网络，结构参考 ResNet 但大幅简化。**作为软件参考 / 高准确率备选**（尚未量化部署）。
 
 ### 为什么不是 ResNet-18
 
@@ -81,38 +81,62 @@
 | 2 个 stage 而非 4 个 | MNIST 复杂度低，不需要过深网络 |
 | 无 7×7 卷积 | 28×28 输入下 3×3 感受野已足够 |
 
-## FPGA 部署候选评估
+---
 
-| 指标 | BaselineCNN | Tiny-ResNet |
-|------|:---------:|:----------:|
-| 总参数量 | 14,458 | 42,938 |
-| Conv 权重占比 | 96.6% | 99.2% |
-| BatchNorm (可融合) | 3层 | 10层 |
-| 最大特征图（单张量） | 16×28×28=12,544 | 16×28×28=12,544 |
-| 全连接层 | 1层 (32→10) | 1层 (32→10) |
+## 已完成的部署链路（BaselineCNN）
 
-两个模型的参数量和最大单张量激活规模较小，**具备进一步进行定点化和 FPGA 资源评估的条件**。但以下事项**尚未完成**，目前不能宣称"适合 FPGA 部署"：
+> 从 FP32 到 AC620 板级自检的完整链路均已落地，见 [硬件目标](../fpga/baseline_cnn/docs/hardware_target.md)。
 
-- 尚未完成定点量化（位宽、量化策略、精度损失评估）
-- Cyclone IV 具体型号已冻结（EP4CE10F17C8，~10K LE），资源预算（LE/M9K/DSP）尚未评估
-- 尚未评估残差缓存（Tiny-ResNet 需要）、行缓冲、DSP 调度和中间位宽
-- 13.76M MAC（Tiny-ResNet）不等于一定能满足特定延迟与功耗目标
-- BatchNorm 融合为后续工作，当前尚未验证融合后的精度
+| 阶段 | 结果 | 证据 |
+|------|------|------|
+| 浮点基线 | seed 42：98.45%（BaselineCNN）/ 99.43%（Tiny-ResNet） | [m1_baselines](../experiments/model_baselines/m1_baselines/README.md) |
+| 多种子审计 | BaselineCNN test 98.26%±0.20；TinyResNet 98.89%±0.82（seeds 42/43/44） | [multiseed](../experiments/model_baselines/m1_baseline_audit/README.md) |
+| BN 融合 | 融合后 98.48%，预测 100% 一致 | [bn_fusion](../experiments/model_deployment/baseline_cnn_bn_fusion/README.md) |
+| INT8 PTQ | 方案 A 98.46%（降 0.02pp） | [int8_ptq](../experiments/model_deployment/baseline_cnn_int8_ptq/README.md) |
+| 纯整数参考 | 98.47%，GAP 前逐位一致 | [int8_reference](../experiments/model_deployment/baseline_cnn_int8_reference/README.md) |
+| 参数导出 | `.mem`/`.mif`/`.vh` + SHA256 checksums | [params](../fpga/baseline_cnn/params/) |
+| 完整 RTL + 仿真 | 11 节点黄金 trace + 10 smoke 逐位一致 | [rtl_microarchitecture](../fpga/baseline_cnn/docs/rtl_microarchitecture.md) |
+| 50 MHz STA | 最小 Fmax 56.41 MHz | [hardware_target](../fpga/baseline_cnn/docs/hardware_target.md) §12 |
+| 固定 digit8 板级自检 | prediction=8，PASS，JTAG SRAM | [hardware_target](../fpga/baseline_cnn/docs/hardware_target.md) §12.1 |
 
-### 两个模型的不同角色
+### 部署现状总结
 
-- **Tiny-ResNet**：后续类脑训练规则的主要算法研究模型。残差连接可能对非标准更新规则有稳定作用，但更高的 MAC 和参数量需要在 FPGA 资源评估中确认。
-- **BaselineCNN**：轻量对照模型和潜在低资源 FPGA 候选。无残差连接，结构更简单，但作为算法研究平台灵活性较低。
+BaselineCNN 已具备 INT8 定点硬件部署资格（INT32 累加无溢出、无回绕、确定性、逐层 bit-accurate），并在 AC620 V2 上完成**固定 digit8、片上 ROM 输入**的板级自检。以下事项**尚未完成**，不能扩大为"完整系统部署全部完成"：
+
+- 外部任意图像输入 / UART 图像传输
+- 测试集级硬件准确率（≥1000 张）
+- 功耗或单次推理能耗实测
+- EPCS Flash 固化
+- 完整最终产品化接口
+
+---
+
+## 后续研究方向（2026-08-02 组会）
+
+- 器件模型驱动训练：标准 RGB 图像 → 电导/电流表示 → 训练与评价
+- 定向 Hebbian 连接增强
+- KAN 候选
+- 多次采样与时序特征编码
+
+以上均处于决策/待设计阶段，参数（数据集、矩阵尺寸、公式、结构）为开放问题，见 [open_questions.md](open_questions.md) 的 NQ 清单。
+
+---
 
 ## 本阶段不实现的特性
 
-- ❌ Hebbian / STDP / Oja / 三因素更新规则
-- ❌ "多用增强、少用削弱"的权重更新修改
-- ❌ 4×4 光电阵列数据接入
-- ❌ FPGA 训练
-- ❌ RTL 或量化硬件实现
+- ❌ 定向 Hebbian 更新规则的数学实现（公式 TBD）
+- ❌ KAN 实现（结构 TBD）
+- ❌ 4×4 光电阵列数据实时接入（不要求实时耦合）
+- ❌ FPGA 在线训练
+- ❌ 外部图像输入与测试集级硬件评价（M3-B.4 未完成）
+
+> 注：量化、整数参考、RTL 与 bit-accurate 比对**均已实现**，不再属于"不实现"列表。
+
+---
 
 ## 后续扩展接口
 
 - `model/onn_model/activity.py` — 通道活动统计，可用于活动依赖衰减规则
 - `model/onn_model/engine.py` —— `train_one_epoch` 可替换优化器为自定义更新规则
+- `model/onn_model/int8_reference.py` — 纯整数参考模型（冻结数值标准）
+- `model/export_baseline_cnn_hardware.py` — 硬件参数导出入口

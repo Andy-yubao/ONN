@@ -5,6 +5,7 @@
 | **状态** | Accepted |
 | **提出日期** | 2026-07-19 |
 | **最后更新** | 2026-07-19 |
+| **部分被替代** | [ADR 008](008-device-model-driven-training-and-temporal-acquisition.md)（2026-08-02）："完全无数据联系"更新为允许离线算法耦合 |
 
 ## 问题
 
@@ -32,5 +33,5 @@
 
 - 文档全部按 A/B 两组组织
 - 不再以"端到端系统联调"为成功标准
-- 器件曲线作为辅助研究（C 轨），不阻塞 A/B
-- 未来若条件成熟，可在算法层建立离线弱联系
+- 器件曲线作为辅助研究（C 轨），不阻塞 A/B——**"C 轨"名称已废弃（2026-08-02）**，该方向并入路线 B 的器件模型驱动训练研究方向，见 [ADR 008](008-device-model-driven-training-and-temporal-acquisition.md)
+- 未来若条件成熟，可在算法层建立离线弱联系——**2026-08-02 起离线算法耦合为当前允许且期望的联系**，见 [ADR 008](008-device-model-driven-training-and-temporal-acquisition.md)

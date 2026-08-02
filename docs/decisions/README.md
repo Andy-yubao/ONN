@@ -22,3 +22,4 @@
 - [005-外围采集系统支持多档可配置采样率](005-configurable-multirate-acquisition.md)
 - [006-FPGA 实现 28×28 数字 CNN 推理](006-28x28-digital-cnn-on-fpga.md)
 - [007-双路线架构与边界定义](007-dual-track-architecture-and-boundaries.md)
+- [008-器件模型驱动训练与多次采样采集](008-device-model-driven-training-and-temporal-acquisition.md)
