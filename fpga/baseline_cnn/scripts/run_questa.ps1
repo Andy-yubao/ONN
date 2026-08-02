@@ -38,6 +38,9 @@
                                      golden trace - every node bit-exact - plus
                                      10 smoke samples digit0..digit9, no reset
                                      between frames)
+ 14. vsim  -> tb_ac620_led_bringup  (AC620 board bring-up top on a shortened
+                                     config: counter keeps running, all four
+                                     LEDs toggle, adjacent halving, no X/Z)
 
   Any compile error, simulation fatal or mismatch sets a non-zero exit code.
   $readmemh paths inside the testbenches are relative to the repo root, so
@@ -103,6 +106,7 @@ $srcs = @(
     (Join-Path $rtlDir "gap_stream_u8.v"),
     (Join-Path $rtlDir "fc_argmax_serial.v"),
     (Join-Path $rtlDir "baseline_cnn_core.v"),
+    (Join-Path $rtlDir "ac620_led_bringup_top.v"),
     (Join-Path $tbDir  "tb_requantize_u8.v"),
     (Join-Path $tbDir  "tb_gap_div49.v"),
     (Join-Path $tbDir  "tb_stem_conv_serial.v"),
@@ -113,7 +117,8 @@ $srcs = @(
     (Join-Path $tbDir  "tb_conv3_serial.v"),
     (Join-Path $tbDir  "tb_gap_stream_u8.v"),
     (Join-Path $tbDir  "tb_fc_argmax_serial.v"),
-    (Join-Path $tbDir  "tb_baseline_cnn_core.v")
+    (Join-Path $tbDir  "tb_baseline_cnn_core.v"),
+    (Join-Path $tbDir  "tb_ac620_led_bringup.v")
 )
 Write-Host "[run_questa] vlog -work $workRel" -ForegroundColor Cyan
 & $vlog -work $workRel $srcs 2>&1
@@ -123,7 +128,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "[run_questa] vlog failed ($LASTEXITCODE)"
 Push-Location $root
 $allOk = $true
 try {
-    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream", "tb_stem_pool1_pipeline", "tb_conv2_pool2", "tb_conv3_serial", "tb_gap_stream_u8", "tb_fc_argmax_serial", "tb_baseline_cnn_core")) {
+    foreach ($tb in @("tb_requantize_u8", "tb_gap_div49", "tb_stem_conv_serial", "tb_stem_conv_padding", "tb_maxpool2x2_stream", "tb_stem_pool1_pipeline", "tb_conv2_pool2", "tb_conv3_serial", "tb_gap_stream_u8", "tb_fc_argmax_serial", "tb_baseline_cnn_core", "tb_ac620_led_bringup")) {
         $logFile = Join-Path $logDir "$tb.log"
         Write-Host "[run_questa] vsim -c -work $workRel $tb (log: $logFile)" -ForegroundColor Cyan
         & $vsim -c -work $workRel -do "run -all; quit -f" -l $logFile "$tb" 2>&1
