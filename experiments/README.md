@@ -12,10 +12,12 @@ experiments/
 │  └─ m1_baseline_audit/           # M1-B.1 审计与可复现性加固（多种子 post-activation）
 ├─ model_compaction/               # M2 compact 模型探索
 │  └─ m2_compact_models/
-└─ model_deployment/               # FPGA 部署链路实验
-   ├─ baseline_cnn_bn_fusion/      # BN 融合验证
-   ├─ baseline_cnn_int8_ptq/       # INT8 PTQ 可行性评估
-   └─ baseline_cnn_int8_reference/ # 纯整数参考模型验证
+├─ model_deployment/               # FPGA 部署链路实验
+│  ├─ baseline_cnn_bn_fusion/      # BN 融合验证
+│  ├─ baseline_cnn_int8_ptq/       # INT8 PTQ 可行性评估
+│  └─ baseline_cnn_int8_reference/ # 纯整数参考模型验证
+└─ input_resolution/               # 冻结模型的输入分辨率兼容性实验
+   └─ e1_frozen_baseline/          # 实验一：28×28、8×8、4×4 有效分辨率
 ```
 
 ## 实验记录规范

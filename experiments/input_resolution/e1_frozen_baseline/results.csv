@@ -1,0 +1,4 @@
+condition,effective_size,sample_count,fp32_accuracy,fake_quant_accuracy,integer_reference_accuracy,fp32_drop_vs_native_pp,fake_quant_drop_vs_native_pp,integer_reference_drop_vs_native_pp,integer_vs_fp32_agreement,integer_vs_fake_quant_agreement,fake_quant_vs_fp32_agreement,integer_changed_vs_native_count
+native_28,28,10000,0.984800,0.984600,0.984700,0.000,0.000,0.000,0.998100,0.999100,0.997300,0
+down8_up28,8,10000,0.338600,0.312500,0.313700,64.620,67.210,67.100,0.917600,0.982800,0.917500,6852
+down4_up28,4,10000,0.111400,0.104600,0.104500,87.340,88.000,88.020,0.968900,0.993100,0.968000,8942
