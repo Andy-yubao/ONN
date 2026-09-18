@@ -2,6 +2,11 @@
 
 > 每当遇到一个重要选择，在此记录决策过程。
 > 文件命名方式：`NNN-decision-title.md`
+>
+> 这里的 ADR 保留历史决策链。当前 active scope、架构、阶段和开放问题分别以
+> [`project_scope.md`](../project_scope.md)、[`system_architecture.md`](../system_architecture.md)、
+> [`development_plan.md`](../development_plan.md) 和 [`open_questions.md`](../open_questions.md)
+> 为准；旧 28×28 CNN / AC620 决策不代表当前部署目标。
 
 ## 记录原则
 
