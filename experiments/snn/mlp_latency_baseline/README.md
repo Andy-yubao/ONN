@@ -32,14 +32,16 @@ D:\tools\anaconda3\envs\onn\python.exe -m experiments.snn.mlp_latency_baseline.t
 ```
 
 默认配置：5 epochs、batch size 512、Adam、学习率 0.002、随机种子 7。
-原始数据复用 `model/data/`，输出写入本实验目录下的 `results/`。训练时会在本地生成
+原始数据默认写入仓库根目录的 `data/`，输出写入本实验目录下的 `results/`。训练时会在本地生成
 `results/best_model.pt`；checkpoint 按仓库规则不纳入 Git 跟踪，提交的 JSON/CSV/PNG
 是当前实验结果的持久记录。
 本次环境安装并固定使用 `snntorch==1.0.0`。
 
-## 本次结果
+## 探索性结果（不可作为 held-out benchmark）
 
-在 NVIDIA CUDA GPU 上完成 5 epochs 实测：
+在 NVIDIA CUDA GPU 上完成 5 epochs 实测。由于训练过程中逐 epoch 查看 test set，
+并据此保存 best model，本结果仅作为 exploratory architecture baseline，不是严格
+独立 held-out test benchmark：
 
 | 指标 | 结果 |
 |---|---:|

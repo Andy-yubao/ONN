@@ -18,7 +18,7 @@ device latency / first-spike encoding
         ↓
 参数量相近的 CNN vs SNN 公平实验
         ↓
-选出最终 SNN champion
+完成 champion selection（若选择 SNN，再 promote）
         ↓
 model/：量化、整数参考、硬件导出
         ↓
@@ -32,7 +32,7 @@ fpga/：RTL、仿真、综合与板级验证
 
 三项保留的 SNN 实验及结果见 [`experiments/README.md`](../experiments/README.md)：
 
-- MLP latency baseline：87.15%；
+- MLP latency baseline：87.15%，训练时逐轮查看 test set，属于 exploratory 结果；
 - large Conv-SNN architecture exploration：91.27%，因逐轮查看 test set，不作为严格
   独立 held-out test benchmark；
 - small Conv-IF-SNN（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线：
@@ -61,5 +61,6 @@ SNN 尚未选定；当前 SNN 尚未量化、导出或实现 RTL。后续公平�
 
 ## 当前不做
 
-本次架构切换不训练模型、不重跑完整 MNIST、不搜索超参数、不量化 SNN、不写新 RTL、
-不创建 Vivado 工程，也不进行 FPGA 综合、实现、bitstream、功耗或板级验证。
+当前尚未安排重新训练、完整 MNIST 重跑、超参数搜索、SNN 量化、新 RTL、Vivado 工程、
+FPGA 综合、实现、bitstream、功耗或板级验证；这些不是已完成的验证结果，后续是否执行
+取决于阶段边界和用户明确任务。

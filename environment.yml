@@ -40,4 +40,5 @@ dependencies:
 
   # 通过 pip 安装的额外依赖
   - pip:
+    - snntorch==1.0.0
     - tensorboard

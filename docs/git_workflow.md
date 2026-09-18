@@ -9,16 +9,18 @@
 
 ## 分支策略
 
-项目按功能/阶段建立分支，**不在旧 `master` 上重新开始开发**。
+项目按功能/阶段建立分支，以当前 checkout 的活跃分支为基线。当前工作树使用
+`main`；截至本次整理，`main` 与 `master` 指向同一提交，不应再把 `master` 描述为明显
+落后或要求从旧 feature branch 派生。
 
-- `master` 为远端默认分支，已明显落后，**不作为开发基线**；
-- 开发基线为各活跃功能分支（如 `model/m1-baseline-audit`、`fpga/retime-requant-50mhz` 等），从对应功能分支的最新远端 HEAD 派生新分支；
-- 文档/独立改动建立独立分支（如 `docs/reconcile-project-state-20260802`）；
-- 完成的分支可推送并保留，不做破坏性合并或强推。
+- 新改动默认从当前活跃分支或用户明确指定的分支开始；不要擅自切回历史 feature branch；
+- 文档/独立改动可建立独立分支，例如 `docs/reconcile-project-state`；
+- 保留有价值的实验和历史分支，不对包含历史锚点的分支强推或重写历史；
+- 是否合并到 `main` 由项目协作者按当前评审流程决定。
 
 ```
 git fetch --all --prune
-git switch -c <新分支名> origin/<上游功能分支>
+git switch -c <新分支名> <当前活跃分支>
 git add .
 git commit -m "类型: 简述修改内容"
 git push -u origin <新分支名>

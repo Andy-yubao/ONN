@@ -22,7 +22,7 @@ from .model import MinimalIFSNN
 
 
 EXPERIMENT_DIR = Path(__file__).resolve().parent
-DEFAULT_DATA_DIR = EXPERIMENT_DIR.parents[2] / "model" / "data"
+DEFAULT_DATA_DIR = EXPERIMENT_DIR.parents[2] / "data"
 
 
 def parse_args() -> argparse.Namespace:
@@ -196,6 +196,8 @@ def main() -> None:
     model_file_size = (results_dir / "best_model.pt").stat().st_size
 
     metrics = {
+        "evaluation_status": "exploratory",
+        "test_set_used_for_checkpoint_selection": True,
         "final_test_accuracy_percent": final_accuracy,
         "best_test_accuracy_percent": best_accuracy,
         "best_accuracy_recheck_percent": best_accuracy_check,

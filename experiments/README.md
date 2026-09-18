@@ -16,10 +16,15 @@ experiments/
 
 三个 SNN 实验保留原有 README、源码、`metrics.json`、`history.csv`、PNG 和小型测试。
 其中 `snn/conv_small/`（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线，
-后续 matched CNN 公平比较和 champion 选择优先以它为参考；
+后续 matched CNN 公平比较和 champion selection 优先以它为参考；若公平比较最终选择
+SNN，才将选定的 SNN promote 到 `model/`；
 本次只重构路径与共享依赖，不重新生成或修改历史结果数值。训练时会在本地生成
 `results/best_model.pt`，checkpoint 按仓库规则不纳入 Git 跟踪；JSON/CSV/PNG 是提交的
 结果持久记录。
+
+MLP latency baseline 的 87.15% 和 large Conv-SNN 的 91.27% 都是在训练过程中逐轮查看
+test set 并据此选择 checkpoint 的 exploratory 结果，不能作为严格独立 held-out test
+benchmark。`conv_small` 使用验证集选择 checkpoint，测试集只用于最终评估。
 
 推荐从仓库根目录使用 `onn` 环境运行：
 

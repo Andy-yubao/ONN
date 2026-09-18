@@ -6,7 +6,7 @@
 
 - 所有回复使用中文；
 - 不得虚构未运行的验证；
-- 不从旧 `master` 重新开始，以当前活跃功能分支为基线；
+- 以当前 checkout 的活跃分支和工作树为基线，不擅自切换到旧分支重新开始；
 - 不覆盖或删除未提交的用户修改。
 
 ## 当前项目主线
@@ -17,7 +17,7 @@ ONN 当前围绕以下 promotion pipeline：
 8×8 输入 / 器件动态模型
 → first-spike latency encoding
 → matched CNN/SNN 公平实验
-→ SNN champion selection
+→ champion selection（若选择 SNN，再 promote）
 → model/ 中的量化、整数参考、硬件导出
 → fpga/ 中的 RTL / 仿真 / 综合 / 板级验证
 ```
@@ -51,7 +51,8 @@ ONN 当前围绕以下 promotion pipeline：
 
 - 必须使用 `onn` Conda 环境：`D:\tools\anaconda3\envs\onn`；
 - 从仓库根目录运行 Python module；
-- 本次重构禁止训练、全量 MNIST evaluation、量化、Vivado/Quartus、RTL 仿真、综合、实现和 bitstream；
+- 是否训练、评估、量化或运行硬件流程以当前任务范围和阶段要求为准；不得把未运行的流程写成已完成；
+- matched CNN/SNN 研究中，test set 只用于最终评价；逐轮查看 test set 的历史结果必须标为 exploratory；
 - 修改文档后运行 `python tools/check_markdown_links.py`；
 - 运行过的命令和测试才可以写成验证结果，未运行内容必须明确标记为“未运行”。
 
@@ -59,4 +60,4 @@ ONN 当前围绕以下 promotion pipeline：
 
 旧 28×28 CNN、INT8、纯整数参考和 AC620 FPGA 工程由
 `pre-snn-era-restructure-20260918` tag 保存。不要复制到 `history/`，不要删除该 tag，
-不要 force push 或合并到 `master`。
+也不要对包含该历史的分支 force push。

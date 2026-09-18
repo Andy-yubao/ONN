@@ -1,4 +1,6 @@
 {
+  "evaluation_status": "exploratory",
+  "test_set_used_for_checkpoint_selection": true,
   "final_test_accuracy_percent": 91.27,
   "best_test_accuracy_percent": 91.27,
   "best_accuracy_recheck_percent": 91.27,

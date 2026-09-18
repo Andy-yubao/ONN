@@ -102,7 +102,6 @@ build/
 venv/
 env/
 .pytest_cache/
-model/data/
 model/runs/
 model/profiles/
 

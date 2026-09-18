@@ -21,7 +21,7 @@ from .model import DeviceIFConvSmall
 
 
 EXPERIMENT_DIR = Path(__file__).resolve().parent
-DEFAULT_DATA_DIR = EXPERIMENT_DIR.parents[2] / "model" / "data"
+DEFAULT_DATA_DIR = EXPERIMENT_DIR.parents[2] / "data"
 
 
 def parse_args() -> argparse.Namespace:
