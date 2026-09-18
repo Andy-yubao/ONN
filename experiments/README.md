@@ -9,12 +9,14 @@ experiments/
 ├── snn/
 │   ├── mlp_latency_baseline/       # 原 snn_8x8_device_encoding
 │   ├── conv_large/                # 原 snn_8x8_conv_snn
-│   └── conv_small/                # 原 snn_8x8_device_if_conv_small
+│   └── conv_small/                # 原 snn_8x8_device_if_conv_small, 最重要的基线
 ├── cnn/                            # matched 8×8 CNN baseline 规划
 └── comparison/                     # 公平比较协议
 ```
 
-三个 SNN 实验保留原有 README、源码、`metrics.json`、`history.csv`、PNG 和小型测试；
+三个 SNN 实验保留原有 README、源码、`metrics.json`、`history.csv`、PNG 和小型测试。
+其中 `snn/conv_small/`（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线，
+后续 matched CNN 公平比较和 champion 选择优先以它为参考；
 本次只重构路径与共享依赖，不重新生成或修改历史结果数值。训练时会在本地生成
 `results/best_model.pt`，checkpoint 按仓库规则不纳入 Git 跟踪；JSON/CSV/PNG 是提交的
 结果持久记录。

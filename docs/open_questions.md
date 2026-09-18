@@ -6,7 +6,8 @@
 ## 待实验确定
 
 - matched 8×8 CNN 的最终架构与准确率；
-- CNN 与 small Conv-IF-SNN 在统一协议下的准确率/资源折中；
+- CNN 与当前最重要的 `experiments/snn/conv_small/` 基线（原
+  `snn_8x8_device_if_conv_small`）在统一协议下的准确率/资源折中；
 - effective event/synaptic operations 与状态访问量的可比记录方式；
 - SNN champion 的稳定性、位宽需求和溢出边界。
 

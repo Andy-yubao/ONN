@@ -16,7 +16,8 @@ ONN 当前是一个器件动态模型驱动的 8×8 脉冲神经网络研究与 
 
 ## 当前资产
 
-- 三项已记录的 8×8 SNN 实验在 [`experiments/snn/`](../experiments/snn/)；
+- 三项已记录的 8×8 SNN 实验在 [`experiments/snn/`](../experiments/snn/)，其中
+  `conv_small`（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线；
 - 共享编码器和轻量测试在 [`experiments/common/`](../experiments/common/)；
 - CNN 计划在 [`experiments/cnn/README.md`](../experiments/cnn/README.md)；
 - 公平比较协议在 [`experiments/comparison/README.md`](../experiments/comparison/README.md)。

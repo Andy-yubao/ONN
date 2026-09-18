@@ -6,13 +6,14 @@
 ## 阶段 1：统一器件编码与候选实验（进行中）
 
 - [x] 保留 MLP latency baseline、large Conv-SNN 和 small Conv-IF-SNN 结果；
+- [x] 将 `conv_small`（原 `snn_8x8_device_if_conv_small`）确认为当前最重要的 SNN 基线；
 - [x] 将 `DeviceLatencyEncoder` 统一到 `experiments/common/`；
 - [x] 建立可复现的 module execution 入口和轻量编码器契约测试；
 - [ ] 明确后续实验的统一 seed、数据划分和记录模板。
 
 ## 阶段 2：matched 8×8 CNN baseline（下一步）
 
-建立约 8k–12k 参数的 CNN 候选，与当前约 9,872 参数的 small Conv-IF-SNN 使用相同
+建立约 8k–12k 参数的 CNN 候选，与当前最重要的 `conv_small` SNN 基线（约 9,872 参数）使用相同
 8×8 预处理、55k/5k/10k 划分和 test-set-only-final-evaluation 规则。不得用 test
 accuracy 做架构选择。
 

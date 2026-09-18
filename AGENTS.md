@@ -1,7 +1,6 @@
 # ONN 项目 AI 开发代理指令
 
-> 本文件是唯一可编辑源；`AGENTS.md` 与 `CLAUDE.md` 由
-> `tools/sync_ai_agent_instructions.py` 生成并保持字节级一致。不要直接修改两个根文件。
+> 本文件是项目规则的唯一权威来源。`CLAUDE.md` 只路由到本文件，不维护独立副本。
 
 ## 会话约定
 
@@ -35,7 +34,9 @@ ONN 当前围绕以下 promotion pipeline：
 | `fpga/` | 正式模型的 FPGA 实现 |
 | `history/` | 历史阶段索引和 Git tag 入口，不复制旧源码 |
 
-当前三个 SNN 实验位于 `experiments/snn/`，共同编码器位于
+当前三个 SNN 实验位于 `experiments/snn/`。其中 `experiments/snn/conv_small/` 是当前
+最重要的 SNN 基线，原实验目录名为 `snn_8x8_device_if_conv_small`；后续 matched CNN
+公平比较、模型选择和部署讨论优先以它为参考。共同编码器位于
 `experiments/common/device_latency_encoder.py`。编码参数和 `-1` no-spike 约定以实现和
 实验记录为准，不复制 encoder fallback。
 
@@ -51,8 +52,7 @@ ONN 当前围绕以下 promotion pipeline：
 - 必须使用 `onn` Conda 环境：`D:\tools\anaconda3\envs\onn`；
 - 从仓库根目录运行 Python module；
 - 本次重构禁止训练、全量 MNIST evaluation、量化、Vivado/Quartus、RTL 仿真、综合、实现和 bitstream；
-- 修改文档后运行 `python tools/sync_ai_agent_instructions.py --check` 与
-  `python tools/check_markdown_links.py`；
+- 修改文档后运行 `python tools/check_markdown_links.py`；
 - 运行过的命令和测试才可以写成验证结果，未运行内容必须明确标记为“未运行”。
 
 ## 历史锚点

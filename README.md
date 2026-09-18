@@ -22,7 +22,8 @@ ONN 当前研究重点是把 8×8 输入、器件动态响应和时序脉冲编�
 - 冻结的 28×28 CNN 无法直接兼容 8×8/4×4 低有效分辨率输入；
 - MLP latency SNN：87.15%；
 - large Conv-SNN architecture exploration：91.27%，不作为严格独立 held-out test benchmark；
-- small Conv-IF-SNN：held-out test 90.22%，9,872 parameters；
+- 当前最重要的 SNN 基线是 small Conv-IF-SNN（原实验目录
+  `snn_8x8_device_if_conv_small`）：held-out test 90.22%，9,872 parameters；
 - 95% 目标尚未达到；
 - matched 8×8 CNN baseline 尚未完成；
 - 尚未选出 production SNN；
@@ -45,11 +46,13 @@ history/       历史阶段索引与 Git tag 入口，不复制旧源码
 docs/          当前范围、架构、阶段计划和开放问题
 ```
 
-当前保留的三项 SNN 研究资产位于：
+当前保留的三项 SNN 研究资产位于；其中 `conv_small` 是后续 CNN/SNN 公平比较和模型
+选择的优先参考基线：
 
 - [`experiments/snn/mlp_latency_baseline/`](experiments/snn/mlp_latency_baseline/)；
 - [`experiments/snn/conv_large/`](experiments/snn/conv_large/)；
-- [`experiments/snn/conv_small/`](experiments/snn/conv_small/)。
+- [`experiments/snn/conv_small/`](experiments/snn/conv_small/)（原
+  `snn_8x8_device_if_conv_small`，最重要的 SNN 基线）。
 
 开始阅读：[`docs/project_scope.md`](docs/project_scope.md)、
 [`docs/system_architecture.md`](docs/system_architecture.md)、

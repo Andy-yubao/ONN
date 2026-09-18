@@ -10,6 +10,8 @@
 
 ## 公平实验
 
+- `experiments/snn/conv_small/`（原 `snn_8x8_device_if_conv_small`）作为当前最重要的
+  SNN 基线，优先用于 matched CNN 的对照设计；
 - 训练/验证/测试为 55,000 / 5,000 / 10,000；
 - test set 只用于最终评价，不用于架构选择、early stop 或 checkpoint 选择；
 - CNN 与 SNN 使用相同 seed policy 和相近参数量；

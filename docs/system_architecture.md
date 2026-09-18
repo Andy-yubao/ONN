@@ -37,7 +37,8 @@ MNIST 28×28
 
 ## CNN/SNN 公平性
 
-下一轮 matched CNN 与 small Conv-IF-SNN 至少共享 8×8 输入、预处理原则、55k/5k/10k
+下一轮 matched CNN 以 `experiments/snn/conv_small/`（原
+`snn_8x8_device_if_conv_small`）作为当前最重要的 SNN 基线，至少共享 8×8 输入、预处理原则、55k/5k/10k
 数据划分、seed policy、相近参数规模和 test-set-only-final-evaluation 规则。比较同时
 报告准确率、参数/存储、稠密等效操作、有效事件突触操作、状态存储和预期 FPGA 资源，
 不把 GPU 时间直接当作 FPGA 性能结论。

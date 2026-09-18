@@ -35,10 +35,12 @@ fpga/：RTL、仿真、综合与板级验证
 - MLP latency baseline：87.15%；
 - large Conv-SNN architecture exploration：91.27%，因逐轮查看 test set，不作为严格
   独立 held-out test benchmark；
-- small Conv-IF-SNN：best validation 92.32%，final held-out test 90.22%，9,872 参数。
+- small Conv-IF-SNN（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线：
+  best validation 92.32%，final held-out test 90.22%，9,872 参数。
 
 这些数字本次未重跑、未重算。95% 目标尚未达到；matched 8×8 CNN 尚未完成；production
-SNN 尚未选定；当前 SNN 尚未量化、导出或实现 RTL。
+SNN 尚未选定；当前 SNN 尚未量化、导出或实现 RTL。后续公平比较和 champion 选择优先
+围绕上述 `conv_small` 基线展开，但不得因此预先宣布 SNN 获胜。
 
 ## 四个核心目录
 
