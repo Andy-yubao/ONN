@@ -1,0 +1,26 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seed": 17,
+  "epochs": 20,
+  "batch_size": 256,
+  "num_workers": 0,
+  "time_steps": 3,
+  "source_time_steps": 24,
+  "time_mapping": "floor(old_t * target_T / source_T); -1 remains -1",
+  "readout_mode": "accumulated_membrane",
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "total_parameters": 9872,
+  "readout": "accumulated membrane: A[T-1]/T; earlier output currents receive larger weights",
+  "source_sha256": {
+    "experiments/snn/conv_small/train.py": "5c970cd27fdeecb7d8ea45a5da32fa73e8c89e6f87d0fef8e2d7920d053251c4",
+    "experiments/snn/conv_small/model.py": "36e6e1480b89189586bac025ccc3a23b4ff58deb7fbde053016dd2eb889d11d2",
+    "experiments/common/device_latency_encoder.py": "0e137bb6dd0aa381cec1cfe08e0dfdb1f5b843483ace4cc2501aff6623496ca6",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+  }
+}

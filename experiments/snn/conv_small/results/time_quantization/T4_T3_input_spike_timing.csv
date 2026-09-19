@@ -1,0 +1,8 @@
+time_steps,display_step_1_based,encoded_time_0_based,firing_pixel_total,mean_firing_pixels_per_image
+4,1,0,96276,9.6276
+4,2,1,29674,2.9674
+4,3,2,6254,0.6254
+4,4,3,1201,0.1201
+3,1,0,112458,11.2458
+3,2,1,18508,1.8508
+3,3,2,2439,0.2439

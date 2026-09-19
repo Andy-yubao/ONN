@@ -9,6 +9,29 @@ from torch import nn
 from snntorch import surrogate
 
 
+def normalized_temporal_weights(
+    time_steps: int,
+    beta: float,
+    *,
+    device: torch.device | None = None,
+    dtype: torch.dtype = torch.float32,
+) -> torch.Tensor:
+    """Return gentle early-time weights with the baseline total scale.
+
+    For T=4 the unnormalized shape is ``1 + beta * (4 - t)`` for
+    one-based ``t``.  Every beta is rescaled to sum to 10, so beta=1 keeps
+    the historical 4:3:2:1 accumulated-membrane readout exactly.
+    """
+    if time_steps <= 0:
+        raise ValueError("time_steps must be positive")
+    if beta < 0:
+        raise ValueError("beta must be non-negative")
+    reverse_steps = torch.arange(time_steps - 1, -1, -1, device=device, dtype=dtype)
+    raw = 1.0 + float(beta) * reverse_steps
+    baseline_sum = time_steps * (time_steps + 1) / 2.0
+    return raw * (baseline_sum / raw.sum())
+
+
 def subtract_if(
     current: torch.Tensor,
     membrane: torch.Tensor,
@@ -55,9 +78,20 @@ class DeviceIFConvSmall(nn.Module):
     documented same-step integrate, strict threshold, emit, subtract update.
     """
 
-    def __init__(self, threshold: float = 1.0) -> None:
+    def __init__(
+        self,
+        threshold: float = 1.0,
+        readout_mode: str = "final_membrane",
+        temporal_beta: float = 1.0,
+    ) -> None:
         super().__init__()
+        if readout_mode not in {"final_membrane", "accumulated_membrane"}:
+            raise ValueError("readout_mode must be final_membrane or accumulated_membrane")
+        if temporal_beta < 0:
+            raise ValueError("temporal_beta must be non-negative")
         self.threshold = float(threshold)
+        self.readout_mode = readout_mode
+        self.temporal_beta = float(temporal_beta)
         self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1, bias=False)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1, bias=False)
         self.readout = nn.Linear(32 * 4 * 4, 10, bias=False)
@@ -84,7 +118,12 @@ class DeviceIFConvSmall(nn.Module):
         time_steps: int = 24,
         *,
         collect_stats: bool = False,
-    ) -> torch.Tensor | tuple[torch.Tensor, dict[str, int]]:
+        return_event_proxy: bool = False,
+    ) -> (
+        torch.Tensor
+        | tuple[torch.Tensor, dict[str, int]]
+        | tuple[torch.Tensor, torch.Tensor]
+    ):
         """Consume [B,1,8,8] latency maps and return [B,10] logits.
 
         ``collect_stats`` adds the actual valid-connection event work count;
@@ -101,7 +140,14 @@ class DeviceIFConvSmall(nn.Module):
         mem1 = self.conv1.weight.new_zeros(batch_size, 16, 8, 8)
         mem2 = self.conv1.weight.new_zeros(batch_size, 32, 4, 4)
         readout_mem = self.conv1.weight.new_zeros(batch_size, 10)
-        accumulated_logits = self.conv1.weight.new_zeros(batch_size, 10)
+        weighted_logits = self.conv1.weight.new_zeros(batch_size, 10)
+        event_proxy = self.conv1.weight.new_zeros(())
+        temporal_weights = normalized_temporal_weights(
+            time_steps,
+            self.temporal_beta,
+            device=device,
+            dtype=dtype,
+        )
         synaptic_additions = torch.zeros((), device=device, dtype=torch.float64)
         input_events = torch.zeros((), device=device, dtype=torch.float64)
         layer1_events = torch.zeros((), device=device, dtype=torch.float64)
@@ -117,7 +163,16 @@ class DeviceIFConvSmall(nn.Module):
             )
             current = self.readout(spikes2.flatten(1))
             readout_mem = readout_mem + current
-            accumulated_logits = accumulated_logits + readout_mem
+            if self.readout_mode == "accumulated_membrane":
+                weighted_logits = weighted_logits + temporal_weights[step] * current
+
+            if return_event_proxy:
+                event_proxy = event_proxy + (
+                    spikes1
+                    * self.conv2_spatial_fanout.to(dtype=dtype)[None, None, :, :]
+                    * 32
+                ).sum()
+                event_proxy = event_proxy + spikes2.sum() * 10
 
             if collect_stats:
                 input_events = input_events + input_spikes.detach().sum(dtype=torch.float64)
@@ -135,7 +190,12 @@ class DeviceIFConvSmall(nn.Module):
                 ).sum()
                 synaptic_additions = synaptic_additions + spikes2.detach().sum() * 10
 
-        logits = accumulated_logits / float(time_steps)
+        logits = (weighted_logits / float(time_steps)
+                  if self.readout_mode == "accumulated_membrane" else readout_mem)
+        if collect_stats and return_event_proxy:
+            raise ValueError("collect_stats and return_event_proxy are mutually exclusive")
+        if return_event_proxy:
+            return logits, event_proxy / float(batch_size)
         if not collect_stats:
             return logits
         stats = {

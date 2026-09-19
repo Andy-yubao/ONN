@@ -1,0 +1,53 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seed": 7,
+  "epochs_planned": 20,
+  "batch_size": 256,
+  "num_workers": 0,
+  "optimizer": "Adam",
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "learning_rate_drop_epoch": 11,
+  "network": "Conv1x16-ReLU-Conv16x32(stride2)-ReLU-FC512x10; bias=True",
+  "total_parameters": 9930,
+  "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+  "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+  "split_indices": {
+    "train": [
+      0,
+      55000
+    ],
+    "validation": [
+      55000,
+      60000
+    ],
+    "end_exclusive": true
+  },
+  "validation_split": {
+    "train": 55000,
+    "validation": 5000
+  },
+  "test_set_size": 10000,
+  "device": "cuda",
+  "data_dir": "E:\\project\\ONN\\data",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+    "git_dirty": true
+  },
+  "source_sha256": {
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+    "experiments/cnn/model.py": "ce8fec057dd4d99a28ee3c258a2b1c78fed9ef34092c572ba6465127ee7690ab",
+    "experiments/cnn/train.py": "ee3d1eca23785bc0cd64afad207b7852182a3d38da4abe35114ca248c2d3fe2d"
+  }
+}

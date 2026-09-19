@@ -1,0 +1,31 @@
+{
+  "status": "complete",
+  "selection_metric": "best validation accuracy",
+  "selected_beta": 0.5,
+  "baseline_retrained": false,
+  "runs": [
+    {
+      "beta": 1.0,
+      "source": "../input_encoding_joint/T4_quantile_030/metrics.json",
+      "best_validation_accuracy_percent": 95.44,
+      "final_test_accuracy_percent": 93.88,
+      "effective_synaptic_additions_per_image": 23758.6092
+    },
+    {
+      "beta": 0.5,
+      "source": "beta_0p5_seed17/metrics.json",
+      "best_validation_accuracy_percent": 95.66,
+      "best_epoch": 14,
+      "final_test_accuracy_percent": 94.35,
+      "effective_synaptic_additions_per_image": 23204.609
+    },
+    {
+      "beta": 0.25,
+      "source": "beta_0p25_seed17/metrics.json",
+      "best_validation_accuracy_percent": 95.58,
+      "best_epoch": 14,
+      "final_test_accuracy_percent": 94.07,
+      "effective_synaptic_additions_per_image": 23135.056
+    }
+  ]
+}

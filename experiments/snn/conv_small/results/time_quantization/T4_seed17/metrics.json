@@ -1,0 +1,275 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "test_evaluations": 1,
+  "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+  "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+  "split_indices": {
+    "train": [
+      0,
+      55000
+    ],
+    "validation": [
+      55000,
+      60000
+    ],
+    "end_exclusive": true
+  },
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+    "git_dirty": true
+  },
+  "optimizer": "Adam",
+  "num_workers": 0,
+  "run_config": {
+    "protocol_id": "mnist8x8-sequential-v1",
+    "seed": 17,
+    "epochs": 20,
+    "batch_size": 256,
+    "num_workers": 0,
+    "time_steps": 4,
+    "source_time_steps": 24,
+    "time_mapping": "floor(old_t * target_T / source_T); -1 remains -1",
+    "readout_mode": "accumulated_membrane",
+    "optimizer": "Adam",
+    "learning_rate_schedule": [
+      0.001,
+      0.0003
+    ],
+    "weight_decay": 0.0,
+    "gradient_clip_norm": 1.0,
+    "total_parameters": 9872,
+    "readout": "accumulated membrane: A[T-1]/T; earlier output currents receive larger weights",
+    "source_sha256": {
+      "experiments/snn/conv_small/train.py": "5c970cd27fdeecb7d8ea45a5da32fa73e8c89e6f87d0fef8e2d7920d053251c4",
+      "experiments/snn/conv_small/model.py": "36e6e1480b89189586bac025ccc3a23b4ff58deb7fbde053016dd2eb889d11d2",
+      "experiments/common/device_latency_encoder.py": "0e137bb6dd0aa381cec1cfe08e0dfdb1f5b843483ace4cc2501aff6623496ca6",
+      "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+    }
+  },
+  "test_based_tuning": false,
+  "checkpoint_sha256": "7e35e3ae38579418d53512422f1d2c59a3a09cec7eab3ca4c109f73403aef00c",
+  "final_test_accuracy_percent": 91.07,
+  "best_validation_accuracy_percent": 92.36,
+  "best_epoch": 20,
+  "validation_split": {
+    "train": 55000,
+    "validation": 5000
+  },
+  "test_set_size": 10000,
+  "target_accuracy_percent": 95.0,
+  "target_reached": false,
+  "epochs_run": 20,
+  "total_training_time_seconds": 300.0528914000024,
+  "average_time_per_epoch_seconds": 15.00264457000012,
+  "full_test_inference_time_seconds": 1.8231981999997515,
+  "average_inference_time_per_sample_ms": 0.18231981999997515,
+  "inference_batch_size": 256,
+  "total_parameters": 9872,
+  "model_file_size_bytes": 41788,
+  "device": "cuda",
+  "batch_size": 256,
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "seed": 17,
+  "network": "Conv1x16-IF-subtract-Conv16x32(stride2)-IF-subtract-FC512x10-time-weighted-membrane",
+  "time_steps": 4,
+  "threshold": 1.0,
+  "surrogate": "fast_sigmoid_slope5_training_only",
+  "dense_equivalent_macs_per_time_step": 88064,
+  "dense_equivalent_macs_all_time_steps": 352256,
+  "hidden_state_count": 1536,
+  "hidden_state_updates_per_sample": 6144,
+  "readout_state_count": 20,
+  "readout_state_updates_per_sample": 80,
+  "workload_test_total": {
+    "effective_synaptic_additions": 207386786,
+    "input_spike_events": 133405,
+    "layer1_spike_events": 2047364,
+    "layer2_spike_events": 4322165
+  },
+  "workload_test_per_sample": {
+    "effective_synaptic_additions": 20738.6786,
+    "input_spike_events": 13.3405,
+    "layer1_spike_events": 204.7364,
+    "layer2_spike_events": 432.2165
+  },
+  "if_activity": {
+    "layer1": {
+      "if_count": 1024,
+      "fire_per_if_per_image": 0.199937890625,
+      "neuron_step_firing_rate": 0.04998447265625
+    },
+    "layer2": {
+      "if_count": 512,
+      "fire_per_if_per_image": 0.8441728515625,
+      "neuron_step_firing_rate": 0.211043212890625
+    }
+  },
+  "encoder": {
+    "g0": 0.1,
+    "alpha": 0.9,
+    "tau": 5.0,
+    "g_threshold": 0.35,
+    "source_time_steps": 24,
+    "quantized_time_steps": 4,
+    "time_mapping": "floor(old_t * target_T / source_T); -1 remains -1"
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.24359906577197,
+      "validation_accuracy": 86.44,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 15.622201499994844
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.4803848907817494,
+      "validation_accuracy": 88.84,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 15.054621699993731
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.40595098552703857,
+      "validation_accuracy": 89.96,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 14.115434000006644
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.3717143038142811,
+      "validation_accuracy": 90.8,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 13.92198250000365
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.3500993212959983,
+      "validation_accuracy": 90.88,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 14.593473500019172
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.33501322090842506,
+      "validation_accuracy": 90.9,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 17.586639799992554
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.3224401336409829,
+      "validation_accuracy": 91.2,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 17.548780999990413
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.31168474713238803,
+      "validation_accuracy": 91.4,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 17.607560600008583
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.3029566125349565,
+      "validation_accuracy": 91.52,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 17.612433400005102
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.29707156410217284,
+      "validation_accuracy": 91.8,
+      "learning_rate": 0.001,
+      "elapsed_seconds": 16.62304750000476
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.28595750782273033,
+      "validation_accuracy": 91.98,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.91062390001025
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.28208861595934087,
+      "validation_accuracy": 91.84,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 14.176856100006262
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.2800522552620281,
+      "validation_accuracy": 91.88,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 14.20693770001526
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.2777090374166315,
+      "validation_accuracy": 91.78,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.788332099997206
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.27761103268970144,
+      "validation_accuracy": 91.96,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.904675300000235
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.2748964867375114,
+      "validation_accuracy": 91.82,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.862835999985691
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.2728841033372012,
+      "validation_accuracy": 91.92,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.983690299995942
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.2722969451167367,
+      "validation_accuracy": 92.06,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 14.497178599995095
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.26971170615282924,
+      "validation_accuracy": 91.86,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.737853700004052
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.26900293091860683,
+      "validation_accuracy": 92.36,
+      "learning_rate": 0.0003,
+      "elapsed_seconds": 13.663641199993435
+    }
+  ],
+  "metadata_correction": {
+    "reason": "training entry previously emitted final-membrane static labels despite explicit accumulated_membrane run_config; corrected labels/counts after run",
+    "checkpoint_or_measured_metrics_changed": false,
+    "exact_run_source_manifest": "../T4_T3_source_snapshot/manifest.json"
+  }
+}

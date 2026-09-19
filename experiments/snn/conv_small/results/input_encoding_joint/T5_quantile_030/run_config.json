@@ -1,0 +1,84 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seed": 17,
+  "epochs": 20,
+  "batch_size": 256,
+  "num_workers": 0,
+  "time_steps": 5,
+  "source_time_steps": 24,
+  "time_mapping": "quantile",
+  "target_firing_ratio": "0.30",
+  "input_encoding_calibration": {
+    "data_scope": "training split indices [0, 55000) only",
+    "training_samples": 55000,
+    "training_pixels": 3520000,
+    "target_firing_ratio": "0.30",
+    "actual_firing_ratio": 0.300865625,
+    "input_spikes_per_image": 19.2554,
+    "g_threshold": 0.21026152308606838,
+    "threshold_method": "direct training-pixel quantile: midpoint between adjacent resized intensities whose 24-step firing count is closest to 30%; no validation/test data",
+    "time_mapping": "quantile",
+    "quantile_boundaries_inclusive_source_latency": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "source_latency_histogram": [
+      102732,
+      464827,
+      173169,
+      96319,
+      56746,
+      42786,
+      26831,
+      18135,
+      18649,
+      9487,
+      9546,
+      9761,
+      9976,
+      0,
+      9868,
+      0,
+      0,
+      0,
+      10215,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "mapped_training_histogram_total": [
+      102732,
+      464827,
+      173169,
+      96319,
+      222000
+    ],
+    "mapped_training_histogram_per_image": [
+      1.8678545454545454,
+      8.4514,
+      3.148527272727273,
+      1.7512545454545454,
+      4.036363636363636
+    ]
+  },
+  "readout_mode": "accumulated_membrane",
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "total_parameters": 9872,
+  "readout": "accumulated membrane: A[T-1]/T; earlier output currents receive larger weights",
+  "source_sha256": {
+    "experiments/snn/conv_small/train.py": "33d41b27e5fe6f0adc38114abd735fc9d98617ab6d2c76df39db39c449848f8d",
+    "experiments/snn/conv_small/model.py": "36e6e1480b89189586bac025ccc3a23b4ff58deb7fbde053016dd2eb889d11d2",
+    "experiments/common/device_latency_encoder.py": "cb4ca7026a5800ab177ac6b0b23450f19bb057532bb38ced3b7f9179de4207a9",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+  }
+}

@@ -1,0 +1,286 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seeds": [
+    7,
+    17,
+    27
+  ],
+  "aggregation": "all three seeds; sample std ddof=1; accuracy in percent",
+  "configuration_frozen_before_runs": true,
+  "test_based_tuning": false,
+  "aggregate": {
+    "best_validation_accuracy_percent": {
+      "mean": 97.96666666666667,
+      "sample_std_ddof1": 0.10066445913694495
+    },
+    "final_test_accuracy_percent": {
+      "mean": 97.36666666666666,
+      "sample_std_ddof1": 0.11239810200058094
+    },
+    "total_training_time_seconds": {
+      "mean": 182.91940836666618,
+      "sample_std_ddof1": 20.962136349737616
+    },
+    "full_test_inference_time_seconds": {
+      "mean": 0.9048552666596757,
+      "sample_std_ddof1": 0.05856364533006573
+    }
+  },
+  "paired_accuracy": [
+    {
+      "seed": 7,
+      "cnn_validation_percent": 98.06,
+      "snn_validation_percent": 92.32,
+      "cnn_test_percent": 97.34,
+      "snn_test_percent": 90.22,
+      "test_difference_percentage_points": 7.1200000000000045
+    },
+    {
+      "seed": 17,
+      "cnn_validation_percent": 97.98,
+      "snn_validation_percent": 92.28,
+      "cnn_test_percent": 97.49,
+      "snn_test_percent": 90.46,
+      "test_difference_percentage_points": 7.030000000000001
+    },
+    {
+      "seed": 27,
+      "cnn_validation_percent": 97.86,
+      "snn_validation_percent": 92.56,
+      "cnn_test_percent": 97.27,
+      "snn_test_percent": 90.62,
+      "test_difference_percentage_points": 6.6499999999999915
+    }
+  ],
+  "paired_test_difference_percentage_points": {
+    "mean": 6.933333333333333,
+    "sample_std_ddof1": 0.24946609656090887
+  },
+  "runs": [
+    {
+      "protocol_id": "mnist8x8-sequential-v1",
+      "seed": 7,
+      "epochs_planned": 20,
+      "batch_size": 256,
+      "num_workers": 0,
+      "optimizer": "Adam",
+      "weight_decay": 0.0,
+      "gradient_clip_norm": 1.0,
+      "learning_rate_schedule": [
+        0.001,
+        0.0003
+      ],
+      "learning_rate_drop_epoch": 11,
+      "network": "Conv1x16-ReLU-Conv16x32(stride2)-ReLU-FC512x10; bias=True",
+      "total_parameters": 9930,
+      "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+      "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+      "split_indices": {
+        "train": [
+          0,
+          55000
+        ],
+        "validation": [
+          55000,
+          60000
+        ],
+        "end_exclusive": true
+      },
+      "validation_split": {
+        "train": 55000,
+        "validation": 5000
+      },
+      "test_set_size": 10000,
+      "device": "cuda",
+      "data_dir": "E:\\project\\ONN\\data",
+      "environment": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+        "git_dirty": true
+      },
+      "source_sha256": {
+        "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+        "experiments/cnn/model.py": "ce8fec057dd4d99a28ee3c258a2b1c78fed9ef34092c572ba6465127ee7690ab",
+        "experiments/cnn/train.py": "ee3d1eca23785bc0cd64afad207b7852182a3d38da4abe35114ca248c2d3fe2d"
+      },
+      "epochs_run": 20,
+      "best_epoch": 20,
+      "best_validation_accuracy_percent": 98.06,
+      "final_test_accuracy_percent": 97.34,
+      "test_evaluations": 1,
+      "test_based_tuning": false,
+      "total_training_time_seconds": 204.20187089999672,
+      "average_time_per_epoch_seconds": 10.210093544999836,
+      "full_test_inference_time_seconds": 0.8382637999893632,
+      "average_inference_time_per_sample_ms": 0.08382637999893633,
+      "inference_batch_size": 256,
+      "timing_scope": "full loader preprocessing + transfers + forward + accuracy + CUDA sync; validation warmup",
+      "model_file_size_bytes": 42809,
+      "checkpoint_sha256": "02df7fa10180fb2ae7bc000c27295217e26505675e18b3a20c0346f220e25e49",
+      "parameter_payload_fp32_bytes": 39720,
+      "dense_equivalent_macs_per_sample": 88064,
+      "bias_additions_per_sample": 1546,
+      "relu_elements_per_sample": 1536,
+      "hidden_feature_elements_sum": 1536,
+      "hidden_feature_fp32_bytes_sum": 6144,
+      "target_accuracy_percent": 95.0,
+      "target_reached": true
+    },
+    {
+      "protocol_id": "mnist8x8-sequential-v1",
+      "seed": 17,
+      "epochs_planned": 20,
+      "batch_size": 256,
+      "num_workers": 0,
+      "optimizer": "Adam",
+      "weight_decay": 0.0,
+      "gradient_clip_norm": 1.0,
+      "learning_rate_schedule": [
+        0.001,
+        0.0003
+      ],
+      "learning_rate_drop_epoch": 11,
+      "network": "Conv1x16-ReLU-Conv16x32(stride2)-ReLU-FC512x10; bias=True",
+      "total_parameters": 9930,
+      "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+      "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+      "split_indices": {
+        "train": [
+          0,
+          55000
+        ],
+        "validation": [
+          55000,
+          60000
+        ],
+        "end_exclusive": true
+      },
+      "validation_split": {
+        "train": 55000,
+        "validation": 5000
+      },
+      "test_set_size": 10000,
+      "device": "cuda",
+      "data_dir": "E:\\project\\ONN\\data",
+      "environment": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+        "git_dirty": true
+      },
+      "source_sha256": {
+        "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+        "experiments/cnn/model.py": "ce8fec057dd4d99a28ee3c258a2b1c78fed9ef34092c572ba6465127ee7690ab",
+        "experiments/cnn/train.py": "ee3d1eca23785bc0cd64afad207b7852182a3d38da4abe35114ca248c2d3fe2d"
+      },
+      "epochs_run": 20,
+      "best_epoch": 17,
+      "best_validation_accuracy_percent": 97.98,
+      "final_test_accuracy_percent": 97.49,
+      "test_evaluations": 1,
+      "test_based_tuning": false,
+      "total_training_time_seconds": 182.26335369999288,
+      "average_time_per_epoch_seconds": 9.113167684999643,
+      "full_test_inference_time_seconds": 0.948343299998669,
+      "average_inference_time_per_sample_ms": 0.09483432999986689,
+      "inference_batch_size": 256,
+      "timing_scope": "full loader preprocessing + transfers + forward + accuracy + CUDA sync; validation warmup",
+      "model_file_size_bytes": 42809,
+      "checkpoint_sha256": "bd03cc35ff49dd4835a7e4baca2f80e436b0450c4e1ea1440ef9b82ffef79184",
+      "parameter_payload_fp32_bytes": 39720,
+      "dense_equivalent_macs_per_sample": 88064,
+      "bias_additions_per_sample": 1546,
+      "relu_elements_per_sample": 1536,
+      "hidden_feature_elements_sum": 1536,
+      "hidden_feature_fp32_bytes_sum": 6144,
+      "target_accuracy_percent": 95.0,
+      "target_reached": true
+    },
+    {
+      "protocol_id": "mnist8x8-sequential-v1",
+      "seed": 27,
+      "epochs_planned": 20,
+      "batch_size": 256,
+      "num_workers": 0,
+      "optimizer": "Adam",
+      "weight_decay": 0.0,
+      "gradient_clip_norm": 1.0,
+      "learning_rate_schedule": [
+        0.001,
+        0.0003
+      ],
+      "learning_rate_drop_epoch": 11,
+      "network": "Conv1x16-ReLU-Conv16x32(stride2)-ReLU-FC512x10; bias=True",
+      "total_parameters": 9930,
+      "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+      "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+      "split_indices": {
+        "train": [
+          0,
+          55000
+        ],
+        "validation": [
+          55000,
+          60000
+        ],
+        "end_exclusive": true
+      },
+      "validation_split": {
+        "train": 55000,
+        "validation": 5000
+      },
+      "test_set_size": 10000,
+      "device": "cuda",
+      "data_dir": "E:\\project\\ONN\\data",
+      "environment": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+        "git_dirty": true
+      },
+      "source_sha256": {
+        "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+        "experiments/cnn/model.py": "ce8fec057dd4d99a28ee3c258a2b1c78fed9ef34092c572ba6465127ee7690ab",
+        "experiments/cnn/train.py": "ee3d1eca23785bc0cd64afad207b7852182a3d38da4abe35114ca248c2d3fe2d"
+      },
+      "epochs_run": 20,
+      "best_epoch": 20,
+      "best_validation_accuracy_percent": 97.86,
+      "final_test_accuracy_percent": 97.27,
+      "test_evaluations": 1,
+      "test_based_tuning": false,
+      "total_training_time_seconds": 162.29300050000893,
+      "average_time_per_epoch_seconds": 8.114650025000447,
+      "full_test_inference_time_seconds": 0.9279586999909952,
+      "average_inference_time_per_sample_ms": 0.09279586999909951,
+      "inference_batch_size": 256,
+      "timing_scope": "full loader preprocessing + transfers + forward + accuracy + CUDA sync; validation warmup",
+      "model_file_size_bytes": 42809,
+      "checkpoint_sha256": "359a7c306045d6c11eeb503f250d70c33b2ea19bbb9bb485a0473c54ce9702ca",
+      "parameter_payload_fp32_bytes": 39720,
+      "dense_equivalent_macs_per_sample": 88064,
+      "bias_additions_per_sample": 1546,
+      "relu_elements_per_sample": 1536,
+      "hidden_feature_elements_sum": 1536,
+      "hidden_feature_fp32_bytes_sum": 6144,
+      "target_accuracy_percent": 95.0,
+      "target_reached": true
+    }
+  ]
+}

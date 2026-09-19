@@ -1,0 +1,72 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "dataset": "official MNIST test, 10000 images",
+  "preprocessing": "PIL bilinear Resize 8x8 -> ToTensor",
+  "mapping": "q=floor(old_t*T/24), -1 unchanged",
+  "scope": "input encoding only; no trained model loaded and no accuracy evaluated",
+  "device": "cuda",
+  "source_sha256": {
+    "experiments/common/device_latency_encoder.py": "0e137bb6dd0aa381cec1cfe08e0dfdb1f5b843483ace4cc2501aff6623496ca6",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+  },
+  "records": [
+    {
+      "time_steps": 4,
+      "test_images": 10000,
+      "mean_nonfiring_pixels_per_image": 50.6595,
+      "mean_total_firing_pixels_per_image": 13.3405,
+      "per_step": [
+        {
+          "display_step_1_based": 1,
+          "encoded_time_0_based": 0,
+          "firing_pixel_total": 96276,
+          "mean_firing_pixels_per_image": 9.6276
+        },
+        {
+          "display_step_1_based": 2,
+          "encoded_time_0_based": 1,
+          "firing_pixel_total": 29674,
+          "mean_firing_pixels_per_image": 2.9674
+        },
+        {
+          "display_step_1_based": 3,
+          "encoded_time_0_based": 2,
+          "firing_pixel_total": 6254,
+          "mean_firing_pixels_per_image": 0.6254
+        },
+        {
+          "display_step_1_based": 4,
+          "encoded_time_0_based": 3,
+          "firing_pixel_total": 1201,
+          "mean_firing_pixels_per_image": 0.1201
+        }
+      ]
+    },
+    {
+      "time_steps": 3,
+      "test_images": 10000,
+      "mean_nonfiring_pixels_per_image": 50.6595,
+      "mean_total_firing_pixels_per_image": 13.3405,
+      "per_step": [
+        {
+          "display_step_1_based": 1,
+          "encoded_time_0_based": 0,
+          "firing_pixel_total": 112458,
+          "mean_firing_pixels_per_image": 11.2458
+        },
+        {
+          "display_step_1_based": 2,
+          "encoded_time_0_based": 1,
+          "firing_pixel_total": 18508,
+          "mean_firing_pixels_per_image": 1.8508
+        },
+        {
+          "display_step_1_based": 3,
+          "encoded_time_0_based": 2,
+          "firing_pixel_total": 2439,
+          "mean_firing_pixels_per_image": 0.2439
+        }
+      ]
+    }
+  ]
+}

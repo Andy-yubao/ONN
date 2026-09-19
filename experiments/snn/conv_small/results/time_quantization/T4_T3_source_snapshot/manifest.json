@@ -1,0 +1,9 @@
+{
+  "purpose": "exact source snapshot used by completed T4/T3 runs before post-run metadata correction",
+  "source_sha256": {
+    "experiments/common/device_latency_encoder.py": "0e137bb6dd0aa381cec1cfe08e0dfdb1f5b843483ace4cc2501aff6623496ca6",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+    "experiments/snn/conv_small/model.py": "36e6e1480b89189586bac025ccc3a23b4ff58deb7fbde053016dd2eb889d11d2",
+    "experiments/snn/conv_small/train.py": "5c970cd27fdeecb7d8ea45a5da32fa73e8c89e6f87d0fef8e2d7920d053251c4"
+  }
+}

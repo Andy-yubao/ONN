@@ -1,0 +1,24 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seed": 17,
+  "epochs": 20,
+  "batch_size": 256,
+  "num_workers": 0,
+  "time_steps": 8,
+  "source_time_steps": 24,
+  "time_mapping": "floor(old_t * target_T / source_T); -1 remains -1",
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "total_parameters": 9872,
+  "source_sha256": {
+    "experiments/snn/conv_small/train.py": "0237bdc0ca483f7030145804b1de1654ac1e169c8dc430ed853057cae9dc6e4a",
+    "experiments/snn/conv_small/model.py": "e09514deaf90de7e08eec770ae3770e9ee302bbce33ef5ef4a41fb03d0c232ef",
+    "experiments/common/device_latency_encoder.py": "0e137bb6dd0aa381cec1cfe08e0dfdb1f5b843483ace4cc2501aff6623496ca6",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+  }
+}

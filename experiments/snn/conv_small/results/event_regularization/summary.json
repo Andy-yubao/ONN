@@ -1,0 +1,58 @@
+{
+  "status": "complete",
+  "temporal_beta": 0.5,
+  "validation_accuracy_budget_percentage_points": 0.5,
+  "selection_rule": "lowest effective synaptic additions among runs within the validation accuracy budget",
+  "selected_lambda": 0.1,
+  "confirmation_rerun": {
+    "source": "beta_0p5_lambda_0p10_seed17_rerun/metrics.json",
+    "requested_after_initial_selection": true,
+    "checkpoint_identical": true,
+    "history_identical_excluding_elapsed_seconds": true,
+    "best_validation_accuracy_percent": 95.2,
+    "best_epoch": 18,
+    "final_test_accuracy_percent": 93.6,
+    "effective_synaptic_additions_per_image": 9440.0364,
+    "checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6"
+  },
+  "runs": [
+    {
+      "lambda": 0.0,
+      "source": "../temporal_weighting/beta_0p5_seed17/metrics.json",
+      "best_validation_accuracy_percent": 95.66,
+      "final_test_accuracy_percent": 94.35,
+      "hidden_spikes_per_image": 635.2723,
+      "effective_synaptic_additions_per_image": 23204.609
+    },
+    {
+      "lambda": 0.01,
+      "source": "beta_0p5_lambda_0p01_seed17/metrics.json",
+      "best_validation_accuracy_percent": 95.38,
+      "validation_delta_percentage_points": -0.28,
+      "final_test_accuracy_percent": 93.76,
+      "hidden_spikes_per_image": 570.9566,
+      "effective_synaptic_additions_per_image": 19852.0462,
+      "synaptic_additions_delta_percent": -14.45
+    },
+    {
+      "lambda": 0.03,
+      "source": "beta_0p5_lambda_0p03_seed17/metrics.json",
+      "best_validation_accuracy_percent": 95.54,
+      "validation_delta_percentage_points": -0.12,
+      "final_test_accuracy_percent": 94.18,
+      "hidden_spikes_per_image": 447.0956,
+      "effective_synaptic_additions_per_image": 14837.9386,
+      "synaptic_additions_delta_percent": -36.06
+    },
+    {
+      "lambda": 0.1,
+      "source": "beta_0p5_lambda_0p10_seed17/metrics.json",
+      "best_validation_accuracy_percent": 95.2,
+      "validation_delta_percentage_points": -0.46,
+      "final_test_accuracy_percent": 93.6,
+      "hidden_spikes_per_image": 290.0512,
+      "effective_synaptic_additions_per_image": 9440.0364,
+      "synaptic_additions_delta_percent": -59.32
+    }
+  ]
+}

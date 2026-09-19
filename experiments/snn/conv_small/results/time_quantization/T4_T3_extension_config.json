@@ -1,0 +1,32 @@
+{
+  "experiment": "extension of linear TTFS time quantization exploration",
+  "requested_time_steps": [
+    4,
+    3
+  ],
+  "seed": 17,
+  "readout_mode": "accumulated_membrane",
+  "readout_reference": "same A[T-1]/T implementation as existing T8/T5 time-quantization baseline",
+  "source_time_steps": 24,
+  "mapping": "floor(old_t * target_T / 24), -1 unchanged",
+  "epochs": 20,
+  "batch_size": 256,
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0,
+  "gradient_clip_norm": 1.0,
+  "dense_macs_per_image": {
+    "4": 352256,
+    "3": 264192
+  },
+  "existing_results_retrained": false,
+  "source_sha256": {
+    "experiments/common/device_latency_encoder.py": "0e137bb6dd0aa381cec1cfe08e0dfdb1f5b843483ace4cc2501aff6623496ca6",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+    "experiments/snn/conv_small/model.py": "36e6e1480b89189586bac025ccc3a23b4ff58deb7fbde053016dd2eb889d11d2",
+    "experiments/snn/conv_small/train.py": "5c970cd27fdeecb7d8ea45a5da32fa73e8c89e6f87d0fef8e2d7920d053251c4"
+  }
+}

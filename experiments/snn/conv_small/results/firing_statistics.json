@@ -1,0 +1,107 @@
+{
+  "definition": "hidden IF spikes over full 24 steps / (test images * IF neurons); layer-pooled average, not individual-neuron distribution",
+  "data_source": "existing final-test totals only; no new inference, training or accuracy evaluation",
+  "runs": [
+    {
+      "seed": 7,
+      "test_images": 10000,
+      "time_steps": 24,
+      "source_metrics_sha256": "80498fdb3fa40a0ee5e3a2d08baa0e9c6604e22c975793a4a0dccf7f4b2ad2ce",
+      "layers": {
+        "layer1": {
+          "if_neurons": 1024,
+          "total_fires": 4321573,
+          "mean_fires_per_image_all_neurons": 432.1573,
+          "mean_fires_per_if_per_image": 0.42202861328125,
+          "mean_fraction_of_steps_firing": 0.017584525553385418
+        },
+        "layer2": {
+          "if_neurons": 512,
+          "total_fires": 24086333,
+          "mean_fires_per_image_all_neurons": 2408.6333,
+          "mean_fires_per_if_per_image": 4.7043619140625,
+          "mean_fraction_of_steps_firing": 0.19601507975260415
+        }
+      },
+      "all_hidden_if": {
+        "if_neurons": 1536,
+        "total_fires": 28407906,
+        "mean_fires_per_if_per_image": 1.849473046875,
+        "mean_fraction_of_steps_firing": 0.077061376953125
+      }
+    },
+    {
+      "seed": 17,
+      "test_images": 10000,
+      "time_steps": 24,
+      "source_metrics_sha256": "b0e78a89c79676b68c65bb948a3f4b3c2723bc550553099404eac38d9e856ba9",
+      "layers": {
+        "layer1": {
+          "if_neurons": 1024,
+          "total_fires": 4392343,
+          "mean_fires_per_image_all_neurons": 439.2343,
+          "mean_fires_per_if_per_image": 0.42893974609375,
+          "mean_fraction_of_steps_firing": 0.01787248942057292
+        },
+        "layer2": {
+          "if_neurons": 512,
+          "total_fires": 27005811,
+          "mean_fires_per_image_all_neurons": 2700.5811,
+          "mean_fires_per_if_per_image": 5.2745724609375,
+          "mean_fraction_of_steps_firing": 0.21977385253906248
+        }
+      },
+      "all_hidden_if": {
+        "if_neurons": 1536,
+        "total_fires": 31398154,
+        "mean_fires_per_if_per_image": 2.0441506510416665,
+        "mean_fraction_of_steps_firing": 0.08517294379340277
+      }
+    },
+    {
+      "seed": 27,
+      "test_images": 10000,
+      "time_steps": 24,
+      "source_metrics_sha256": "0ba6f5efb8f1c4ec7a0e022602d996bdb5bdd748a54cb6d095230a134e4c2852",
+      "layers": {
+        "layer1": {
+          "if_neurons": 1024,
+          "total_fires": 4007349,
+          "mean_fires_per_image_all_neurons": 400.7349,
+          "mean_fires_per_if_per_image": 0.39134267578125,
+          "mean_fraction_of_steps_firing": 0.016305944824218748
+        },
+        "layer2": {
+          "if_neurons": 512,
+          "total_fires": 22088530,
+          "mean_fires_per_image_all_neurons": 2208.853,
+          "mean_fires_per_if_per_image": 4.314166015625,
+          "mean_fraction_of_steps_firing": 0.17975691731770835
+        }
+      },
+      "all_hidden_if": {
+        "if_neurons": 1536,
+        "total_fires": 26095879,
+        "mean_fires_per_if_per_image": 1.6989504557291666,
+        "mean_fraction_of_steps_firing": 0.07078960232204862
+      }
+    }
+  ],
+  "aggregate_across_three_seeds": {
+    "layer1": {
+      "mean_fires_per_if_per_image": 0.4141036783854167,
+      "sample_std_across_seeds_ddof1": 0.02001220549685031,
+      "mean_fraction_of_steps_firing": 0.017254319932725696
+    },
+    "layer2": {
+      "mean_fires_per_if_per_image": 4.764366796875,
+      "sample_std_across_seeds_ddof1": 0.48300680587384504,
+      "mean_fraction_of_steps_firing": 0.19851528320312498
+    },
+    "all_hidden_if": {
+      "mean_fires_per_if_per_image": 1.864191384548611,
+      "sample_std_across_seeds_ddof1": 0.17307011818581752,
+      "mean_fraction_of_steps_firing": 0.0776746410228588
+    }
+  }
+}

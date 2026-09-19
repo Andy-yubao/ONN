@@ -1,0 +1,81 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seed": 17,
+  "epochs": 20,
+  "batch_size": 256,
+  "num_workers": 0,
+  "time_steps": 4,
+  "source_time_steps": 24,
+  "time_mapping": "quantile",
+  "target_firing_ratio": "baseline",
+  "input_encoding_calibration": {
+    "data_scope": "training split indices [0, 55000) only",
+    "training_samples": 55000,
+    "training_pixels": 3520000,
+    "target_firing_ratio": "baseline",
+    "actual_firing_ratio": 0.20639914772727272,
+    "input_spikes_per_image": 13.209545454545454,
+    "g_threshold": 0.35,
+    "threshold_method": "existing fixed device threshold",
+    "time_mapping": "quantile",
+    "quantile_boundaries_inclusive_source_latency": [
+      2,
+      3,
+      6
+    ],
+    "source_latency_histogram": [
+      0,
+      16124,
+      153125,
+      161894,
+      109770,
+      77485,
+      49161,
+      41461,
+      27504,
+      20553,
+      13622,
+      13727,
+      7060,
+      6967,
+      7013,
+      6925,
+      0,
+      7060,
+      0,
+      0,
+      7074,
+      0,
+      0,
+      0
+    ],
+    "mapped_training_histogram_total": [
+      169249,
+      161894,
+      236416,
+      158966
+    ],
+    "mapped_training_histogram_per_image": [
+      3.0772545454545455,
+      2.9435272727272728,
+      4.298472727272728,
+      2.890290909090909
+    ]
+  },
+  "readout_mode": "accumulated_membrane",
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "total_parameters": 9872,
+  "readout": "accumulated membrane: A[T-1]/T; earlier output currents receive larger weights",
+  "source_sha256": {
+    "experiments/snn/conv_small/train.py": "33d41b27e5fe6f0adc38114abd735fc9d98617ab6d2c76df39db39c449848f8d",
+    "experiments/snn/conv_small/model.py": "36e6e1480b89189586bac025ccc3a23b4ff58deb7fbde053016dd2eb889d11d2",
+    "experiments/common/device_latency_encoder.py": "cb4ca7026a5800ab177ac6b0b23450f19bb057532bb38ced3b7f9179de4207a9",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+  }
+}

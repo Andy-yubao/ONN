@@ -1,0 +1,8 @@
+{
+  "status": "interrupted by user pause, then user authorized completion",
+  "completed_epochs_observed": 4,
+  "final_test_run": false,
+  "optimizer_and_rng_state_saved": false,
+  "replacement_run_directory": "../T5_seed17_completed",
+  "reason_for_restart": "weight-only checkpoint cannot exactly resume training"
+}

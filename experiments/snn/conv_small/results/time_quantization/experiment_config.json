@@ -1,0 +1,29 @@
+{
+  "experiment": "linear TTFS quantization; exploratory single-seed experiment",
+  "seed": 17,
+  "target_time_steps": [
+    12,
+    8,
+    5
+  ],
+  "source_time_steps": 24,
+  "mapping": "floor(old_t * target_T / 24), -1 remains -1",
+  "epochs": 20,
+  "batch_size": 256,
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0,
+  "gradient_clip_norm": 1,
+  "baseline_metrics": "results/seed_17/metrics.json",
+  "dense_macs_per_image": {
+    "24": 2113536,
+    "12": 1056768,
+    "8": 704512,
+    "5": 440320
+  },
+  "selection_for_next_stage": "use validation accuracy and activity; test reported descriptively only",
+  "prohibited": "no other seeds/T, no test-based tuning, no regularization/hardware work"
+}

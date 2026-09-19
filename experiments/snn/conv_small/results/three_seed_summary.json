@@ -1,0 +1,301 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seeds": [
+    7,
+    17,
+    27
+  ],
+  "aggregation": "all three reruns; sample standard deviation ddof=1; accuracy in percent",
+  "configuration_frozen_before_runs": true,
+  "test_based_tuning": false,
+  "source_sha256": {
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc",
+    "experiments/common/device_latency_encoder.py": "41f2f35423f6d2ed5a3aaeb2e398086c8af0b64865198129236ffb96d4b93543",
+    "experiments/snn/conv_small/model.py": "e09514deaf90de7e08eec770ae3770e9ee302bbce33ef5ef4a41fb03d0c232ef",
+    "experiments/snn/conv_small/train.py": "d6086b1886e4d4999f07779eaa46008d0b9f1e1a2e6973486f29676e93fbb394"
+  },
+  "checkpoint_sha256": {
+    "7": "72f2115ea057f674341891136e4b2e667445c860b0b2e0acd1e0370ef0ff9ece",
+    "17": "680351ef85e8eee637f9a14c75a6dec07f0dd7fef1c4aa57fa86c7fb646e2421",
+    "27": "e8a40da7d89ec6d8890ac2fa808a516a5e130001b78ee514f360f97b00d6fa07"
+  },
+  "aggregate": {
+    "best_validation_accuracy_percent": {
+      "mean": 92.38666666666667,
+      "sample_std_ddof1": 0.1514375558880097
+    },
+    "final_test_accuracy_percent": {
+      "mean": 90.43333333333334,
+      "sample_std_ddof1": 0.20132891827388896
+    },
+    "total_training_time_seconds": {
+      "mean": 423.2523595333332,
+      "sample_std_ddof1": 13.11142834756539
+    },
+    "full_test_inference_time_seconds": {
+      "mean": 2.6617476000004294,
+      "sample_std_ddof1": 0.114830189102044
+    },
+    "effective_synaptic_additions_per_sample": {
+      "mean": 56140.23586666667,
+      "sample_std_ddof1": 3823.0275666232205
+    }
+  },
+  "runs": [
+    {
+      "protocol_id": "mnist8x8-sequential-v1",
+      "test_evaluations": 1,
+      "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+      "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+      "split_indices": {
+        "train": [
+          0,
+          55000
+        ],
+        "validation": [
+          55000,
+          60000
+        ],
+        "end_exclusive": true
+      },
+      "environment": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+        "git_dirty": true
+      },
+      "optimizer": "Adam",
+      "num_workers": 0,
+      "final_test_accuracy_percent": 90.22,
+      "best_validation_accuracy_percent": 92.32,
+      "best_epoch": 15,
+      "validation_split": {
+        "train": 55000,
+        "validation": 5000
+      },
+      "test_set_size": 10000,
+      "target_accuracy_percent": 95.0,
+      "target_reached": false,
+      "epochs_run": 20,
+      "total_training_time_seconds": 438.2014143000124,
+      "average_time_per_epoch_seconds": 21.91007071500062,
+      "full_test_inference_time_seconds": 2.6001311000145506,
+      "average_inference_time_per_sample_ms": 0.26001311000145505,
+      "inference_batch_size": 256,
+      "total_parameters": 9872,
+      "model_file_size_bytes": 41788,
+      "device": "cuda",
+      "batch_size": 256,
+      "learning_rate_schedule": [
+        0.001,
+        0.0003
+      ],
+      "weight_decay": 0.0,
+      "gradient_clip_norm": 1.0,
+      "seed": 7,
+      "network": "Conv1x16-IF-subtract-Conv16x32(stride2)-IF-subtract-FC512x10-time-weighted-membrane",
+      "time_steps": 24,
+      "threshold": 1.0,
+      "surrogate": "fast_sigmoid_slope5_training_only",
+      "dense_equivalent_macs_per_time_step": 88064,
+      "dense_equivalent_macs_all_time_steps": 2113536,
+      "hidden_state_count": 1536,
+      "hidden_state_updates_per_sample": 36864,
+      "readout_state_count": 20,
+      "readout_state_updates_per_sample": 480,
+      "workload_test_total": {
+        "effective_synaptic_additions": 564088306,
+        "input_spike_events": 133405,
+        "layer1_spike_events": 4321573,
+        "layer2_spike_events": 24086333
+      },
+      "workload_test_per_sample": {
+        "effective_synaptic_additions": 56408.8306,
+        "input_spike_events": 13.3405,
+        "layer1_spike_events": 432.1573,
+        "layer2_spike_events": 2408.6333
+      },
+      "encoder": {
+        "g0": 0.1,
+        "alpha": 0.9,
+        "tau": 5.0,
+        "g_threshold": 0.35
+      }
+    },
+    {
+      "protocol_id": "mnist8x8-sequential-v1",
+      "test_evaluations": 1,
+      "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+      "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+      "split_indices": {
+        "train": [
+          0,
+          55000
+        ],
+        "validation": [
+          55000,
+          60000
+        ],
+        "end_exclusive": true
+      },
+      "environment": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+        "git_dirty": true
+      },
+      "optimizer": "Adam",
+      "num_workers": 0,
+      "final_test_accuracy_percent": 90.46,
+      "best_validation_accuracy_percent": 92.28,
+      "best_epoch": 18,
+      "validation_split": {
+        "train": 55000,
+        "validation": 5000
+      },
+      "test_set_size": 10000,
+      "target_accuracy_percent": 95.0,
+      "target_reached": false,
+      "epochs_run": 20,
+      "total_training_time_seconds": 413.70325399999274,
+      "average_time_per_epoch_seconds": 20.685162699999637,
+      "full_test_inference_time_seconds": 2.5908773000119254,
+      "average_inference_time_per_sample_ms": 0.25908773000119256,
+      "inference_batch_size": 256,
+      "total_parameters": 9872,
+      "model_file_size_bytes": 41788,
+      "device": "cuda",
+      "batch_size": 256,
+      "learning_rate_schedule": [
+        0.001,
+        0.0003
+      ],
+      "weight_decay": 0.0,
+      "gradient_clip_norm": 1.0,
+      "seed": 17,
+      "network": "Conv1x16-IF-subtract-Conv16x32(stride2)-IF-subtract-FC512x10-time-weighted-membrane",
+      "time_steps": 24,
+      "threshold": 1.0,
+      "surrogate": "fast_sigmoid_slope5_training_only",
+      "dense_equivalent_macs_per_time_step": 88064,
+      "dense_equivalent_macs_all_time_steps": 2113536,
+      "hidden_state_count": 1536,
+      "hidden_state_updates_per_sample": 36864,
+      "readout_state_count": 20,
+      "readout_state_updates_per_sample": 480,
+      "workload_test_total": {
+        "effective_synaptic_additions": 598218830,
+        "input_spike_events": 133405,
+        "layer1_spike_events": 4392343,
+        "layer2_spike_events": 27005811
+      },
+      "workload_test_per_sample": {
+        "effective_synaptic_additions": 59821.883,
+        "input_spike_events": 13.3405,
+        "layer1_spike_events": 439.2343,
+        "layer2_spike_events": 2700.5811
+      },
+      "encoder": {
+        "g0": 0.1,
+        "alpha": 0.9,
+        "tau": 5.0,
+        "g_threshold": 0.35
+      }
+    },
+    {
+      "protocol_id": "mnist8x8-sequential-v1",
+      "test_evaluations": 1,
+      "checkpoint_selection": "maximum validation accuracy; earliest epoch on ties",
+      "preprocessing": "PIL bilinear Resize(8,8), ToTensor; no normalization or augmentation",
+      "split_indices": {
+        "train": [
+          0,
+          55000
+        ],
+        "validation": [
+          55000,
+          60000
+        ],
+        "end_exclusive": true
+      },
+      "environment": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "git_commit": "36b7467585183d476796b2747d098395a13143c1",
+        "git_dirty": true
+      },
+      "optimizer": "Adam",
+      "num_workers": 0,
+      "final_test_accuracy_percent": 90.62,
+      "best_validation_accuracy_percent": 92.56,
+      "best_epoch": 17,
+      "validation_split": {
+        "train": 55000,
+        "validation": 5000
+      },
+      "test_set_size": 10000,
+      "target_accuracy_percent": 95.0,
+      "target_reached": false,
+      "epochs_run": 20,
+      "total_training_time_seconds": 417.8524102999945,
+      "average_time_per_epoch_seconds": 20.892620514999727,
+      "full_test_inference_time_seconds": 2.794234399974812,
+      "average_inference_time_per_sample_ms": 0.27942343999748115,
+      "inference_batch_size": 256,
+      "total_parameters": 9872,
+      "model_file_size_bytes": 41788,
+      "device": "cuda",
+      "batch_size": 256,
+      "learning_rate_schedule": [
+        0.001,
+        0.0003
+      ],
+      "weight_decay": 0.0,
+      "gradient_clip_norm": 1.0,
+      "seed": 27,
+      "network": "Conv1x16-IF-subtract-Conv16x32(stride2)-IF-subtract-FC512x10-time-weighted-membrane",
+      "time_steps": 24,
+      "threshold": 1.0,
+      "surrogate": "fast_sigmoid_slope5_training_only",
+      "dense_equivalent_macs_per_time_step": 88064,
+      "dense_equivalent_macs_all_time_steps": 2113536,
+      "hidden_state_count": 1536,
+      "hidden_state_updates_per_sample": 36864,
+      "readout_state_count": 20,
+      "readout_state_updates_per_sample": 480,
+      "workload_test_total": {
+        "effective_synaptic_additions": 521899940,
+        "input_spike_events": 133405,
+        "layer1_spike_events": 4007349,
+        "layer2_spike_events": 22088530
+      },
+      "workload_test_per_sample": {
+        "effective_synaptic_additions": 52189.994,
+        "input_spike_events": 13.3405,
+        "layer1_spike_events": 400.7349,
+        "layer2_spike_events": 2208.853
+      },
+      "encoder": {
+        "g0": 0.1,
+        "alpha": 0.9,
+        "tau": 5.0,
+        "g_threshold": 0.35
+      }
+    }
+  ]
+}

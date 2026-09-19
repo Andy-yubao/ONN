@@ -1,0 +1,67 @@
+{
+  "protocol_id": "mnist8x8-sequential-v1",
+  "seed": 17,
+  "epochs": 20,
+  "batch_size": 256,
+  "num_workers": 0,
+  "time_steps": 4,
+  "source_time_steps": 24,
+  "input_preset": "t4_quantile_030",
+  "time_mapping": "quantile",
+  "target_firing_ratio": "0.30",
+  "input_encoding_calibration": {
+    "frozen": true,
+    "recalibrated_for_this_run": false,
+    "source_result": "results/input_encoding_joint/T4_quantile_030/run_config.json",
+    "data_scope": "original calibration used training split indices [0, 55000) only",
+    "training_samples": 55000,
+    "training_pixels": 3520000,
+    "target_firing_ratio": "0.30",
+    "actual_firing_ratio": 0.300865625,
+    "input_spikes_per_image": 19.2554,
+    "g_threshold": 0.21026152308606838,
+    "threshold_method": "reused frozen training-set calibration; no recalibration",
+    "time_mapping": "quantile",
+    "quantile_boundaries_inclusive_source_latency": [
+      0,
+      1,
+      3
+    ],
+    "mapped_training_histogram_per_image": [
+      1.8678545454545454,
+      8.4514,
+      4.899781818181818,
+      4.036363636363636
+    ]
+  },
+  "readout_mode": "accumulated_membrane",
+  "temporal_beta": 0.5,
+  "normalized_temporal_weights": [
+    3.5714287757873535,
+    2.857142925262451,
+    2.142857074737549,
+    1.4285714626312256
+  ],
+  "event_lambda": 0.0,
+  "event_proxy": {
+    "formula": "(sum L1 spikes * valid Conv2 spatial fanout * 32 + sum L2 spikes * 10) / batch_size / normalization",
+    "normalization": 20876.389236363637,
+    "normalization_source": "frozen beta=1 baseline checkpoint mean on 55k training split only",
+    "input_spikes_penalized": false
+  },
+  "optimizer": "Adam",
+  "learning_rate_schedule": [
+    0.001,
+    0.0003
+  ],
+  "weight_decay": 0.0,
+  "gradient_clip_norm": 1.0,
+  "total_parameters": 9872,
+  "readout": "accumulated membrane: A[T-1]/T; earlier output currents receive larger weights",
+  "source_sha256": {
+    "experiments/snn/conv_small/train.py": "6e2091598d1853d36bda0e01a073d2dd7496874b94c7211a01f7e77df90b79ed",
+    "experiments/snn/conv_small/model.py": "5c4fa0508f2a8d9c8a1a350ed31e00db4e8a75aca03d6a822f0531f891d045c8",
+    "experiments/common/device_latency_encoder.py": "cb4ca7026a5800ab177ac6b0b23450f19bb057532bb38ced3b7f9179de4207a9",
+    "experiments/common/comparison_protocol.py": "a71e5a7438b3f814240847f8e3b5ec0c1ba06b063e80f6fef515a828300c0bfc"
+  }
+}
