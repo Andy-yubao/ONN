@@ -1,0 +1,400 @@
+{
+  "experiment": "frozen SNN device-curve transfer with encoder-only recalibration",
+  "weights_retrained_or_finetuned": false,
+  "calibration_data": "training split only; validation and test excluded",
+  "new_test_inferences": 9,
+  "original_reference": {
+    "device": {
+      "name": "original",
+      "description": "frozen reference device",
+      "g0": 0.1,
+      "alpha": 0.9,
+      "tau": 5.0
+    },
+    "results": {
+      "7": {
+        "test_accuracy_percent": 93.47,
+        "effective_synaptic_additions_per_image": 10141.294,
+        "source": "results/final_three_seed/seed_7/metrics.json",
+        "reused_existing_final_test": true
+      },
+      "17": {
+        "test_accuracy_percent": 93.6,
+        "effective_synaptic_additions_per_image": 9440.0364,
+        "source": "results/event_regularization/beta_0p5_lambda_0p10_seed17/metrics.json",
+        "reused_existing_final_test": true
+      },
+      "27": {
+        "test_accuracy_percent": 93.33,
+        "effective_synaptic_additions_per_image": 10182.7548,
+        "source": "results/final_three_seed/seed_27/metrics.json",
+        "reused_existing_final_test": true
+      }
+    }
+  },
+  "variants": [
+    {
+      "device": {
+        "name": "faster_tau3",
+        "description": "faster response",
+        "g0": 0.1,
+        "alpha": 0.9,
+        "tau": 3.0
+      },
+      "curve_check": {
+        "valid": true,
+        "conductance_monotonic_in_intensity": true,
+        "conductance_monotonic_in_time": true,
+        "crossing_earlier_or_equal_at_higher_intensity": true,
+        "firing_grid_points": 877
+      },
+      "calibration": {
+        "data_scope": "training split indices [0, 55000) only",
+        "training_samples": 55000,
+        "training_pixels": 3520000,
+        "target_firing_ratio": 0.3,
+        "actual_firing_ratio": 0.300865625,
+        "input_spikes_per_image": 19.2554,
+        "intensity_cut": 0.12352941930294037,
+        "g_threshold": 0.21113918181938596,
+        "quantile_boundaries_inclusive_source_latency": [
+          0,
+          1,
+          2
+        ],
+        "source_latency_histogram": [
+          447961,
+          329031,
+          116801,
+          60681,
+          36477,
+          18730,
+          19307,
+          9976,
+          0,
+          9868,
+          0,
+          0,
+          10215,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "mapped_training_histogram_per_image": [
+          8.144745454545454,
+          5.9823818181818185,
+          2.1236545454545452,
+          3.0046181818181816
+        ]
+      },
+      "evaluations": {
+        "7": {
+          "test_accuracy_percent": 92.85,
+          "inference_seconds": 1.9687440000125207,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 10235.2586,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 75.3662,
+            "layer2_spike_events": 235.2025
+          },
+          "test_input_spike_histogram_total": [
+            83625,
+            58684,
+            21132,
+            29700
+          ],
+          "checkpoint": "results/final_three_seed/seed_7/best_model.pt",
+          "checkpoint_sha256": "44bf212122c0f8fc358b427d9dfd31cbc35dbc456e7048bdf0b8a106bdbf0431"
+        },
+        "17": {
+          "test_accuracy_percent": 93.38,
+          "inference_seconds": 1.1893118000007235,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 9610.6062,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 66.2498,
+            "layer2_spike_events": 236.4435
+          },
+          "test_input_spike_histogram_total": [
+            83625,
+            58684,
+            21132,
+            29700
+          ],
+          "checkpoint": "results/event_regularization/beta_0p5_lambda_0p10_seed17/best_model.pt",
+          "checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6"
+        },
+        "27": {
+          "test_accuracy_percent": 92.61,
+          "inference_seconds": 0.9321934999898076,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 10370.1886,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 72.437,
+            "layer2_spike_events": 254.0107
+          },
+          "test_input_spike_histogram_total": [
+            83625,
+            58684,
+            21132,
+            29700
+          ],
+          "checkpoint": "results/final_three_seed/seed_27/best_model.pt",
+          "checkpoint_sha256": "ffd273a8ee78f1ef85fe4abef74e86b50b3a8ad31b2fd3ad4c9afda00d6b685e"
+        }
+      },
+      "test_accuracy_mean_percent": 92.94666666666666,
+      "accuracy_drop_vs_original_mean_pct_points": 0.519999999999996
+    },
+    {
+      "device": {
+        "name": "slower_tau8",
+        "description": "slower response",
+        "g0": 0.1,
+        "alpha": 0.9,
+        "tau": 8.0
+      },
+      "curve_check": {
+        "valid": true,
+        "conductance_monotonic_in_intensity": true,
+        "conductance_monotonic_in_time": true,
+        "crossing_earlier_or_equal_at_higher_intensity": true,
+        "firing_grid_points": 877
+      },
+      "calibration": {
+        "data_scope": "training split indices [0, 55000) only",
+        "training_samples": 55000,
+        "training_pixels": 3520000,
+        "target_firing_ratio": 0.3,
+        "actual_firing_ratio": 0.300865625,
+        "input_spikes_per_image": 19.2554,
+        "intensity_cut": 0.12352941930294037,
+        "g_threshold": 0.20564132649279612,
+        "quantile_boundaries_inclusive_source_latency": [
+          1,
+          2,
+          4
+        ],
+        "source_latency_histogram": [
+          6,
+          285992,
+          274626,
+          130862,
+          85506,
+          60055,
+          40205,
+          33470,
+          25857,
+          26831,
+          8910,
+          18631,
+          9243,
+          9487,
+          9546,
+          9761,
+          9976,
+          0,
+          0,
+          9868,
+          0,
+          10215,
+          0,
+          0
+        ],
+        "mapped_training_histogram_per_image": [
+          5.199963636363637,
+          4.9932,
+          3.9339636363636363,
+          5.128272727272727
+        ]
+      },
+      "evaluations": {
+        "7": {
+          "test_accuracy_percent": 93.29,
+          "inference_seconds": 0.8869532000098843,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 10400.912,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 77.5417,
+            "layer2_spike_events": 235.7768
+          },
+          "test_input_spike_histogram_total": [
+            54361,
+            49408,
+            38540,
+            50832
+          ],
+          "checkpoint": "results/final_three_seed/seed_7/best_model.pt",
+          "checkpoint_sha256": "44bf212122c0f8fc358b427d9dfd31cbc35dbc456e7048bdf0b8a106bdbf0431"
+        },
+        "17": {
+          "test_accuracy_percent": 93.36,
+          "inference_seconds": 1.0604286000016145,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 9724.4996,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 67.8275,
+            "layer2_spike_events": 235.3378
+          },
+          "test_input_spike_histogram_total": [
+            54361,
+            49408,
+            38540,
+            50832
+          ],
+          "checkpoint": "results/event_regularization/beta_0p5_lambda_0p10_seed17/best_model.pt",
+          "checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6"
+        },
+        "27": {
+          "test_accuracy_percent": 92.98,
+          "inference_seconds": 1.0578141000005417,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 10374.9068,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 73.5063,
+            "layer2_spike_events": 246.9718
+          },
+          "test_input_spike_histogram_total": [
+            54361,
+            49408,
+            38540,
+            50832
+          ],
+          "checkpoint": "results/final_three_seed/seed_27/best_model.pt",
+          "checkpoint_sha256": "ffd273a8ee78f1ef85fe4abef74e86b50b3a8ad31b2fd3ad4c9afda00d6b685e"
+        }
+      },
+      "test_accuracy_mean_percent": 93.21,
+      "accuracy_drop_vs_original_mean_pct_points": 0.2566666666666606
+    },
+    {
+      "device": {
+        "name": "shifted_gain",
+        "description": "higher baseline and lower gain",
+        "g0": 0.16,
+        "alpha": 0.7,
+        "tau": 5.0
+      },
+      "curve_check": {
+        "valid": true,
+        "conductance_monotonic_in_intensity": true,
+        "conductance_monotonic_in_time": true,
+        "crossing_earlier_or_equal_at_higher_intensity": true,
+        "firing_grid_points": 877
+      },
+      "calibration": {
+        "data_scope": "training split indices [0, 55000) only",
+        "training_samples": 55000,
+        "training_pixels": 3520000,
+        "target_firing_ratio": 0.3,
+        "actual_firing_ratio": 0.300865625,
+        "input_spikes_per_image": 19.2554,
+        "intensity_cut": 0.12352941930294037,
+        "g_threshold": 0.2457589624002754,
+        "quantile_boundaries_inclusive_source_latency": [
+          0,
+          1,
+          3
+        ],
+        "source_latency_histogram": [
+          102732,
+          464827,
+          173169,
+          96319,
+          56746,
+          42786,
+          26831,
+          18135,
+          18649,
+          9487,
+          9546,
+          9761,
+          9976,
+          0,
+          9868,
+          0,
+          0,
+          0,
+          10215,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "mapped_training_histogram_per_image": [
+          1.8678545454545454,
+          8.4514,
+          4.899781818181818,
+          4.036363636363636
+        ]
+      },
+      "evaluations": {
+        "7": {
+          "test_accuracy_percent": 93.47,
+          "inference_seconds": 0.9339357999851927,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 10141.294,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 75.206,
+            "layer2_spike_events": 226.5958
+          },
+          "test_input_spike_histogram_total": [
+            20132,
+            84917,
+            48173,
+            39919
+          ],
+          "checkpoint": "results/final_three_seed/seed_7/best_model.pt",
+          "checkpoint_sha256": "44bf212122c0f8fc358b427d9dfd31cbc35dbc456e7048bdf0b8a106bdbf0431"
+        },
+        "17": {
+          "test_accuracy_percent": 93.6,
+          "inference_seconds": 1.0828925000096206,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 9440.0364,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 65.401,
+            "layer2_spike_events": 224.6502
+          },
+          "test_input_spike_histogram_total": [
+            20132,
+            84917,
+            48173,
+            39919
+          ],
+          "checkpoint": "results/event_regularization/beta_0p5_lambda_0p10_seed17/best_model.pt",
+          "checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6"
+        },
+        "27": {
+          "test_accuracy_percent": 93.33,
+          "inference_seconds": 0.8361025000049267,
+          "workload_test_per_sample": {
+            "effective_synaptic_additions": 10182.7548,
+            "input_spike_events": 19.3141,
+            "layer1_spike_events": 71.6334,
+            "layer2_spike_events": 240.8526
+          },
+          "test_input_spike_histogram_total": [
+            20132,
+            84917,
+            48173,
+            39919
+          ],
+          "checkpoint": "results/final_three_seed/seed_27/best_model.pt",
+          "checkpoint_sha256": "ffd273a8ee78f1ef85fe4abef74e86b50b3a8ad31b2fd3ad4c9afda00d6b685e"
+        }
+      },
+      "test_accuracy_mean_percent": 93.46666666666665,
+      "accuracy_drop_vs_original_mean_pct_points": 0.0
+    }
+  ]
+}

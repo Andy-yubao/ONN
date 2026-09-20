@@ -1,11 +1,10 @@
-# `model/`：正式模型与部署准备
+# `model/`：量化与部署准备
 
-当前尚未选择 production / deployment champion。所有候选网络位于
-[`experiments/`](../experiments/)，完成统一 8×8 CNN/SNN 公平比较并正式完成 champion
-selection 之前，不将候选模型 promote 到本目录；若最终选择 SNN，再按本目录契约继续
-SNN 的量化、整数参考和部署导出。
+当前仍未选择 production / deployment champion。这里先承载 Frozen T=4 SNN 的 PTQ 和
+硬件导向整数参考，身份是 **deployment candidate**，不改变 matched CNN 准确率更高、
+production champion 尚未冻结的项目结论。
 
-未来 `model/` 只承载正式模型及其部署契约：
+本目录承载部署契约：
 
 - frozen architecture；
 - trained checkpoint metadata；
@@ -14,4 +13,15 @@ SNN 的量化、整数参考和部署导出。
 - hardware parameter export；
 - deployment-oriented tests。
 
-当前尚未开始 SNN 量化或正式部署导出。
+## Frozen SNN PTQ
+
+- [量化记录与硬件位宽表](snn/quantization_record.md)
+- [结构化实测结果](snn/results/ptq_summary.json)
+- [内部状态压缩实测结果](snn/results/state_quantization_summary.json)
+- [整数 / 定点 reference](snn/integer_reference.py)
+- [PTQ、calibration 与完整测试入口](snn/ptq.py)
+- [内部状态位宽选择入口](snn/state_quantization.py)
+- [数值契约测试](snn/test_integer_reference.py)
+
+当前已完成三 seed PTQ 与整数 reference test inference；尚未选择供 RTL 导出的单一
+checkpoint，也未写 RTL、创建 Vivado 工程或进行 FPGA 验证。

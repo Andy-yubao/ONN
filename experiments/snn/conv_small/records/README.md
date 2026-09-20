@@ -12,5 +12,7 @@
 | [输入编码联合实验](input_encoding_joint_experiment.md) | T=4/5/8、Linear/Quantile、约 20.84%/30.18% firing ratio | Quantile 与约 30% firing ratio 有协同；T=4 组合 validation 最高、MAC 最低。 |
 | [温和时间权重](temporal_weighting_record.md) | beta=1/0.5/0.25，固定总权重 | beta=0.5 validation 最高，温和削弱 early bias 可行。 |
 | [事件正则化](event_regularization_record.md) | lambda=0/0.01/0.03/0.10 | 三个 λ 均满足精度预算；λ=0.10 的有效突触加法最低，较 λ=0 降 59.32%。 |
+| [Frozen SNN 三 seed 正式结果](final_three_seed_record.md) | 最终 T=4 配置，seed 7/17/27；matched CNN 对比 | SNN test 93.47% ± 0.14 pct；CNN 为 97.37% ± 0.11 pct；事件代理均值 9,921.36/张。 |
+| [器件曲线迁移](device_curve_transfer_record.md) | 三种单调器件变体，仅重校准 encoder | 9 次推理的最大 mean drop 为 0.52 pct；模拟范围内支持复用冻结权重。 |
 
 跨实验、可长期复用的结论集中在 [`../experiment_history.md`](../experiment_history.md)。

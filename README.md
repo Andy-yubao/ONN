@@ -17,17 +17,18 @@ ONN 当前研究重点是把 8×8 输入、器件动态响应和时序脉冲编�
 
 ## 当前阶段结果
 
-以下数字来自已提交实验记录，本次架构重构未重新计算：
+当前验证阶段配置已经冻结：8×8、T=4、Quantile、约 30% input firing、beta=0.5、
+lambda=0.10，网络共 9,872 参数。正式三 seed held-out test 为 **93.47% ± 0.14 pct**；
+参数量相近的 matched CNN（9,930 参数）为 **97.37% ± 0.11 pct**。完整对比见
+[Frozen SNN 三 seed 记录](experiments/snn/conv_small/records/final_three_seed_record.md)。
 
-- 冻结的 28×28 CNN 无法直接兼容 8×8/4×4 低有效分辨率输入；
-- MLP latency SNN：87.15%；
-- large Conv-SNN architecture exploration：91.27%，不作为严格独立 held-out test benchmark；
-- 当前最重要的 SNN 基线是 small Conv-IF-SNN（原实验目录
-  `snn_8x8_device_if_conv_small`）：held-out test 90.22%，9,872 parameters；
-- 95% 目标尚未达到；
-- matched 8×8 CNN baseline 尚未完成；
-- 尚未选出 production SNN；
-- 尚未开始当前 SNN 的量化和 Basys3 RTL。
+三种简单单调器件曲线的 encoder-only 迁移也已完成：保持约 30% firing ratio 并重算
+Quantile boundaries 后，平均准确率相对原器件下降 0.00–0.52 pct，在该模拟范围内支持
+“换器件 → 重校准 encoder → 复用冻结 SNN 权重”。这不是实际器件或 FPGA 证据，详见
+[器件曲线迁移记录](experiments/snn/conv_small/records/device_curve_transfer_record.md)。Frozen
+SNN 的 PTQ 与整数 reference 已完成：三 seed INT8 mean 为 **93.24% ± 0.17 pct**，比 FP32
+下降 0.22 pct，详见[量化记录](model/snn/quantization_record.md)。当前仍未 promote
+production champion，也未开始当前 SNN RTL、板级验证或实测功耗。
 
 ## 硬件方向
 

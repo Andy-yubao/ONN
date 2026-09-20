@@ -96,3 +96,25 @@ SNN。器件迁移、反色输入和 FPGA 均不在本轮范围内。
 
 用户随后追加的同配置 seed=17 确认运行得到完全相同的 checkpoint、逐轮非耗时指标和最终结果，
 验证了当前软件/硬件环境中的确定性复现；它不增加统计独立样本，不能替代多 seed 验证。
+
+## 最终冻结与三 seed 结果
+
+2026-09-19 冻结 T=4、Quantile、约 30% input firing、beta=0.5、lambda=0.10，不再搜索网络、
+T 或超参数。只新增 seed 7/27 两次训练并复用 seed 17 正式结果，三 seed test 为
+93.47%/93.60%/93.33%，均值 93.47%、sample std 0.14 pct；Best-Val mean 为 94.97%。
+平均 L1/L2 activity 为 0.0691/0.4506 fire/IF/image，平均 hidden spikes 为 301.45/image，
+平均 effective synaptic additions 为 9,921.36/image。
+
+matched CNN 的 test mean/std 为 97.37%/0.11 pct，领先 frozen SNN 3.90 pct；两者参数量
+9,930/9,872 接近。因此 CNN 的准确率优势明确，SNN 的事件稀疏性是另一维度的代理优势，
+在 FPGA 实测前不能据此宣称 SNN 整体或能效胜出。
+
+## 器件曲线迁移
+
+三个预先固定的单调变体只用 training split 重校准约 30% firing threshold 与 T=4 Quantile
+boundaries，不更新 SNN 权重。更快 tau=3、更慢 tau=8、基线/增益变化三者的三-checkpoint
+test mean 分别为 92.95%、93.21%、93.47%，相对原器件下降 0.52、0.26、0.00 pct。
+
+结果支持 fixed firing ratio + Quantile 对简单单调响应变化具有前端解耦作用，但快速响应造成的
+离散 latency 碰撞仍留下小幅损失。证据只来自解析模拟曲线；真实器件噪声、漂移、非单调性和
+FPGA 功耗仍未验证。

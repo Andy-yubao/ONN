@@ -1,0 +1,2482 @@
+{
+  "selection_policy": {
+    "calibration": "ordered training indices [0,1024)",
+    "selection": "validation indices [55000,60000); test is not used for bit-width selection",
+    "acceptance": "zero saturation, prediction mismatch, and hidden-spike mismatch on validation vs guard8",
+    "test": "run once for the selected final format"
+  },
+  "hidden_candidates": {
+    "guard8": {
+      "guard_bits": 8,
+      "widths": {
+        "conv1_current": 20,
+        "mem1": 22,
+        "conv2_current": 24,
+        "mem2": 26,
+        "readout_current": 18,
+        "weighted_logits": 21
+      }
+    },
+    "guard4": {
+      "guard_bits": 4,
+      "widths": {
+        "conv1_current": 16,
+        "mem1": 18,
+        "conv2_current": 20,
+        "mem2": 22,
+        "readout_current": 18,
+        "weighted_logits": 21
+      }
+    },
+    "guard2": {
+      "guard_bits": 2,
+      "widths": {
+        "conv1_current": 14,
+        "mem1": 16,
+        "conv2_current": 18,
+        "mem2": 20,
+        "readout_current": 18,
+        "weighted_logits": 21
+      }
+    }
+  },
+  "hidden_validation_by_seed": {
+    "7": {
+      "sample_count": 5000,
+      "variants": {
+        "guard8": {
+          "accuracy_percent": 94.86,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -205568,
+                "max": 43008
+              },
+              "mem1_integrated": {
+                "min": -205568,
+                "max": 43008
+              },
+              "mem1_post_reset": {
+                "min": -205568,
+                "max": 27422
+              },
+              "conv2_current": {
+                "min": -149504,
+                "max": 189952
+              },
+              "mem2_integrated": {
+                "min": -210176,
+                "max": 237797
+              },
+              "mem2_post_reset": {
+                "min": -210176,
+                "max": 202954
+              },
+              "readout_current": {
+                "min": -2825,
+                "max": 1061
+              },
+              "weighted_logits": {
+                "min": -21192,
+                "max": 8507
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -221154,
+                "max": 27422,
+                "min_abs": 30,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -245019,
+                "max": 202954,
+                "min_abs": 27,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.01642521535317729,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.007347238814736914,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008736907027837798,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 15586,
+              "conv2.weight": 34843
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 14,
+              "conv2.weight": 16
+            },
+            "widths": {
+              "conv1_current": 20,
+              "mem1": 22,
+              "conv2_current": 24,
+              "mem2": 26,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 8,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard4": {
+          "accuracy_percent": 94.86,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -12848,
+                "max": 2688
+              },
+              "mem1_integrated": {
+                "min": -12848,
+                "max": 2688
+              },
+              "mem1_post_reset": {
+                "min": -12848,
+                "max": 1714
+              },
+              "conv2_current": {
+                "min": -9344,
+                "max": 11872
+              },
+              "mem2_integrated": {
+                "min": -13136,
+                "max": 14862
+              },
+              "mem2_post_reset": {
+                "min": -13136,
+                "max": 12684
+              },
+              "readout_current": {
+                "min": -2825,
+                "max": 1061
+              },
+              "weighted_logits": {
+                "min": -21192,
+                "max": 8507
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -13822,
+                "max": 1714,
+                "min_abs": 2,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -15314,
+                "max": 12684,
+                "min_abs": 2,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.01642521535317729,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.007347238814736914,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008736907027837798,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 974,
+              "conv2.weight": 2178
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 12
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard2": {
+          "accuracy_percent": 94.54,
+          "prediction_mismatches_vs_baseline": 146,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 68907,
+            "lif2": 367403
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -3212,
+                "max": 672
+              },
+              "mem1_integrated": {
+                "min": -3212,
+                "max": 672
+              },
+              "mem1_post_reset": {
+                "min": -3212,
+                "max": 428
+              },
+              "conv2_current": {
+                "min": -2392,
+                "max": 2824
+              },
+              "mem2_integrated": {
+                "min": -3252,
+                "max": 3292
+              },
+              "mem2_post_reset": {
+                "min": -3252,
+                "max": 2748
+              },
+              "readout_current": {
+                "min": -2857,
+                "max": 1165
+              },
+              "weighted_logits": {
+                "min": -19234,
+                "max": 9100
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -3456,
+                "max": 428,
+                "min_abs": 0,
+                "abs_le_1": 76793
+              },
+              "lif2": {
+                "min": -3796,
+                "max": 2748,
+                "min_abs": 0,
+                "abs_le_1": 12972
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.01642521535317729,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.007347238814736914,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008736907027837798,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 244,
+              "conv2.weight": 544
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 8,
+              "conv2.weight": 10
+            },
+            "widths": {
+              "conv1_current": 14,
+              "mem1": 16,
+              "conv2_current": 18,
+              "mem2": 20,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 2,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        }
+      }
+    },
+    "17": {
+      "sample_count": 5000,
+      "variants": {
+        "guard8": {
+          "accuracy_percent": 94.58,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -244224,
+                "max": 38400
+              },
+              "mem1_integrated": {
+                "min": -244224,
+                "max": 38400
+              },
+              "mem1_post_reset": {
+                "min": -244224,
+                "max": 23373
+              },
+              "conv2_current": {
+                "min": -107008,
+                "max": 164352
+              },
+              "mem2_integrated": {
+                "min": -137216,
+                "max": 217758
+              },
+              "mem2_post_reset": {
+                "min": -137216,
+                "max": 190317
+              },
+              "readout_current": {
+                "min": -2632,
+                "max": 1052
+              },
+              "weighted_logits": {
+                "min": -26654,
+                "max": 8316
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -259251,
+                "max": 23373,
+                "min_abs": 77,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -164657,
+                "max": 190317,
+                "min_abs": 49,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.017035540633314236,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.009329017691724882,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008797451267092247,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 15027,
+              "conv2.weight": 27441
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 14,
+              "conv2.weight": 15
+            },
+            "widths": {
+              "conv1_current": 20,
+              "mem1": 22,
+              "conv2_current": 24,
+              "mem2": 26,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 8,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard4": {
+          "accuracy_percent": 94.58,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -15264,
+                "max": 2400
+              },
+              "mem1_integrated": {
+                "min": -15264,
+                "max": 2400
+              },
+              "mem1_post_reset": {
+                "min": -15264,
+                "max": 1461
+              },
+              "conv2_current": {
+                "min": -6688,
+                "max": 10272
+              },
+              "mem2_integrated": {
+                "min": -8576,
+                "max": 13610
+              },
+              "mem2_post_reset": {
+                "min": -8576,
+                "max": 11895
+              },
+              "readout_current": {
+                "min": -2632,
+                "max": 1052
+              },
+              "weighted_logits": {
+                "min": -26654,
+                "max": 8316
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -16203,
+                "max": 1461,
+                "min_abs": 5,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -10291,
+                "max": 11895,
+                "min_abs": 3,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.017035540633314236,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.009329017691724882,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008797451267092247,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 939,
+              "conv2.weight": 1715
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 11
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard2": {
+          "accuracy_percent": 94.58,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 56
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -3816,
+                "max": 600
+              },
+              "mem1_integrated": {
+                "min": -3816,
+                "max": 600
+              },
+              "mem1_post_reset": {
+                "min": -3816,
+                "max": 365
+              },
+              "conv2_current": {
+                "min": -1672,
+                "max": 2568
+              },
+              "mem2_integrated": {
+                "min": -2144,
+                "max": 3402
+              },
+              "mem2_post_reset": {
+                "min": -2144,
+                "max": 2973
+              },
+              "readout_current": {
+                "min": -2632,
+                "max": 1052
+              },
+              "weighted_logits": {
+                "min": -26654,
+                "max": 8316
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -4051,
+                "max": 365,
+                "min_abs": 1,
+                "abs_le_1": 67207
+              },
+              "lif2": {
+                "min": -2573,
+                "max": 2973,
+                "min_abs": 0,
+                "abs_le_1": 13688
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.017035540633314236,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.009329017691724882,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008797451267092247,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 235,
+              "conv2.weight": 429
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 8,
+              "conv2.weight": 9
+            },
+            "widths": {
+              "conv1_current": 14,
+              "mem1": 16,
+              "conv2_current": 18,
+              "mem2": 20,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 2,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        }
+      }
+    },
+    "27": {
+      "sample_count": 5000,
+      "variants": {
+        "guard8": {
+          "accuracy_percent": 94.08,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -237568,
+                "max": 39168
+              },
+              "mem1_integrated": {
+                "min": -237568,
+                "max": 39168
+              },
+              "mem1_post_reset": {
+                "min": -237568,
+                "max": 23519
+              },
+              "conv2_current": {
+                "min": -176640,
+                "max": 195584
+              },
+              "mem2_integrated": {
+                "min": -271616,
+                "max": 214292
+              },
+              "mem2_post_reset": {
+                "min": -271616,
+                "max": 175656
+              },
+              "readout_current": {
+                "min": -3018,
+                "max": 1219
+              },
+              "weighted_logits": {
+                "min": -25118,
+                "max": 10099
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -253217,
+                "max": 23519,
+                "min_abs": 33,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -310252,
+                "max": 175656,
+                "min_abs": 20,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.016359207198375792,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.006625886507860319,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.00799218688424178,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 15649,
+              "conv2.weight": 38636
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 14,
+              "conv2.weight": 16
+            },
+            "widths": {
+              "conv1_current": 20,
+              "mem1": 22,
+              "conv2_current": 24,
+              "mem2": 26,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 8,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard4": {
+          "accuracy_percent": 94.08,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -14848,
+                "max": 2448
+              },
+              "mem1_integrated": {
+                "min": -14848,
+                "max": 2448
+              },
+              "mem1_post_reset": {
+                "min": -14848,
+                "max": 1470
+              },
+              "conv2_current": {
+                "min": -11040,
+                "max": 12224
+              },
+              "mem2_integrated": {
+                "min": -16976,
+                "max": 13393
+              },
+              "mem2_post_reset": {
+                "min": -16976,
+                "max": 10978
+              },
+              "readout_current": {
+                "min": -3018,
+                "max": 1219
+              },
+              "weighted_logits": {
+                "min": -25118,
+                "max": 10099
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -15826,
+                "max": 1470,
+                "min_abs": 2,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -19391,
+                "max": 10978,
+                "min_abs": 1,
+                "abs_le_1": 7227
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.016359207198375792,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.006625886507860319,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.00799218688424178,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 978,
+              "conv2.weight": 2415
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 12
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard2": {
+          "accuracy_percent": 94.14,
+          "prediction_mismatches_vs_baseline": 17,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 13961
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -3712,
+                "max": 612
+              },
+              "mem1_integrated": {
+                "min": -3712,
+                "max": 612
+              },
+              "mem1_post_reset": {
+                "min": -3712,
+                "max": 367
+              },
+              "conv2_current": {
+                "min": -2760,
+                "max": 3056
+              },
+              "mem2_integrated": {
+                "min": -4244,
+                "max": 3348
+              },
+              "mem2_post_reset": {
+                "min": -4244,
+                "max": 2744
+              },
+              "readout_current": {
+                "min": -3018,
+                "max": 1219
+              },
+              "weighted_logits": {
+                "min": -24848,
+                "max": 10207
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -3957,
+                "max": 367,
+                "min_abs": 1,
+                "abs_le_1": 65516
+              },
+              "lif2": {
+                "min": -4848,
+                "max": 2744,
+                "min_abs": 0,
+                "abs_le_1": 11564
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.016359207198375792,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.006625886507860319,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.00799218688424178,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 245,
+              "conv2.weight": 604
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 8,
+              "conv2.weight": 10
+            },
+            "widths": {
+              "conv1_current": 14,
+              "mem1": 16,
+              "conv2_current": 18,
+              "mem2": 20,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 2,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        }
+      }
+    }
+  },
+  "hidden_validation_aggregate": {
+    "guard8": {
+      "mean_validation_accuracy_percent": 94.50666666666666,
+      "delta_vs_guard8_pct": 0.0,
+      "total_validation_saturations": 0,
+      "total_prediction_mismatches_vs_guard8": 0,
+      "total_spike_mismatches_vs_guard8": 0
+    },
+    "guard4": {
+      "mean_validation_accuracy_percent": 94.50666666666666,
+      "delta_vs_guard8_pct": 0.0,
+      "total_validation_saturations": 0,
+      "total_prediction_mismatches_vs_guard8": 0,
+      "total_spike_mismatches_vs_guard8": 0
+    },
+    "guard2": {
+      "mean_validation_accuracy_percent": 94.42,
+      "delta_vs_guard8_pct": -0.0866666666666589,
+      "total_validation_saturations": 0,
+      "total_prediction_mismatches_vs_guard8": 163,
+      "total_spike_mismatches_vs_guard8": 450327
+    }
+  },
+  "selected_hidden": "guard4",
+  "readout_candidates": {
+    "guard4_readout18": {
+      "guard_bits": 4,
+      "widths": {
+        "conv1_current": 16,
+        "mem1": 18,
+        "conv2_current": 20,
+        "mem2": 22,
+        "readout_current": 18,
+        "weighted_logits": 21
+      }
+    },
+    "guard4_readout17": {
+      "guard_bits": 4,
+      "widths": {
+        "conv1_current": 16,
+        "mem1": 18,
+        "conv2_current": 20,
+        "mem2": 22,
+        "readout_current": 17,
+        "weighted_logits": 21
+      }
+    }
+  },
+  "readout_validation_by_seed": {
+    "7": {
+      "sample_count": 5000,
+      "variants": {
+        "guard4_readout18": {
+          "accuracy_percent": 94.86,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -12848,
+                "max": 2688
+              },
+              "mem1_integrated": {
+                "min": -12848,
+                "max": 2688
+              },
+              "mem1_post_reset": {
+                "min": -12848,
+                "max": 1714
+              },
+              "conv2_current": {
+                "min": -9344,
+                "max": 11872
+              },
+              "mem2_integrated": {
+                "min": -13136,
+                "max": 14862
+              },
+              "mem2_post_reset": {
+                "min": -13136,
+                "max": 12684
+              },
+              "readout_current": {
+                "min": -2825,
+                "max": 1061
+              },
+              "weighted_logits": {
+                "min": -21192,
+                "max": 8507
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -13822,
+                "max": 1714,
+                "min_abs": 2,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -15314,
+                "max": 12684,
+                "min_abs": 2,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.01642521535317729,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.007347238814736914,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008736907027837798,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 974,
+              "conv2.weight": 2178
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 12
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard4_readout17": {
+          "accuracy_percent": 94.86,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -12848,
+                "max": 2688
+              },
+              "mem1_integrated": {
+                "min": -12848,
+                "max": 2688
+              },
+              "mem1_post_reset": {
+                "min": -12848,
+                "max": 1714
+              },
+              "conv2_current": {
+                "min": -9344,
+                "max": 11872
+              },
+              "mem2_integrated": {
+                "min": -13136,
+                "max": 14862
+              },
+              "mem2_post_reset": {
+                "min": -13136,
+                "max": 12684
+              },
+              "readout_current": {
+                "min": -2825,
+                "max": 1061
+              },
+              "weighted_logits": {
+                "min": -21192,
+                "max": 8507
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -13822,
+                "max": 1714,
+                "min_abs": 2,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -15314,
+                "max": 12684,
+                "min_abs": 2,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.01642521535317729,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.007347238814736914,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008736907027837798,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 974,
+              "conv2.weight": 2178
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 12
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 17,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        }
+      }
+    },
+    "17": {
+      "sample_count": 5000,
+      "variants": {
+        "guard4_readout18": {
+          "accuracy_percent": 94.58,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -15264,
+                "max": 2400
+              },
+              "mem1_integrated": {
+                "min": -15264,
+                "max": 2400
+              },
+              "mem1_post_reset": {
+                "min": -15264,
+                "max": 1461
+              },
+              "conv2_current": {
+                "min": -6688,
+                "max": 10272
+              },
+              "mem2_integrated": {
+                "min": -8576,
+                "max": 13610
+              },
+              "mem2_post_reset": {
+                "min": -8576,
+                "max": 11895
+              },
+              "readout_current": {
+                "min": -2632,
+                "max": 1052
+              },
+              "weighted_logits": {
+                "min": -26654,
+                "max": 8316
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -16203,
+                "max": 1461,
+                "min_abs": 5,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -10291,
+                "max": 11895,
+                "min_abs": 3,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.017035540633314236,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.009329017691724882,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008797451267092247,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 939,
+              "conv2.weight": 1715
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 11
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard4_readout17": {
+          "accuracy_percent": 94.58,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -15264,
+                "max": 2400
+              },
+              "mem1_integrated": {
+                "min": -15264,
+                "max": 2400
+              },
+              "mem1_post_reset": {
+                "min": -15264,
+                "max": 1461
+              },
+              "conv2_current": {
+                "min": -6688,
+                "max": 10272
+              },
+              "mem2_integrated": {
+                "min": -8576,
+                "max": 13610
+              },
+              "mem2_post_reset": {
+                "min": -8576,
+                "max": 11895
+              },
+              "readout_current": {
+                "min": -2632,
+                "max": 1052
+              },
+              "weighted_logits": {
+                "min": -26654,
+                "max": 8316
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -16203,
+                "max": 1461,
+                "min_abs": 5,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -10291,
+                "max": 11895,
+                "min_abs": 3,
+                "abs_le_1": 0
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.017035540633314236,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.009329017691724882,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.008797451267092247,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 939,
+              "conv2.weight": 1715
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 11
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 17,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        }
+      }
+    },
+    "27": {
+      "sample_count": 5000,
+      "variants": {
+        "guard4_readout18": {
+          "accuracy_percent": 94.08,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -14848,
+                "max": 2448
+              },
+              "mem1_integrated": {
+                "min": -14848,
+                "max": 2448
+              },
+              "mem1_post_reset": {
+                "min": -14848,
+                "max": 1470
+              },
+              "conv2_current": {
+                "min": -11040,
+                "max": 12224
+              },
+              "mem2_integrated": {
+                "min": -16976,
+                "max": 13393
+              },
+              "mem2_post_reset": {
+                "min": -16976,
+                "max": 10978
+              },
+              "readout_current": {
+                "min": -3018,
+                "max": 1219
+              },
+              "weighted_logits": {
+                "min": -25118,
+                "max": 10099
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -15826,
+                "max": 1470,
+                "min_abs": 2,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -19391,
+                "max": 10978,
+                "min_abs": 1,
+                "abs_le_1": 7227
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.016359207198375792,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.006625886507860319,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.00799218688424178,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 978,
+              "conv2.weight": 2415
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 12
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 18,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        },
+        "guard4_readout17": {
+          "accuracy_percent": 94.08,
+          "prediction_mismatches_vs_baseline": 0,
+          "spike_mismatches_vs_baseline": {
+            "lif1": 0,
+            "lif2": 0
+          },
+          "spike_values_compared": {
+            "lif1": 20480000,
+            "lif2": 10240000
+          },
+          "metrics": {
+            "saturations": {
+              "conv1_current": 0,
+              "mem1_integrated": 0,
+              "mem1_post_reset": 0,
+              "conv2_current": 0,
+              "mem2_integrated": 0,
+              "mem2_post_reset": 0,
+              "readout_current": 0,
+              "weighted_logits": 0
+            },
+            "ranges": {
+              "conv1_current": {
+                "min": -14848,
+                "max": 2448
+              },
+              "mem1_integrated": {
+                "min": -14848,
+                "max": 2448
+              },
+              "mem1_post_reset": {
+                "min": -14848,
+                "max": 1470
+              },
+              "conv2_current": {
+                "min": -11040,
+                "max": 12224
+              },
+              "mem2_integrated": {
+                "min": -16976,
+                "max": 13393
+              },
+              "mem2_post_reset": {
+                "min": -16976,
+                "max": 10978
+              },
+              "readout_current": {
+                "min": -3018,
+                "max": 1219
+              },
+              "weighted_logits": {
+                "min": -25118,
+                "max": 10099
+              }
+            },
+            "threshold_margin": {
+              "lif1": {
+                "min": -15826,
+                "max": 1470,
+                "min_abs": 2,
+                "abs_le_1": 0
+              },
+              "lif2": {
+                "min": -19391,
+                "max": 10978,
+                "min_abs": 1,
+                "abs_le_1": 7227
+              }
+            }
+          },
+          "quantization": {
+            "weights": {
+              "conv1.weight": {
+                "name": "conv1.weight",
+                "scale": 0.016359207198375792,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "conv2.weight": {
+                "name": "conv2.weight",
+                "scale": 0.006625886507860319,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              },
+              "readout.weight": {
+                "name": "readout.weight",
+                "scale": 0.00799218688424178,
+                "fractional_bits": null,
+                "qmin": -127,
+                "qmax": 127,
+                "zero_point": 0,
+                "rounding": "round-to-nearest, ties-away-from-zero"
+              }
+            },
+            "threshold_integer": {
+              "conv1.weight": 978,
+              "conv2.weight": 2415
+            },
+            "threshold_unsigned_bits": {
+              "conv1.weight": 10,
+              "conv2.weight": 12
+            },
+            "widths": {
+              "conv1_current": 16,
+              "mem1": 18,
+              "conv2_current": 20,
+              "mem2": 22,
+              "readout_current": 17,
+              "weighted_logits": 21
+            },
+            "temporal_coefficients": [
+              5,
+              4,
+              3,
+              2
+            ],
+            "hidden_state_guard_bits": 4,
+            "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+            "overflow": "saturate after every current, membrane update, and readout accumulation",
+            "threshold_compare": "strict greater-than",
+            "reset": "subtract one quantized threshold after a spike"
+          }
+        }
+      }
+    }
+  },
+  "readout_validation_aggregate": {
+    "guard4_readout18": {
+      "mean_validation_accuracy_percent": 94.50666666666666,
+      "delta_vs_readout18_pct": 0.0,
+      "total_validation_saturations": 0,
+      "total_prediction_mismatches_vs_readout18": 0
+    },
+    "guard4_readout17": {
+      "mean_validation_accuracy_percent": 94.50666666666666,
+      "delta_vs_readout18_pct": 0.0,
+      "total_validation_saturations": 0,
+      "total_prediction_mismatches_vs_readout18": 0
+    }
+  },
+  "selected_final_format": {
+    "guard_bits": 4,
+    "widths": {
+      "conv1_current": 16,
+      "mem1": 18,
+      "conv2_current": 20,
+      "mem2": 22,
+      "readout_current": 17,
+      "weighted_logits": 21
+    }
+  },
+  "selected_final_name": "guard4_readout17",
+  "calibration_by_seed": {
+    "7": {
+      "sample_count": 1024,
+      "metrics": {
+        "saturations": {
+          "conv1_current": 0,
+          "mem1_integrated": 0,
+          "mem1_post_reset": 0,
+          "conv2_current": 0,
+          "mem2_integrated": 0,
+          "mem2_post_reset": 0,
+          "readout_current": 0,
+          "weighted_logits": 0
+        },
+        "ranges": {
+          "conv1_current": {
+            "min": -12016,
+            "max": 2688
+          },
+          "mem1_integrated": {
+            "min": -12848,
+            "max": 2688
+          },
+          "mem1_post_reset": {
+            "min": -12848,
+            "max": 1714
+          },
+          "conv2_current": {
+            "min": -9280,
+            "max": 11664
+          },
+          "mem2_integrated": {
+            "min": -13232,
+            "max": 13886
+          },
+          "mem2_post_reset": {
+            "min": -13232,
+            "max": 11708
+          },
+          "readout_current": {
+            "min": -2595,
+            "max": 1043
+          },
+          "weighted_logits": {
+            "min": -20040,
+            "max": 8015
+          }
+        },
+        "threshold_margin": {
+          "lif1": {
+            "min": -13822,
+            "max": 1714,
+            "min_abs": 2,
+            "abs_le_1": 0
+          },
+          "lif2": {
+            "min": -15410,
+            "max": 11708,
+            "min_abs": 2,
+            "abs_le_1": 0
+          }
+        }
+      }
+    },
+    "17": {
+      "sample_count": 1024,
+      "metrics": {
+        "saturations": {
+          "conv1_current": 0,
+          "mem1_integrated": 0,
+          "mem1_post_reset": 0,
+          "conv2_current": 0,
+          "mem2_integrated": 0,
+          "mem2_post_reset": 0,
+          "readout_current": 0,
+          "weighted_logits": 0
+        },
+        "ranges": {
+          "conv1_current": {
+            "min": -14096,
+            "max": 2400
+          },
+          "mem1_integrated": {
+            "min": -15264,
+            "max": 2400
+          },
+          "mem1_post_reset": {
+            "min": -15264,
+            "max": 1461
+          },
+          "conv2_current": {
+            "min": -6224,
+            "max": 10272
+          },
+          "mem2_integrated": {
+            "min": -8672,
+            "max": 13005
+          },
+          "mem2_post_reset": {
+            "min": -8672,
+            "max": 11290
+          },
+          "readout_current": {
+            "min": -3434,
+            "max": 1024
+          },
+          "weighted_logits": {
+            "min": -21240,
+            "max": 7494
+          }
+        },
+        "threshold_margin": {
+          "lif1": {
+            "min": -16203,
+            "max": 1461,
+            "min_abs": 5,
+            "abs_le_1": 0
+          },
+          "lif2": {
+            "min": -10387,
+            "max": 11290,
+            "min_abs": 3,
+            "abs_le_1": 0
+          }
+        }
+      }
+    },
+    "27": {
+      "sample_count": 1024,
+      "metrics": {
+        "saturations": {
+          "conv1_current": 0,
+          "mem1_integrated": 0,
+          "mem1_post_reset": 0,
+          "conv2_current": 0,
+          "mem2_integrated": 0,
+          "mem2_post_reset": 0,
+          "readout_current": 0,
+          "weighted_logits": 0
+        },
+        "ranges": {
+          "conv1_current": {
+            "min": -13920,
+            "max": 2448
+          },
+          "mem1_integrated": {
+            "min": -14848,
+            "max": 2448
+          },
+          "mem1_post_reset": {
+            "min": -14848,
+            "max": 1470
+          },
+          "conv2_current": {
+            "min": -12992,
+            "max": 11408
+          },
+          "mem2_integrated": {
+            "min": -15776,
+            "max": 13281
+          },
+          "mem2_post_reset": {
+            "min": -15776,
+            "max": 10866
+          },
+          "readout_current": {
+            "min": -2730,
+            "max": 1111
+          },
+          "weighted_logits": {
+            "min": -21678,
+            "max": 7226
+          }
+        },
+        "threshold_margin": {
+          "lif1": {
+            "min": -15826,
+            "max": 1470,
+            "min_abs": 2,
+            "abs_le_1": 0
+          },
+          "lif2": {
+            "min": -18191,
+            "max": 10866,
+            "min_abs": 1,
+            "abs_le_1": 1462
+          }
+        }
+      }
+    }
+  },
+  "final_test_by_seed": {
+    "7": {
+      "accuracy_percent": 93.44,
+      "quantization": {
+        "weights": {
+          "conv1.weight": {
+            "name": "conv1.weight",
+            "scale": 0.01642521535317729,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          },
+          "conv2.weight": {
+            "name": "conv2.weight",
+            "scale": 0.007347238814736914,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          },
+          "readout.weight": {
+            "name": "readout.weight",
+            "scale": 0.008736907027837798,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          }
+        },
+        "threshold_integer": {
+          "conv1.weight": 974,
+          "conv2.weight": 2178
+        },
+        "threshold_unsigned_bits": {
+          "conv1.weight": 10,
+          "conv2.weight": 12
+        },
+        "widths": {
+          "conv1_current": 16,
+          "mem1": 18,
+          "conv2_current": 20,
+          "mem2": 22,
+          "readout_current": 17,
+          "weighted_logits": 21
+        },
+        "temporal_coefficients": [
+          5,
+          4,
+          3,
+          2
+        ],
+        "hidden_state_guard_bits": 4,
+        "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+        "overflow": "saturate after every current, membrane update, and readout accumulation",
+        "threshold_compare": "strict greater-than",
+        "reset": "subtract one quantized threshold after a spike"
+      }
+    },
+    "17": {
+      "accuracy_percent": 93.18,
+      "quantization": {
+        "weights": {
+          "conv1.weight": {
+            "name": "conv1.weight",
+            "scale": 0.017035540633314236,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          },
+          "conv2.weight": {
+            "name": "conv2.weight",
+            "scale": 0.009329017691724882,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          },
+          "readout.weight": {
+            "name": "readout.weight",
+            "scale": 0.008797451267092247,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          }
+        },
+        "threshold_integer": {
+          "conv1.weight": 939,
+          "conv2.weight": 1715
+        },
+        "threshold_unsigned_bits": {
+          "conv1.weight": 10,
+          "conv2.weight": 11
+        },
+        "widths": {
+          "conv1_current": 16,
+          "mem1": 18,
+          "conv2_current": 20,
+          "mem2": 22,
+          "readout_current": 17,
+          "weighted_logits": 21
+        },
+        "temporal_coefficients": [
+          5,
+          4,
+          3,
+          2
+        ],
+        "hidden_state_guard_bits": 4,
+        "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+        "overflow": "saturate after every current, membrane update, and readout accumulation",
+        "threshold_compare": "strict greater-than",
+        "reset": "subtract one quantized threshold after a spike"
+      }
+    },
+    "27": {
+      "accuracy_percent": 93.11,
+      "quantization": {
+        "weights": {
+          "conv1.weight": {
+            "name": "conv1.weight",
+            "scale": 0.016359207198375792,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          },
+          "conv2.weight": {
+            "name": "conv2.weight",
+            "scale": 0.006625886507860319,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          },
+          "readout.weight": {
+            "name": "readout.weight",
+            "scale": 0.00799218688424178,
+            "fractional_bits": null,
+            "qmin": -127,
+            "qmax": 127,
+            "zero_point": 0,
+            "rounding": "round-to-nearest, ties-away-from-zero"
+          }
+        },
+        "threshold_integer": {
+          "conv1.weight": 978,
+          "conv2.weight": 2415
+        },
+        "threshold_unsigned_bits": {
+          "conv1.weight": 10,
+          "conv2.weight": 12
+        },
+        "widths": {
+          "conv1_current": 16,
+          "mem1": 18,
+          "conv2_current": 20,
+          "mem2": 22,
+          "readout_current": 17,
+          "weighted_logits": 21
+        },
+        "temporal_coefficients": [
+          5,
+          4,
+          3,
+          2
+        ],
+        "hidden_state_guard_bits": 4,
+        "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+        "overflow": "saturate after every current, membrane update, and readout accumulation",
+        "threshold_compare": "strict greater-than",
+        "reset": "subtract one quantized threshold after a spike"
+      }
+    }
+  },
+  "final_test_aggregate": {
+    "mean_accuracy_percent": 93.24333333333334,
+    "sample_std_pct": 0.17387735140993069,
+    "delta_vs_fp32_mean_pct": -0.22333333333331495
+  }
+}

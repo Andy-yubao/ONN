@@ -1,0 +1,22 @@
+{
+  "experiment": "frozen T4 quantile 30% beta0.5 lambda0.10 three-seed evaluation",
+  "seeds": [7, 17, 27],
+  "new_training_runs": 2,
+  "seed_17_retrained": false,
+  "test_evaluations_per_seed": 1,
+  "results": {
+    "7": {"best_validation_accuracy_percent": 94.96, "final_test_accuracy_percent": 93.47, "l1_fire_per_if_per_image": 0.073443359375, "l2_fire_per_if_per_image": 0.442569921875, "hidden_spikes_per_image": 301.8018, "effective_synaptic_additions_per_image": 10141.294},
+    "17": {"best_validation_accuracy_percent": 95.20, "final_test_accuracy_percent": 93.60, "l1_fire_per_if_per_image": 0.0638681640625, "l2_fire_per_if_per_image": 0.438769921875, "hidden_spikes_per_image": 290.0512, "effective_synaptic_additions_per_image": 9440.0364},
+    "27": {"best_validation_accuracy_percent": 94.76, "final_test_accuracy_percent": 93.33, "l1_fire_per_if_per_image": 0.0699544921875, "l2_fire_per_if_per_image": 0.470415234375, "hidden_spikes_per_image": 312.4860, "effective_synaptic_additions_per_image": 10182.7548}
+  },
+  "aggregate": {
+    "best_validation_accuracy_mean_percent": 94.97333333333333,
+    "best_validation_accuracy_sample_std_pct_points": 0.22030282189144326,
+    "test_accuracy_mean_percent": 93.46666666666667,
+    "test_accuracy_sample_std_pct_points": 0.135030860670192,
+    "l1_fire_per_if_per_image_mean": 0.069088671875,
+    "l2_fire_per_if_per_image_mean": 0.45058502604166667,
+    "hidden_spikes_per_image_mean": 301.4463333333333,
+    "effective_synaptic_additions_per_image_mean": 9921.361733333333
+  }
+}

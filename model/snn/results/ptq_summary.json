@@ -1,0 +1,227 @@
+{
+  "model_identity": {
+    "status": "frozen SNN research model; deployment candidate, not a production champion",
+    "architecture": "Conv1x16-IF-subtract-Conv16x32(stride2)-IF-subtract-FC512x10",
+    "input": "encoder latency map [B,1,8,8], values -1 or 0..3",
+    "time_steps": 4,
+    "threshold": 1.0,
+    "parameters": 9872,
+    "readout": "time-weighted output currents; beta=0.5",
+    "fp32_temporal_weights": [
+      3.5714287757873535,
+      2.857142925262451,
+      2.142857074737549,
+      1.4285714626312256
+    ],
+    "encoder": {
+      "frozen": true,
+      "recalibrated_for_this_run": false,
+      "source_result": "results/input_encoding_joint/T4_quantile_030/run_config.json",
+      "data_scope": "original calibration used training split indices [0, 55000) only",
+      "training_samples": 55000,
+      "training_pixels": 3520000,
+      "target_firing_ratio": "0.30",
+      "actual_firing_ratio": 0.300865625,
+      "input_spikes_per_image": 19.2554,
+      "g_threshold": 0.21026152308606838,
+      "threshold_method": "reused frozen training-set calibration; no recalibration",
+      "time_mapping": "quantile",
+      "quantile_boundaries_inclusive_source_latency": [
+        0,
+        1,
+        3
+      ],
+      "mapped_training_histogram_per_image": [
+        1.8678545454545454,
+        8.4514,
+        4.899781818181818,
+        4.036363636363636
+      ]
+    }
+  },
+  "calibration": {
+    "split": "training indices [0,1024), ordered",
+    "sample_count": 1024,
+    "fp32_ranges": {
+      "sample_count": 1024,
+      "statistics": {
+        "conv1_current": {
+          "min": -15.00168514251709,
+          "max": 2.5597729682922363,
+          "abs_max": 15.00168514251709,
+          "abs_p99": 4.516564846038818,
+          "abs_p999": 8.01005744934082
+        },
+        "mem1_integrated": {
+          "min": -16.241825103759766,
+          "max": 2.5597729682922363,
+          "abs_max": 16.241825103759766,
+          "abs_p99": 9.480113983154297,
+          "abs_p999": 14.19491958618164
+        },
+        "mem1_post_reset": {
+          "min": -16.241825103759766,
+          "max": 1.5597729682922363,
+          "abs_max": 16.241825103759766,
+          "abs_p99": 9.480113983154297,
+          "abs_p999": 14.19491958618164
+        },
+        "conv2_current": {
+          "min": -4.277478218078613,
+          "max": 5.898623466491699,
+          "abs_max": 5.898623466491699,
+          "abs_p99": 1.9652845859527588,
+          "abs_p999": 3.102958917617798
+        },
+        "mem2_integrated": {
+          "min": -5.895671367645264,
+          "max": 7.401030540466309,
+          "abs_max": 7.401030540466309,
+          "abs_p99": 2.4809720516204834,
+          "abs_p999": 3.738147020339966
+        },
+        "mem2_post_reset": {
+          "min": -5.895671367645264,
+          "max": 6.401030540466309,
+          "abs_max": 6.401030540466309,
+          "abs_p99": 1.686862826347351,
+          "abs_p999": 2.8776357173919678
+        },
+        "readout_current": {
+          "min": -27.486557006835938,
+          "max": 9.69700813293457,
+          "abs_max": 27.486557006835938,
+          "abs_p99": 13.38239574432373,
+          "abs_p999": 17.89767074584961
+        },
+        "weighted_logits": {
+          "min": -131.16197204589844,
+          "max": 49.442440032958984,
+          "abs_max": 131.16197204589844,
+          "abs_p99": 67.85688018798828,
+          "abs_p999": 95.80858612060547
+        }
+      }
+    }
+  },
+  "seeds": {
+    "7": {
+      "checkpoint_sha256": "44bf212122c0f8fc358b427d9dfd31cbc35dbc456e7048bdf0b8a106bdbf0431",
+      "fp32_accuracy_percent": 93.47,
+      "weight_only_int8_accuracy_percent": 93.44,
+      "integer_reference_accuracy_percent": 93.44
+    },
+    "17": {
+      "checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6",
+      "fp32_accuracy_percent": 93.6,
+      "weight_only_int8_accuracy_percent": 93.18,
+      "integer_reference_accuracy_percent": 93.18
+    },
+    "27": {
+      "checkpoint_sha256": "ffd273a8ee78f1ef85fe4abef74e86b50b3a8ad31b2fd3ad4c9afda00d6b685e",
+      "fp32_accuracy_percent": 93.33,
+      "weight_only_int8_accuracy_percent": 93.11,
+      "integer_reference_accuracy_percent": 93.11
+    }
+  },
+  "weight_only_scheme": {
+    "conv1.weight": {
+      "name": "conv1.weight",
+      "scale": 0.017035540633314236,
+      "fractional_bits": null,
+      "qmin": -127,
+      "qmax": 127,
+      "zero_point": 0,
+      "rounding": "round-to-nearest, ties-away-from-zero"
+    },
+    "conv2.weight": {
+      "name": "conv2.weight",
+      "scale": 0.009329017691724882,
+      "fractional_bits": null,
+      "qmin": -127,
+      "qmax": 127,
+      "zero_point": 0,
+      "rounding": "round-to-nearest, ties-away-from-zero"
+    },
+    "readout.weight": {
+      "name": "readout.weight",
+      "scale": 0.008797451267092247,
+      "fractional_bits": null,
+      "qmin": -127,
+      "qmax": 127,
+      "zero_point": 0,
+      "rounding": "round-to-nearest, ties-away-from-zero"
+    }
+  },
+  "integer_scheme": {
+    "weights": {
+      "conv1.weight": {
+        "name": "conv1.weight",
+        "scale": 0.017035540633314236,
+        "fractional_bits": null,
+        "qmin": -127,
+        "qmax": 127,
+        "zero_point": 0,
+        "rounding": "round-to-nearest, ties-away-from-zero"
+      },
+      "conv2.weight": {
+        "name": "conv2.weight",
+        "scale": 0.009329017691724882,
+        "fractional_bits": null,
+        "qmin": -127,
+        "qmax": 127,
+        "zero_point": 0,
+        "rounding": "round-to-nearest, ties-away-from-zero"
+      },
+      "readout.weight": {
+        "name": "readout.weight",
+        "scale": 0.008797451267092247,
+        "fractional_bits": null,
+        "qmin": -127,
+        "qmax": 127,
+        "zero_point": 0,
+        "rounding": "round-to-nearest, ties-away-from-zero"
+      }
+    },
+    "threshold_integer": {
+      "conv1.weight": 15027,
+      "conv2.weight": 27441
+    },
+    "widths": {
+      "conv1_current": 20,
+      "mem1": 22,
+      "conv2_current": 24,
+      "mem2": 26,
+      "readout_current": 18,
+      "weighted_logits": 21
+    },
+    "temporal_coefficients": [
+      5,
+      4,
+      3,
+      2
+    ],
+    "hidden_state_guard_bits": 8,
+    "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+    "overflow": "saturate after every current, membrane update, and readout accumulation",
+    "threshold_compare": "strict greater-than",
+    "reset": "subtract one quantized threshold after a spike"
+  },
+  "aggregate": {
+    "fp32": {
+      "mean_accuracy_percent": 93.46666666666665,
+      "sample_std_pct": 0.13503086067019202,
+      "delta_vs_fp32_pct": 0.0
+    },
+    "weight_only_int8": {
+      "mean_accuracy_percent": 93.24333333333334,
+      "sample_std_pct": 0.17387735140993069,
+      "delta_vs_fp32_pct": -0.22333333333331495
+    },
+    "integer_reference": {
+      "mean_accuracy_percent": 93.24333333333334,
+      "sample_std_pct": 0.17387735140993069,
+      "delta_vs_fp32_pct": -0.22333333333331495
+    }
+  }
+}

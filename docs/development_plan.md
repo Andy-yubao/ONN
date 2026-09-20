@@ -26,7 +26,7 @@ accuracy 做架构选择。
 含 bias 共 9,930 参数；前后向与参数预算检查已运行。冻结配置的三个 seed 训练与最终测试已完成，详见 [CNN 实验记录](../experiments/cnn/three_seed_record.md)。
 最终测试均值 97.37%，样本标准差 0.11 个百分点；未做测试后调参。
 
-## 阶段 3：CNN/SNN 公平比较与 champion 选择（准确率对照已记录，部署成本与选择待开展）
+## 阶段 3：CNN/SNN 公平比较与 SNN 验证冻结（已完成）
 
 报告准确率、参数量、模型存储、稠密等效操作、有效事件/突触操作、激活/状态存储和
 预计 FPGA BRAM/DSP/LUT 压力。当前不预先声称 SNN 获胜，也不把 GPU 时间当作 FPGA
@@ -41,13 +41,25 @@ accuracy 做架构选择。
 本轮方向筛选新增 2 个 beta 和 3 个 lambda，共 5 次正式训练；随后按用户追加请求对最终配置
 做 1 次同 seed 确认运行，checkpoint 与逐轮非耗时指标完全复现。按 validation 规则选择 beta=0.5；在
 validation 损失不超过 0.5 pct 的候选中选择事件成本最低的 lambda=0.10。该候选为
-95.20% validation、93.60% test、9,440.04 有效突触加法/张，仍是单 seed 方向筛选，
-尚未选定 production champion。
+95.20% validation、93.60% test、9,440.04 有效突触加法/张。
+
+最终配置已在 [frozen_model.md](../experiments/snn/conv_small/frozen_model.md) 冻结，新增 seed 7
+和 27 后三 seed test 为 93.47% ± 0.14 pct；matched CNN 为 97.37% ± 0.11 pct。SNN 的
+平均 effective synaptic additions 为 9,921.36/张，但该代理不能等同实测能耗。三种单调
+器件曲线的 encoder-only 迁移共完成 9 次 inference，最大 mean accuracy drop 为 0.52 pct，
+在当前模拟范围内支持重新校准前端后复用权重。完整结果见
+[三 seed 记录](../experiments/snn/conv_small/records/final_three_seed_record.md) 与
+[器件迁移记录](../experiments/snn/conv_small/records/device_curve_transfer_record.md)。
+
+本阶段冻结的是最终 SNN 研究候选；CNN 仍有 3.90 pct mean accuracy 优势，真实器件行为、
+FPGA 资源/功耗和总体 trade-off 尚未验证，因此未将任一方案 promote 为 production champion。
 
 ## 阶段 4：正式模型与量化
 
-仅在 champion 选定后建立真实的 `model/` 结构，冻结 architecture、checkpoint metadata、
-量化方案、fixed-point/integer reference 和 hardware export。当前尚未开始。
+Frozen SNN 的 PTQ、动态范围分析和 fixed-point/integer reference 已先行建立在 `model/`，
+作为 deployment candidate 验证；三 seed INT8 mean 为 93.24%，详见
+[`quantization_record.md`](../model/snn/quantization_record.md)。production champion、供 RTL
+使用的单一 checkpoint 和 hardware export 仍未冻结。
 
 ## 阶段 5：Basys3 / Artix-7 硬件实现
 
@@ -56,6 +68,7 @@ validation 损失不超过 0.5 pct 的候选中选择事件成本最低的 lambd
 
 ## 当前范围边界
 
-旧 CNN / AC620 不作为当前主线重做；器件迁移、反色输入、多 seed 稳健性确认、量化、
+旧 CNN / AC620 不作为当前主线重做；模拟单调器件曲线迁移和 frozen SNN 多 seed 稳健性已经
+完成，Frozen SNN 的首轮 PTQ 与整数 reference 也已完成。反色输入、真实器件迁移、
 RTL/Vivado 工程、综合、实现、bitstream、功耗和板级测试均未开始，不应在 champion 和
 资源预算冻结前提前宣称已完成。是否执行其中某项以当前任务的明确范围为准。
