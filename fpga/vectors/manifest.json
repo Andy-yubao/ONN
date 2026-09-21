@@ -1,0 +1,150 @@
+{
+  "format_version": 1,
+  "element_order": "channel*64 + y*8 + x (PyTorch contiguous [16,8,8])",
+  "input_bit_order": "bit y*8+x is input pixel [y,x]",
+  "case_count": 10,
+  "elements_per_case": 1024,
+  "cases": [
+    {
+      "case_id": 0,
+      "name": "all_zero",
+      "frame_start": true,
+      "spike_word_hex": "0000000000000000",
+      "input_spike_count": 0,
+      "output_spike_count": 0,
+      "source": {
+        "kind": "artificial",
+        "timestep": 0
+      }
+    },
+    {
+      "case_id": 1,
+      "name": "single_pixel",
+      "frame_start": true,
+      "spike_word_hex": "0000000010000000",
+      "input_spike_count": 1,
+      "output_spike_count": 0,
+      "source": {
+        "kind": "artificial",
+        "timestep": 0
+      }
+    },
+    {
+      "case_id": 2,
+      "name": "multi_pattern",
+      "frame_start": true,
+      "spike_word_hex": "810000100C080081",
+      "input_spike_count": 8,
+      "output_spike_count": 10,
+      "source": {
+        "kind": "artificial",
+        "timestep": 0
+      }
+    },
+    {
+      "case_id": 3,
+      "name": "mnist_val_55000_t0",
+      "frame_start": true,
+      "spike_word_hex": "0000000000000000",
+      "input_spike_count": 0,
+      "output_spike_count": 0,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55000,
+        "label": 1,
+        "timestep": 0,
+        "state": "zeroed for isolated-timestep verification"
+      }
+    },
+    {
+      "case_id": 4,
+      "name": "mnist_val_55001_t1",
+      "frame_start": true,
+      "spike_word_hex": "00000E2820600000",
+      "input_spike_count": 8,
+      "output_spike_count": 21,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55001,
+        "label": 2,
+        "timestep": 1,
+        "state": "zeroed for isolated-timestep verification"
+      }
+    },
+    {
+      "case_id": 5,
+      "name": "mnist_val_55002_t2",
+      "frame_start": true,
+      "spike_word_hex": "0028300010240800",
+      "input_spike_count": 8,
+      "output_spike_count": 23,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55002,
+        "label": 8,
+        "timestep": 2,
+        "state": "zeroed for isolated-timestep verification"
+      }
+    },
+    {
+      "case_id": 6,
+      "name": "mnist_val_55003_stateful_t0",
+      "frame_start": true,
+      "spike_word_hex": "0000000000300000",
+      "input_spike_count": 2,
+      "output_spike_count": 4,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 0,
+        "state": "carried from preceding timestep"
+      }
+    },
+    {
+      "case_id": 7,
+      "name": "mnist_val_55003_stateful_t1",
+      "frame_start": false,
+      "spike_word_hex": "000C08102C080000",
+      "input_spike_count": 8,
+      "output_spike_count": 29,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 1,
+        "state": "carried from preceding timestep"
+      }
+    },
+    {
+      "case_id": 8,
+      "name": "mnist_val_55003_stateful_t2",
+      "frame_start": false,
+      "spike_word_hex": "0400102410000000",
+      "input_spike_count": 5,
+      "output_spike_count": 18,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 2,
+        "state": "carried from preceding timestep"
+      }
+    },
+    {
+      "case_id": 9,
+      "name": "mnist_val_55003_stateful_t3",
+      "frame_start": false,
+      "spike_word_hex": "0000000000400000",
+      "input_spike_count": 1,
+      "output_spike_count": 4,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 3,
+        "state": "carried from preceding timestep"
+      }
+    }
+  ]
+}

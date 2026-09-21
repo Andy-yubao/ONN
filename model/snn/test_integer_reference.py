@@ -82,6 +82,50 @@ def test_one_timestep_and_minimal_layer_trace() -> None:
     assert torch.equal(logits, reconstructed)
 
 
+def test_public_conv1_if1_step_matches_forward_trace() -> None:
+    generator = torch.Generator().manual_seed(17)
+    state = {
+        "conv1.weight": torch.randn(16, 1, 3, 3, generator=generator),
+        "conv2.weight": torch.randn(32, 16, 3, 3, generator=generator),
+        "readout.weight": torch.randn(10, 512, generator=generator),
+    }
+    reference = IntegerSNNReference(state)
+    times = torch.randint(-1, 4, (2, 1, 8, 8), generator=generator)
+    _, trace = reference.forward(times, return_trace=True)
+    current, integrated, post, spikes = reference.conv1_if1_step(times == 0)
+    assert torch.equal(current, trace["conv1_current"][0])
+    assert torch.equal(integrated, trace["mem1_integrated"][0])
+    assert torch.equal(post, trace["mem1_post_reset"][0])
+    assert torch.equal(spikes, trace["spikes1"][0])
+
+
+def test_public_phase2_and_readout_steps_match_forward_trace() -> None:
+    generator = torch.Generator().manual_seed(23)
+    state = {
+        "conv1.weight": torch.randn(16, 1, 3, 3, generator=generator),
+        "conv2.weight": torch.randn(32, 16, 3, 3, generator=generator),
+        "readout.weight": torch.randn(10, 512, generator=generator),
+    }
+    reference = IntegerSNNReference(state)
+    times = torch.randint(-1, 4, (2, 1, 8, 8), generator=generator)
+    _, trace = reference.forward(times, return_trace=True)
+    mem1 = None
+    mem2 = None
+    scores = None
+    for step, coefficient in enumerate(reference.temporal_coefficients):
+        _, _, mem1, spikes1 = reference.conv1_if1_step(times == step, mem1)
+        current2, integrated2, mem2, spikes2 = reference.conv2_if2_step(
+            spikes1, mem2
+        )
+        readout, scores = reference.readout_step(spikes2, scores, coefficient)
+        assert torch.equal(current2, trace["conv2_current"][step])
+        assert torch.equal(integrated2, trace["mem2_integrated"][step])
+        assert torch.equal(mem2, trace["mem2_post_reset"][step])
+        assert torch.equal(spikes2, trace["spikes2"][step])
+        assert torch.equal(readout, trace["readout_current"][step])
+        assert torch.equal(scores, trace["weighted_logits"][step])
+
+
 def test_complete_inference_is_repeatable() -> None:
     generator = torch.Generator().manual_seed(7)
     state = {

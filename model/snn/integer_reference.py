@@ -152,6 +152,129 @@ class IntegerSNNReference:
         )
         return spikes, post_reset, integrated
 
+    def conv1_if1_step(
+        self,
+        input_spikes: torch.Tensor,
+        membrane: torch.Tensor | None = None,
+        *,
+        return_metrics: bool = False,
+    ):
+        """Run the shared integer Conv1+IF1 rule for one timestep.
+
+        This is the Phase-1 RTL golden boundary. ``input_spikes`` has shape
+        ``[B,1,8,8]`` and the returned tensors use ``[B,16,8,8]`` layout.
+        """
+        if input_spikes.ndim != 4 or input_spikes.shape[1:] != (1, 8, 8):
+            raise ValueError("input_spikes must have shape [B,1,8,8]")
+        spikes_int = input_spikes.to(device="cpu", dtype=torch.int64)
+        if membrane is None:
+            membrane = torch.zeros(
+                spikes_int.shape[0], 16, 8, 8, dtype=torch.int64
+            )
+        else:
+            membrane = membrane.to(device="cpu", dtype=torch.int64)
+            expected = (spikes_int.shape[0], 16, 8, 8)
+            if tuple(membrane.shape) != expected:
+                raise ValueError(f"membrane must have shape {expected}")
+        current = F.conv2d(
+            spikes_int, self.weights["conv1.weight"], padding=1
+        )
+        current = current << self.state_fractional_guard_bits
+        if return_metrics:
+            spikes, post_reset, integrated, metrics = self._if_step_instrumented(
+                current,
+                membrane,
+                self.thresholds["conv1.weight"],
+                self.widths.conv1_current,
+                self.widths.mem1,
+            )
+            return current, integrated, post_reset, spikes, metrics
+        spikes, post_reset, integrated = self._if_step(
+            current,
+            membrane,
+            self.thresholds["conv1.weight"],
+            self.widths.conv1_current,
+            self.widths.mem1,
+        )
+        return current, integrated, post_reset, spikes
+
+    def conv2_if2_step(
+        self,
+        input_spikes: torch.Tensor,
+        membrane: torch.Tensor | None = None,
+        *,
+        return_metrics: bool = False,
+    ):
+        """Run the shared integer Conv2+IF2 rule for one timestep."""
+        if input_spikes.ndim != 4 or input_spikes.shape[1:] != (16, 8, 8):
+            raise ValueError("input_spikes must have shape [B,16,8,8]")
+        spikes_int = input_spikes.to(device="cpu", dtype=torch.int64)
+        if membrane is None:
+            membrane = torch.zeros(
+                spikes_int.shape[0], 32, 4, 4, dtype=torch.int64
+            )
+        else:
+            membrane = membrane.to(device="cpu", dtype=torch.int64)
+            expected = (spikes_int.shape[0], 32, 4, 4)
+            if tuple(membrane.shape) != expected:
+                raise ValueError(f"membrane must have shape {expected}")
+        current = F.conv2d(
+            spikes_int, self.weights["conv2.weight"], stride=2, padding=1
+        )
+        current = current << self.state_fractional_guard_bits
+        if return_metrics:
+            spikes, post_reset, integrated, metrics = self._if_step_instrumented(
+                current,
+                membrane,
+                self.thresholds["conv2.weight"],
+                self.widths.conv2_current,
+                self.widths.mem2,
+            )
+            return current, integrated, post_reset, spikes, metrics
+        spikes, post_reset, integrated = self._if_step(
+            current,
+            membrane,
+            self.thresholds["conv2.weight"],
+            self.widths.conv2_current,
+            self.widths.mem2,
+        )
+        return current, integrated, post_reset, spikes
+
+    def readout_step(
+        self,
+        input_spikes: torch.Tensor,
+        weighted_logits: torch.Tensor | None,
+        coefficient: int,
+        *,
+        return_raw: bool = False,
+    ):
+        """Run one shared integer readout and temporal accumulation step."""
+        if input_spikes.ndim != 4 or input_spikes.shape[1:] != (32, 4, 4):
+            raise ValueError("input_spikes must have shape [B,32,4,4]")
+        spikes_int = input_spikes.to(device="cpu", dtype=torch.int64)
+        if weighted_logits is None:
+            weighted_logits = torch.zeros(
+                spikes_int.shape[0], 10, dtype=torch.int64
+            )
+        else:
+            weighted_logits = weighted_logits.to(device="cpu", dtype=torch.int64)
+            expected = (spikes_int.shape[0], 10)
+            if tuple(weighted_logits.shape) != expected:
+                raise ValueError(f"weighted_logits must have shape {expected}")
+        readout_raw = (
+            spikes_int.flatten(1) @ self.weights["readout.weight"].t()
+        )
+        readout_current = saturate_signed(
+            readout_raw, self.widths.readout_current
+        )
+        weighted_raw = weighted_logits + coefficient * readout_current
+        weighted_next = saturate_signed(
+            weighted_raw, self.widths.weighted_logits
+        )
+        if return_raw:
+            return readout_current, weighted_next, readout_raw, weighted_raw
+        return readout_current, weighted_next
+
     def forward(
         self,
         first_spike_times: torch.Tensor,
@@ -211,45 +334,26 @@ class IntegerSNNReference:
 
         for step, coefficient in enumerate(self.temporal_coefficients):
             input_spikes = (times == step).to(torch.int64)
-            current1 = F.conv2d(input_spikes, self.weights["conv1.weight"], padding=1)
-            current1 = current1 << self.state_fractional_guard_bits
             if return_metrics:
-                spikes1, mem1, integrated1, metrics1 = self._if_step_instrumented(
-                    current1, mem1, self.thresholds["conv1.weight"],
-                    self.widths.conv1_current, self.widths.mem1,
+                current1, integrated1, mem1, spikes1, metrics1 = self.conv1_if1_step(
+                    input_spikes, mem1, return_metrics=True,
                 )
             else:
-                spikes1, mem1, integrated1 = self._if_step(
-                    current1, mem1, self.thresholds["conv1.weight"],
-                    self.widths.conv1_current, self.widths.mem1,
+                current1, integrated1, mem1, spikes1 = self.conv1_if1_step(
+                    input_spikes, mem1,
                 )
                 metrics1 = None
-            current2 = F.conv2d(
-                spikes1.to(torch.int64), self.weights["conv2.weight"],
-                stride=2, padding=1,
-            )
-            current2 = current2 << self.state_fractional_guard_bits
             if return_metrics:
-                spikes2, mem2, integrated2, metrics2 = self._if_step_instrumented(
-                    current2, mem2, self.thresholds["conv2.weight"],
-                    self.widths.conv2_current, self.widths.mem2,
+                current2, integrated2, mem2, spikes2, metrics2 = self.conv2_if2_step(
+                    spikes1, mem2, return_metrics=True,
                 )
             else:
-                spikes2, mem2, integrated2 = self._if_step(
-                    current2, mem2, self.thresholds["conv2.weight"],
-                    self.widths.conv2_current, self.widths.mem2,
+                current2, integrated2, mem2, spikes2 = self.conv2_if2_step(
+                    spikes1, mem2,
                 )
                 metrics2 = None
-            readout_raw = (
-                spikes2.flatten(1).to(torch.int64)
-                @ self.weights["readout.weight"].t()
-            )
-            readout_current = saturate_signed(
-                readout_raw, self.widths.readout_current
-            )
-            weighted_raw = weighted_logits + coefficient * readout_current
-            weighted_logits = saturate_signed(
-                weighted_raw, self.widths.weighted_logits,
+            readout_current, weighted_logits, readout_raw, weighted_raw = self.readout_step(
+                spikes2, weighted_logits, coefficient, return_raw=True,
             )
             if return_metrics:
                 assert metrics1 is not None and metrics2 is not None

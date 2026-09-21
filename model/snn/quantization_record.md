@@ -1,8 +1,9 @@
 # Frozen T=4 SNN PTQ 与整数参考记录
 
 日期：2026-09-20。状态：PTQ、训练集 calibration、三 seed 完整 test inference 和整数
-reference 及内部状态位宽压缩已完成；未重新训练、未做 QAT、未进入 RTL。完整机器可读
-结果见 [`results/ptq_summary.json`](results/ptq_summary.json) 和
+reference 及内部状态位宽压缩已完成；未重新训练、未做 QAT。此记录冻结的数值契约现已被
+下游 RTL 使用并通过仿真级逐 bit 对拍。完整机器可读结果见
+[`results/ptq_summary.json`](results/ptq_summary.json) 和
 [`results/state_quantization_summary.json`](results/state_quantization_summary.json)。
 
 ## 1. Frozen model identity
@@ -119,7 +120,19 @@ threshold crossing、subtract reset、beta/readout 语义、单 timestep IF calc
 逐层 trace、guard-bit width contract、instrumentation 和完整 repeatable inference。完整 MNIST
 test inference 对三个 checkpoint 的最终选定格式均已运行。
 
-已知限制：encoder 仍为浮点软件边界；本轮没有选择唯一 production/RTL checkpoint；scale
-是每 checkpoint 的部署常量而不是 power-of-two；没有 QAT、RTL、综合、资源/时序或板级
-证据。下一步应先明确供硬件实现的单一 checkpoint，再冻结 parameter export 格式并开始
-Python reference ↔ RTL 的逐 timestep/逐层对拍。
+## 6. RTL checkpoint 与参数导出
+
+后续 RTL 唯一使用 seed 17 checkpoint。其 frozen validation accuracy 为 95.20%，高于 seed 7
+的 94.96% 和 seed 27 的 94.76%；原运行和确定性复跑的 checkpoint SHA256 均为
+`ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6`。选择依据是 validation
+与复现一致性，而不是 test accuracy。正式身份见 [`deployment_checkpoint.md`](deployment_checkpoint.md)。
+
+[`export/manifest.json`](export/manifest.json) 固定 checkpoint 身份、每层 shape/scale、整数
+threshold、位宽、时间系数、量化规则及导出文件映射；三个 `.mem` 文件按 tensor 连续顺序，
+每行保存一个 INT8 二补码十六进制字节。`params.svh` 保存 RTL 直接使用的整数常量。导出由
+[`export_params.py`](export_params.py) 可重复生成，并由 [`test_export_params.py`](test_export_params.py)
+验证无损读回及与 `IntegerSNNReference` 的契约一致性。
+
+已知限制：encoder 仍为浮点软件边界；scale 不是 power-of-two；没有 QAT。当前仅完成参数
+导出，下一阶段才进入 RTL 和 Python reference ↔ RTL 的逐 timestep/逐层对拍；尚未开始
+Vivado、synthesis、资源/时序分析或 FPGA 板级验证。

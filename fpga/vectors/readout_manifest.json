@@ -1,0 +1,88 @@
+{
+  "case_count": 7,
+  "classes_per_case": 10,
+  "cases": [
+    {
+      "case_id": 0,
+      "name": "all_zero",
+      "step": 0,
+      "frame_start": true,
+      "input_spike_count": 0,
+      "source": {
+        "kind": "artificial"
+      }
+    },
+    {
+      "case_id": 1,
+      "name": "single_spike",
+      "step": 0,
+      "frame_start": true,
+      "input_spike_count": 1,
+      "source": {
+        "kind": "artificial"
+      }
+    },
+    {
+      "case_id": 2,
+      "name": "multi_spike",
+      "step": 0,
+      "frame_start": true,
+      "input_spike_count": 4,
+      "source": {
+        "kind": "artificial"
+      }
+    },
+    {
+      "case_id": 3,
+      "name": "mnist_val_55003_stateful_t0",
+      "step": 0,
+      "frame_start": true,
+      "input_spike_count": 6,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 0
+      }
+    },
+    {
+      "case_id": 4,
+      "name": "mnist_val_55003_stateful_t1",
+      "step": 1,
+      "frame_start": false,
+      "input_spike_count": 72,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 1
+      }
+    },
+    {
+      "case_id": 5,
+      "name": "mnist_val_55003_stateful_t2",
+      "step": 2,
+      "frame_start": false,
+      "input_spike_count": 80,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 2
+      }
+    },
+    {
+      "case_id": 6,
+      "name": "mnist_val_55003_stateful_t3",
+      "step": 3,
+      "frame_start": false,
+      "input_spike_count": 43,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7,
+        "timestep": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "step_count": 16,
+  "frames": [
+    {
+      "last_step_id": 3,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55002,
+        "label": 8
+      },
+      "expected_class": 8,
+      "logits": [
+        -4242,
+        -2615,
+        -2770,
+        -2625,
+        -5575,
+        -553,
+        -4292,
+        -5351,
+        1371,
+        -5114
+      ],
+      "sparse_synaptic_additions": 9130,
+      "sparse_compute_cycles": 31603
+    },
+    {
+      "last_step_id": 7,
+      "source": {
+        "kind": "MNIST validation",
+        "train_index": 55003,
+        "label": 7
+      },
+      "expected_class": 7,
+      "logits": [
+        -4456,
+        -5264,
+        -2915,
+        -3714,
+        -2590,
+        -1961,
+        -9324,
+        2092,
+        -3558,
+        -902
+      ],
+      "sparse_synaptic_additions": 8234,
+      "sparse_compute_cycles": 28360
+    },
+    {
+      "last_step_id": 11,
+      "source": {
+        "kind": "deterministic random latency map",
+        "seed": 1704,
+        "sequence": 0
+      },
+      "expected_class": 5,
+      "logits": [
+        -17227,
+        -20665,
+        -8079,
+        -2157,
+        -21150,
+        -1357,
+        -20169,
+        -10342,
+        -7576,
+        -20666
+      ],
+      "sparse_synaptic_additions": 23340,
+      "sparse_compute_cycles": 73088
+    },
+    {
+      "last_step_id": 15,
+      "source": {
+        "kind": "deterministic random latency map",
+        "seed": 1704,
+        "sequence": 1
+      },
+      "expected_class": 2,
+      "logits": [
+        -14050,
+        -20756,
+        -4040,
+        -4304,
+        -25044,
+        -6251,
+        -18655,
+        -12734,
+        -6443,
+        -18207
+      ],
+      "sparse_synaptic_additions": 23748,
+      "sparse_compute_cycles": 72992
+    }
+  ]
+}

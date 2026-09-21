@@ -27,15 +27,16 @@ Quantile boundaries 后，平均准确率相对原器件下降 0.00–0.52 pct�
 “换器件 → 重校准 encoder → 复用冻结 SNN 权重”。这不是实际器件或 FPGA 证据，详见
 [器件曲线迁移记录](experiments/snn/conv_small/records/device_curve_transfer_record.md)。Frozen
 SNN 的 PTQ 与整数 reference 已完成：三 seed INT8 mean 为 **93.24% ± 0.17 pct**，比 FP32
-下降 0.22 pct，详见[量化记录](model/snn/quantization_record.md)。当前仍未 promote
-production champion，也未开始当前 SNN RTL、板级验证或实测功耗。
+下降 0.22 pct，详见[量化记录](model/snn/quantization_record.md)。seed 17 deployment
+checkpoint 的事件驱动稀疏 SNN RTL 已通过仿真级逐 bit 对拍，但当前仍未 promote 为项目
+production champion，也未进行 synthesis、implementation、板级验证或实测功耗。
 
 ## 硬件方向
 
 - Legacy platform：AC620 / Cyclone IV；
 - Current candidate target：Basys3 / Artix-7；
 - hardware target 尚未最终 freeze；
-- 在 champion、数据位宽、状态存储和资源预算冻结前，不进入正式 RTL。
+- 当前 RTL 用于数值正确性验证；在资源预算与并行度冻结前，不创建最终 Vivado 工程。
 
 ## 目录职责
 

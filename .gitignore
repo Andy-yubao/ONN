@@ -42,6 +42,10 @@ datasets/**/*.csv
 # Vivado（如未来使用）
 *.xdc.bak
 .vivado/
+/fpga/.sim/
+/xelab.pb
+/xvlog.pb
+pytest-cache-files-*/
 NAV/
 webtalk*
 

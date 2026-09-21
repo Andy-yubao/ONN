@@ -1,8 +1,7 @@
 # `model/`：量化与部署准备
 
-当前仍未选择 production / deployment champion。这里先承载 Frozen T=4 SNN 的 PTQ 和
-硬件导向整数参考，身份是 **deployment candidate**，不改变 matched CNN 准确率更高、
-production champion 尚未冻结的项目结论。
+当前已固定 Frozen T=4 SNN 的唯一 **RTL deployment checkpoint**，用于后续 SNN 硬件实现；
+这不等同于将 SNN 选为项目 production champion，也不改变 matched CNN 准确率更高的结论。
 
 本目录承载部署契约：
 
@@ -22,6 +21,13 @@ production champion 尚未冻结的项目结论。
 - [PTQ、calibration 与完整测试入口](snn/ptq.py)
 - [内部状态位宽选择入口](snn/state_quantization.py)
 - [数值契约测试](snn/test_integer_reference.py)
+- [唯一 RTL checkpoint 与选择依据](snn/deployment_checkpoint.md)
+- [硬件参数导出器](snn/export_params.py)
+- [硬件参数与机器可读 manifest](snn/export/manifest.json)
+- [导出读回与契约测试](snn/test_export_params.py)
 
-当前已完成三 seed PTQ 与整数 reference test inference；尚未选择供 RTL 导出的单一
-checkpoint，也未写 RTL、创建 Vivado 工程或进行 FPGA 验证。
+当前已完成三 seed PTQ 与整数 reference test inference，并依据 validation 和确定性复现固定
+seed 17 为唯一 RTL checkpoint；INT8 weight、guard-4/INT17 位宽、整数 threshold 和时间系数
+已导出。下游已完成事件驱动稀疏 SNN RTL 和 Python reference 的仿真级逐 bit 对拍；尚未创建
+最终 Vivado 工程、运行 synthesis / implementation 或进行 FPGA 板级验证。RTL 状态与入口
+见 [`../fpga/README.md`](../fpga/README.md)。

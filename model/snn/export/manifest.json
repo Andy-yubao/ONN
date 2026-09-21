@@ -1,0 +1,158 @@
+{
+  "format_version": 1,
+  "deployment_identity": "frozen-t4-snn-seed17-guard4-int17",
+  "seed": 17,
+  "checkpoint_path": "experiments/snn/conv_small/results/event_regularization/beta_0p5_lambda_0p10_seed17/best_model.pt",
+  "checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6",
+  "selection_basis": {
+    "policy": "highest frozen validation accuracy, with deterministic checkpoint reproduction; test accuracy was not used for selection",
+    "best_epoch": 18,
+    "best_validation_accuracy_percent": 95.2,
+    "deterministic_rerun_checkpoint_sha256": "ecd4fa940c229bb9c717f33d68db2cdaf45ad6b83b48d597465d5431d8c845e6"
+  },
+  "memory_file_format": {
+    "word_bits": 8,
+    "radix": "hexadecimal",
+    "lines": "one two's-complement byte per line, uppercase, no prefix",
+    "tensor_order": "contiguous row-major in the shape recorded for each weight"
+  },
+  "weights": {
+    "conv1": {
+      "state_dict_key": "conv1.weight",
+      "shape": [
+        16,
+        1,
+        3,
+        3
+      ],
+      "element_count": 144,
+      "dtype": "int8",
+      "signed": true,
+      "layout": "PyTorch contiguous row-major; indices follow the recorded shape",
+      "scale": 0.017035540633314236,
+      "zero_point": 0,
+      "qmin": -127,
+      "qmax": 127,
+      "observed_min": -127,
+      "observed_max": 52,
+      "file": "conv1_weight.mem",
+      "file_sha256": "9086bbef5a75dc57ab30238e1b189b1b9babf038a36b02aacc4091e0da9299dc"
+    },
+    "conv2": {
+      "state_dict_key": "conv2.weight",
+      "shape": [
+        32,
+        16,
+        3,
+        3
+      ],
+      "element_count": 4608,
+      "dtype": "int8",
+      "signed": true,
+      "layout": "PyTorch contiguous row-major; indices follow the recorded shape",
+      "scale": 0.009329017691724882,
+      "zero_point": 0,
+      "qmin": -127,
+      "qmax": 127,
+      "observed_min": -95,
+      "observed_max": 127,
+      "file": "conv2_weight.mem",
+      "file_sha256": "24fd185012b2c112149a783e761147955b18ca1fae89849a6bb1a04992f31d8a"
+    },
+    "readout": {
+      "state_dict_key": "readout.weight",
+      "shape": [
+        10,
+        512
+      ],
+      "element_count": 5120,
+      "dtype": "int8",
+      "signed": true,
+      "layout": "PyTorch contiguous row-major; indices follow the recorded shape",
+      "scale": 0.008797451267092247,
+      "zero_point": 0,
+      "qmin": -127,
+      "qmax": 127,
+      "observed_min": -127,
+      "observed_max": 84,
+      "file": "readout_weight.mem",
+      "file_sha256": "11f768ad1371af74d9bd9d0a89edc898f787061a2be755403b97fb9862dd1e09"
+    }
+  },
+  "thresholds": {
+    "lif1": {
+      "source_weight": "conv1.weight",
+      "integer": 939,
+      "unsigned_bits": 10,
+      "state_scale": 0.0010647212895821398
+    },
+    "lif2": {
+      "source_weight": "conv2.weight",
+      "integer": 1715,
+      "unsigned_bits": 11,
+      "state_scale": 0.0005830636057328052
+    }
+  },
+  "bit_widths": {
+    "input_spike": {
+      "bits": 1,
+      "signed": false
+    },
+    "weight": {
+      "bits": 8,
+      "signed": true
+    },
+    "conv1_raw_accumulator": {
+      "bits": 12,
+      "signed": true
+    },
+    "conv1_current": {
+      "bits": 16,
+      "signed": true
+    },
+    "lif1_membrane": {
+      "bits": 18,
+      "signed": true
+    },
+    "conv2_raw_accumulator": {
+      "bits": 16,
+      "signed": true
+    },
+    "conv2_current": {
+      "bits": 20,
+      "signed": true
+    },
+    "lif2_membrane": {
+      "bits": 22,
+      "signed": true
+    },
+    "readout_current": {
+      "bits": 17,
+      "signed": true
+    },
+    "weighted_logits": {
+      "bits": 21,
+      "signed": true
+    }
+  },
+  "hidden_state_guard_bits": 4,
+  "temporal_coefficients": [
+    5,
+    4,
+    3,
+    2
+  ],
+  "quantization_rule": {
+    "weights": "per-tensor symmetric INT8, scale=max(abs(W))/127, zero-point=0",
+    "rounding": "round-to-nearest, ties-away-from-zero (weights and positive thresholds)",
+    "overflow": "saturate after every current, membrane update, and readout accumulation",
+    "threshold_compare": "strict greater-than",
+    "reset": "subtract one quantized threshold after a spike"
+  },
+  "exports": {
+    "conv1.weight": "conv1_weight.mem",
+    "conv2.weight": "conv2_weight.mem",
+    "readout.weight": "readout_weight.mem",
+    "rtl_constants": "params.svh"
+  }
+}
