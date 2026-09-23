@@ -44,8 +44,8 @@ module onn_sparse_conv2_if2 #(
     logic [8:0] clear_index;
     logic [8:0] scan_index;
     logic signed [7:0] conv2_weights [0:CONV2_WEIGHT_COUNT-1];
-    logic signed [CONV2_RAW_ACC_BITS-1:0] current_accumulator [0:OUTPUT_COUNT-1];
-    logic signed [LIF2_MEM_BITS-1:0] membrane [0:OUTPUT_COUNT-1];
+    (* ram_style = "distributed" *) logic signed [CONV2_RAW_ACC_BITS-1:0] current_accumulator [0:OUTPUT_COUNT-1];
+    (* ram_style = "distributed" *) logic signed [LIF2_MEM_BITS-1:0] membrane [0:OUTPUT_COUNT-1];
 
     integer kernel_y;
     integer kernel_x;
@@ -111,6 +111,25 @@ module onn_sparse_conv2_if2 #(
 
     always_comb ready = (state == STATE_IDLE);
 
+    always_ff @(posedge clk) begin
+        if (rst_n) begin
+            case (state)
+                STATE_CLEAR: begin
+                    membrane[clear_index] <= '0;
+                    current_accumulator[clear_index] <= '0;
+                end
+                STATE_SCATTER: if (scatter_is_valid)
+                    current_accumulator[output_address] <=
+                        current_accumulator[output_address] + weight_extended;
+                STATE_IF_SCAN: begin
+                    membrane[scan_index] <= membrane_next_comb;
+                    current_accumulator[scan_index] <= '0;
+                end
+                default: begin end
+            endcase
+        end
+    end
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= STATE_IDLE;
@@ -154,8 +173,6 @@ module onn_sparse_conv2_if2 #(
                     end
                 end
                 STATE_CLEAR: begin
-                    membrane[clear_index] <= '0;
-                    current_accumulator[clear_index] <= '0;
                     if (clear_index == OUTPUT_COUNT - 1) begin
                         event_mask <= spike_latched;
                         event_group <= '0;
@@ -182,8 +199,6 @@ module onn_sparse_conv2_if2 #(
                 end
                 STATE_SCATTER: begin
                     if (scatter_is_valid) begin
-                        current_accumulator[output_address] <=
-                            current_accumulator[output_address] + weight_extended;
                         synaptic_additions <= synaptic_additions + 1'b1;
                     end
                     if (kernel_index == 8) begin
@@ -199,8 +214,6 @@ module onn_sparse_conv2_if2 #(
                     end
                 end
                 STATE_IF_SCAN: begin
-                    membrane[scan_index] <= membrane_next_comb;
-                    current_accumulator[scan_index] <= '0;
                     result_valid <= 1'b1;
                     result_index <= scan_index;
                     current_out <= current_comb;

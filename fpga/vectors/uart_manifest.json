@@ -1,0 +1,22 @@
+{
+  "requests": [
+    "zero",
+    "busy dropped single",
+    "MNIST validation 55002",
+    "bad checksum",
+    "bad timestep index",
+    "MNIST validation 55003 after reset",
+    "single"
+  ],
+  "response_sequences": [
+    10,
+    12,
+    13,
+    16,
+    14,
+    15,
+    10
+  ],
+  "extra_case": "first ten bytes of request 0, then receiver timeout",
+  "uart_clocks_per_bit": 8
+}

@@ -40,8 +40,8 @@ module onn_sparse_readout #(
     logic [3:0] clear_index;
     logic [1:0] step_latched;
     logic signed [7:0] readout_weights [0:READOUT_WEIGHT_COUNT-1];
-    logic signed [READOUT_CURRENT_BITS-1:0] current_accumulator [0:9];
-    logic signed [WEIGHTED_LOGITS_BITS-1:0] scores [0:9];
+    (* ram_style = "distributed" *) logic signed [READOUT_CURRENT_BITS-1:0] current_accumulator [0:9];
+    (* ram_style = "distributed" *) logic signed [WEIGHTED_LOGITS_BITS-1:0] scores [0:9];
     logic signed [WEIGHTED_LOGITS_BITS-1:0] best_score;
     logic [3:0] best_class;
 
@@ -91,6 +91,24 @@ module onn_sparse_readout #(
 
     always_comb ready = (state == STATE_IDLE);
 
+    always_ff @(posedge clk) begin
+        if (rst_n) begin
+            case (state)
+                STATE_CLEAR: begin
+                    scores[clear_index] <= '0;
+                    current_accumulator[clear_index] <= '0;
+                end
+                STATE_SCATTER: current_accumulator[class_index] <=
+                    current_accumulator[class_index] + weight_extended;
+                STATE_UPDATE: begin
+                    scores[class_index] <= weighted_comb;
+                    current_accumulator[class_index] <= '0;
+                end
+                default: begin end
+            endcase
+        end
+    end
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= STATE_IDLE;
@@ -135,8 +153,6 @@ module onn_sparse_readout #(
                     end
                 end
                 STATE_CLEAR: begin
-                    scores[clear_index] <= '0;
-                    current_accumulator[clear_index] <= '0;
                     if (clear_index == 9) begin
                         event_mask <= spike_latched;
                         event_group <= '0;
@@ -161,8 +177,6 @@ module onn_sparse_readout #(
                     end
                 end
                 STATE_SCATTER: begin
-                    current_accumulator[class_index] <=
-                        current_accumulator[class_index] + weight_extended;
                     synaptic_additions <= synaptic_additions + 1'b1;
                     if (class_index == 9) begin
                         class_index <= '0;
@@ -172,8 +186,6 @@ module onn_sparse_readout #(
                     end
                 end
                 STATE_UPDATE: begin
-                    scores[class_index] <= weighted_comb;
-                    current_accumulator[class_index] <= '0;
                     result_valid <= 1'b1;
                     result_class <= class_index;
                     current_out <= current_accumulator[class_index];

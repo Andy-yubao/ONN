@@ -25,8 +25,9 @@ model/：量化、整数参考、硬件导出
 fpga/：RTL、仿真、综合与板级验证
 ```
 
-当前主线不预先断言 SNN 优于 CNN，也不声称准确率已满足目标。统一 8×8 CNN baseline
-完成前，SNN 结果只属于候选实验。
+统一 8×8 matched CNN 已完成，held-out test mean 97.37%，高于 Frozen SNN 的
+93.47%。因此不声称 SNN 优于 CNN，也不声称其满足尚未冻结的产品精度要求。
+当前 seed 17 SNN deployment checkpoint 是硬件研究用的冻结对象，尚非 production champion。
 
 ## 已记录结果与边界
 
@@ -35,12 +36,19 @@ fpga/：RTL、仿真、综合与板级验证
 - MLP latency baseline：87.15%，训练时逐轮查看 test set，属于 exploratory 结果；
 - large Conv-SNN architecture exploration：91.27%，因逐轮查看 test set，不作为严格
   独立 held-out test benchmark；
-- small Conv-IF-SNN（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线：
-  best validation 92.32%，final held-out test 90.22%，9,872 参数。
+- small Conv-IF-SNN（原 `snn_8x8_device_if_conv_small`）后续完成 Frozen T=4 三 seed
+  公平实验，held-out test 为 93.47% ± 0.14 pct，9,872 参数；
+- matched 8×8 CNN 为 97.37% ± 0.11 pct，9,930 参数。完整公平比较见
+  [`final_three_seed_record.md`](../experiments/snn/conv_small/records/final_three_seed_record.md)。
 
-这些数字本次未重跑、未重算。95% 目标尚未达到；matched 8×8 CNN 尚未完成；production
-SNN 尚未选定；当前 SNN 尚未量化、导出或实现 RTL。后续公平比较和 champion 选择优先
-围绕上述 `conv_small` 基线展开，但不得因此预先宣布 SNN 获胜。
+Frozen SNN 的 INT8 PTQ、guard-4 整数参考、seed 17 参数导出均已完成；
+三 seed 整数 reference test mean 为 93.24% ± 0.17 pct。
+事件驱动 sparse RTL 已与整数参考完成逐层和端到端仿真对拍，详见
+[`quantization_record.md`](../model/snn/quantization_record.md) 和
+[`fpga/README.md`](../fpga/README.md)。Basys3 的 UART、host、仿真、综合、
+布局布线和 bitstream 已完成；结果见
+[`synthesis_summary.md`](../fpga/basys3/synthesis_summary.md)。首次真实 FPGA 对拍结果见
+[`verification_record.md`](../fpga/basys3/verification_record.md)。
 
 ## 四个核心目录
 
@@ -48,19 +56,19 @@ SNN 尚未选定；当前 SNN 尚未量化、导出或实现 RTL。后续公平�
 |---|---|
 | `experiments/` | 候选方案、失败实验、消融实验、公平比较 |
 | `model/` | 正式选定模型、量化、整数参考、部署导出 |
-| `fpga/` | `model/` 正式模型的 FPGA 实现 |
+| `fpga/` | `model/` 冻结部署候选及未来正式模型的 FPGA 实现 |
 | `history/` | 历史阶段索引与 Git tag 入口，不复制旧源码 |
 
 ## 硬件状态
 
 - AC620 / Cyclone IV 是 legacy platform；
 - 当前优先候选目标板是 Basys3 / Artix-7；
-- hardware target 尚未最终 freeze；
-- champion、数据位宽、状态存储和资源预算冻结前，不创建最终 Vivado 工程；
+- seed 17 部署数值格式和位宽已冻结；Basys3 综合、布局布线、静态时序和 bitstream 已完成；
+- Basys3 wrapper、约束和脚本化 Vivado 工程用于当前部署验证，不代表已确认产品目标；
 - 不把旧 AC620 固定 digit8 自检扩展为当前 SNN 或任意输入部署证据。
 
-## 当前不做
+## 本轮边界
 
-当前尚未安排重新训练、完整 MNIST 重跑、超参数搜索、SNN 量化、新 RTL、Vivado 工程、
-FPGA 综合、实现、bitstream、功耗或板级验证；这些不是已完成的验证结果，后续是否执行
-取决于阶段边界和用户明确任务。
+不重新训练、不重新选择 champion、不修改 INT8/guard-4/threshold/时间系数契约。
+第一次真实下板只验证 `4×64-bit spike → SNN core → result`，不接入真实 ADC 或器件。
+软件仿真、综合与实现结果需与真实 FPGA 通信和推理结果分别报告。

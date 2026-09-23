@@ -28,22 +28,25 @@ Quantile boundaries 后，平均准确率相对原器件下降 0.00–0.52 pct�
 [器件曲线迁移记录](experiments/snn/conv_small/records/device_curve_transfer_record.md)。Frozen
 SNN 的 PTQ 与整数 reference 已完成：三 seed INT8 mean 为 **93.24% ± 0.17 pct**，比 FP32
 下降 0.22 pct，详见[量化记录](model/snn/quantization_record.md)。seed 17 deployment
-checkpoint 的事件驱动稀疏 SNN RTL 已通过仿真级逐 bit 对拍，但当前仍未 promote 为项目
-production champion，也未进行 synthesis、implementation、板级验证或实测功耗。
+checkpoint 的事件驱动稀疏 SNN RTL 已通过仿真级逐 bit 对拍。Basys3 USB-UART wrapper
+和 PC host 已完成无板仿真；综合与实现结论见 [`fpga/basys3/`](fpga/basys3/) 的记录。
+首次真实 Basys3 验证的 4 个人工输入及 100 张 validation 样本均与整数参考逐项一致，
+详见[板级验证记录](fpga/basys3/verification_record.md)。当前仍未 promote 为项目
+production champion，也未完成真实器件输入验证或实测功耗。
 
 ## 硬件方向
 
 - Legacy platform：AC620 / Cyclone IV；
 - Current candidate target：Basys3 / Artix-7；
-- hardware target 尚未最终 freeze；
-- 当前 RTL 用于数值正确性验证；在资源预算与并行度冻结前，不创建最终 Vivado 工程。
+- seed 17 SNN 的部署数值契约已冻结；Basys3 实现报告已确认 25 MHz 内部时钟下的资源与静态时序；
+- 当前单 lane sparse RTL、PC/FPGA UART 通信和脚本化 Vivado 流程用于部署可行性验证。
 
 ## 目录职责
 
 ```text
 experiments/   候选网络、失败/消融实验和 CNN/SNN 公平比较
-model/         正式 champion、量化、整数参考和硬件导出
-fpga/          正式 champion 的 FPGA 实现
+model/         冻结部署候选、未来正式 champion、量化、整数参考和硬件导出
+fpga/          冻结部署候选的 FPGA 验证与未来正式模型实现
 history/       历史阶段索引与 Git tag 入口，不复制旧源码
 docs/          当前范围、架构、阶段计划和开放问题
 ```

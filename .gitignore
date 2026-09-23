@@ -24,6 +24,8 @@ datasets/**/*.csv
 # FPGA 工程自动生成
 # ---------------------------
 *.rpt
+*.dcp
+*.bit
 *.jou
 *.log
 *.bak
@@ -42,6 +44,10 @@ datasets/**/*.csv
 # Vivado（如未来使用）
 *.xdc.bak
 .vivado/
+.Xil/
+/2026.1/
+/tclapp/
+/clockInfo.txt
 /fpga/.sim/
 /xelab.pb
 /xvlog.pb

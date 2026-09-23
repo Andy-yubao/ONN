@@ -1,0 +1,2918 @@
+{
+  "backend": "serial",
+  "split": "validation",
+  "total_samples": 100,
+  "prediction_mismatch": 0,
+  "score_mismatch": 0,
+  "counter_mismatch": 0,
+  "communication_error": 0,
+  "fpga_correct": 95,
+  "mock_correct": null,
+  "reference_correct": 95,
+  "labeled_samples": 100,
+  "cases": [
+    {
+      "name": "validation_55000",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 0,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -3009,
+          4423,
+          -1596,
+          -1419,
+          -924,
+          -2385,
+          -2378,
+          -2838,
+          -700,
+          -3926
+        ],
+        "synaptic_additions": 4962,
+        "compute_cycles": 20466,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55001",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 1,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -5799,
+          -8518,
+          -126,
+          -282,
+          -2971,
+          -3116,
+          -5775,
+          -7615,
+          -4792,
+          -5685
+        ],
+        "synaptic_additions": 11572,
+        "compute_cycles": 36190,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55002",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 2,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -4242,
+          -2615,
+          -2770,
+          -2625,
+          -5575,
+          -553,
+          -4292,
+          -5351,
+          1371,
+          -5114
+        ],
+        "synaptic_additions": 9130,
+        "compute_cycles": 31603,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55003",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 3,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -4456,
+          -5264,
+          -2915,
+          -3714,
+          -2590,
+          -1961,
+          -9324,
+          2092,
+          -3558,
+          -902
+        ],
+        "synaptic_additions": 8234,
+        "compute_cycles": 28360,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55004",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 4,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -5877,
+          -3848,
+          -3606,
+          -3524,
+          2453,
+          -2655,
+          -5734,
+          -3161,
+          -2025,
+          -1063
+        ],
+        "synaptic_additions": 7758,
+        "compute_cycles": 27396,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55005",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 5,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -3933,
+          -3825,
+          -1721,
+          -4840,
+          2279,
+          -2338,
+          -58,
+          -3907,
+          -1853,
+          -2964
+        ],
+        "synaptic_additions": 8152,
+        "compute_cycles": 27985,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55006",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 6,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          2756,
+          -14164,
+          -5875,
+          -6504,
+          -10374,
+          -2924,
+          -907,
+          -6484,
+          -2033,
+          -4253
+        ],
+        "synaptic_additions": 13248,
+        "compute_cycles": 43256,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55007",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 7,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -4783,
+          -12106,
+          -4964,
+          -1990,
+          -5275,
+          -3108,
+          -11866,
+          -407,
+          -805,
+          1190
+        ],
+        "synaptic_additions": 11090,
+        "compute_cycles": 36074,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55008",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 8,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -13382,
+          -12660,
+          -3656,
+          4372,
+          -9704,
+          -5718,
+          -15010,
+          -3784,
+          -5645,
+          -6317
+        ],
+        "synaptic_additions": 13444,
+        "compute_cycles": 43831,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55009",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 9,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -4942,
+          -11054,
+          -5451,
+          -2238,
+          193,
+          -2990,
+          -9879,
+          -641,
+          -4230,
+          2868
+        ],
+        "synaptic_additions": 9574,
+        "compute_cycles": 31928,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55010",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 10,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -6617,
+          -13486,
+          -5893,
+          -3216,
+          -7486,
+          5210,
+          -8990,
+          -4799,
+          -2724,
+          -3737
+        ],
+        "synaptic_additions": 11586,
+        "compute_cycles": 38190,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55011",
+      "label": 2,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 11,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -3653,
+          -5220,
+          -378,
+          -600,
+          -20,
+          -674,
+          -2821,
+          24,
+          -2713,
+          -1108
+        ],
+        "synaptic_additions": 6210,
+        "compute_cycles": 24287,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55012",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 12,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -2151,
+          -3841,
+          -2661,
+          -3692,
+          -312,
+          -1688,
+          4032,
+          -5644,
+          -2324,
+          -4087
+        ],
+        "synaptic_additions": 8076,
+        "compute_cycles": 28440,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55013",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 13,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -5109,
+          -8683,
+          -4112,
+          -1201,
+          -200,
+          -3615,
+          -8596,
+          1020,
+          -3106,
+          1816
+        ],
+        "synaptic_additions": 8746,
+        "compute_cycles": 31628,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55014",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 14,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -2674,
+          3224,
+          -1278,
+          -2235,
+          -3354,
+          -2497,
+          -1238,
+          -1947,
+          -275,
+          -2936
+        ],
+        "synaptic_additions": 5642,
+        "compute_cycles": 21899,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55015",
+      "label": 8,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 15,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -1475,
+          -902,
+          -2019,
+          -2900,
+          -2016,
+          -2710,
+          -3601,
+          -2189,
+          -1140,
+          -2058
+        ],
+        "synaptic_additions": 6960,
+        "compute_cycles": 25220,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55016",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 16,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -3329,
+          -7680,
+          -1245,
+          -4446,
+          -614,
+          -2567,
+          4702,
+          -5153,
+          -5559,
+          -5235
+        ],
+        "synaptic_additions": 9892,
+        "compute_cycles": 33437,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55017",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 17,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -4254,
+          -5584,
+          730,
+          1185,
+          -8172,
+          -5694,
+          -7449,
+          -6825,
+          -1807,
+          -5219
+        ],
+        "synaptic_additions": 10114,
+        "compute_cycles": 33151,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55018",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 18,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -2092,
+          -1961,
+          -2666,
+          -2524,
+          -654,
+          -798,
+          2513,
+          -3911,
+          -2077,
+          -2885
+        ],
+        "synaptic_additions": 6480,
+        "compute_cycles": 22963,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55019",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 19,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -3219,
+          -6504,
+          -1017,
+          -2706,
+          -1944,
+          -3130,
+          -676,
+          -7893,
+          -4804,
+          -4854
+        ],
+        "synaptic_additions": 10128,
+        "compute_cycles": 32894,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55020",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 20,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -5407,
+          -9262,
+          -3528,
+          -3024,
+          -7935,
+          -1372,
+          -9043,
+          -6647,
+          3981,
+          -4533
+        ],
+        "synaptic_additions": 11414,
+        "compute_cycles": 37836,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55021",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 21,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -3014,
+          -9289,
+          -5438,
+          -3414,
+          -3390,
+          -3268,
+          -9696,
+          462,
+          -2756,
+          -801
+        ],
+        "synaptic_additions": 9580,
+        "compute_cycles": 31572,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55022",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 22,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -4270,
+          -5612,
+          -1921,
+          -2341,
+          -2073,
+          -3712,
+          -3483,
+          -4187,
+          569,
+          -1784
+        ],
+        "synaptic_additions": 8844,
+        "compute_cycles": 29515,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55023",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 23,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          2644,
+          -13792,
+          -2859,
+          -5139,
+          -8566,
+          -2652,
+          -3507,
+          -6216,
+          -6933,
+          -7139
+        ],
+        "synaptic_additions": 14154,
+        "compute_cycles": 43966,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55024",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 24,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -5780,
+          -7805,
+          -4520,
+          -3865,
+          2466,
+          -4855,
+          -4642,
+          -4822,
+          -1569,
+          508
+        ],
+        "synaptic_additions": 10596,
+        "compute_cycles": 35202,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55025",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 25,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -4508,
+          -4228,
+          -2871,
+          -2615,
+          2432,
+          -1488,
+          -2024,
+          -2128,
+          -2216,
+          -1212
+        ],
+        "synaptic_additions": 7324,
+        "compute_cycles": 27165,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55026",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 26,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -5596,
+          -7423,
+          -1724,
+          -953,
+          -5583,
+          -2308,
+          -7434,
+          -4930,
+          1311,
+          -4784
+        ],
+        "synaptic_additions": 9680,
+        "compute_cycles": 33559,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55027",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 27,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          3006,
+          -14746,
+          -1925,
+          -6628,
+          -7711,
+          -4839,
+          -4108,
+          -7017,
+          -5754,
+          -5445
+        ],
+        "synaptic_additions": 13078,
+        "compute_cycles": 40877,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55028",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 28,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -3914,
+          -11761,
+          -5028,
+          -361,
+          -7169,
+          -492,
+          -6035,
+          -4391,
+          -2539,
+          -579
+        ],
+        "synaptic_additions": 12314,
+        "compute_cycles": 40980,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55029",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 29,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          3520,
+          -12587,
+          -1266,
+          -6113,
+          -7410,
+          -4916,
+          -3742,
+          -5558,
+          -3575,
+          -3859
+        ],
+        "synaptic_additions": 11070,
+        "compute_cycles": 36402,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55030",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 30,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          3955,
+          -16385,
+          -3675,
+          -6480,
+          -11928,
+          -3022,
+          -4134,
+          -8196,
+          -2575,
+          -7454
+        ],
+        "synaptic_additions": 13880,
+        "compute_cycles": 45156,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55031",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 31,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -4287,
+          3057,
+          -2290,
+          -175,
+          -1986,
+          -2769,
+          -4279,
+          -393,
+          -1623,
+          -938
+        ],
+        "synaptic_additions": 5504,
+        "compute_cycles": 21831,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55032",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 32,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -5350,
+          -12300,
+          2171,
+          -171,
+          -13639,
+          -2132,
+          -6652,
+          -7928,
+          -5264,
+          -8920
+        ],
+        "synaptic_additions": 12912,
+        "compute_cycles": 41032,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55033",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 33,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -6544,
+          -5439,
+          4283,
+          -1868,
+          -11798,
+          -6830,
+          -5320,
+          -4854,
+          -4531,
+          -9417
+        ],
+        "synaptic_additions": 12270,
+        "compute_cycles": 40656,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55034",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 34,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -5400,
+          -11374,
+          -7048,
+          -4262,
+          -845,
+          -5238,
+          -8118,
+          2589,
+          -5389,
+          -741
+        ],
+        "synaptic_additions": 10244,
+        "compute_cycles": 35059,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55035",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 35,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -9046,
+          -13432,
+          -4954,
+          3041,
+          -8463,
+          -2574,
+          -11820,
+          -1303,
+          -2412,
+          -5592
+        ],
+        "synaptic_additions": 13154,
+        "compute_cycles": 43198,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55036",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 36,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -3396,
+          4292,
+          -1993,
+          -921,
+          -1718,
+          -2937,
+          -2346,
+          -2663,
+          -420,
+          -2064
+        ],
+        "synaptic_additions": 5162,
+        "compute_cycles": 21610,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55037",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 37,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -5122,
+          -5913,
+          -4200,
+          -2166,
+          4769,
+          -2505,
+          -2856,
+          -3341,
+          -1980,
+          272
+        ],
+        "synaptic_additions": 7864,
+        "compute_cycles": 27175,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55038",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 38,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -10599,
+          -8666,
+          -3363,
+          4575,
+          -11572,
+          -4000,
+          -14208,
+          -7777,
+          -2211,
+          -7431
+        ],
+        "synaptic_additions": 13710,
+        "compute_cycles": 45923,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55039",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 39,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -5668,
+          -11651,
+          -1678,
+          -6483,
+          -1433,
+          -1304,
+          4699,
+          -8558,
+          -6361,
+          -5734
+        ],
+        "synaptic_additions": 11670,
+        "compute_cycles": 37923,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55040",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 40,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -4626,
+          -6396,
+          2641,
+          -225,
+          -8319,
+          -3835,
+          -5686,
+          -3813,
+          -2400,
+          -6540
+        ],
+        "synaptic_additions": 9852,
+        "compute_cycles": 33191,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55041",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 41,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -6518,
+          -9505,
+          -3320,
+          860,
+          -6926,
+          -3336,
+          -16076,
+          5361,
+          -4559,
+          -1235
+        ],
+        "synaptic_additions": 10862,
+        "compute_cycles": 35446,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55042",
+      "label": 5,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 42,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -3062,
+          -7001,
+          -3717,
+          -4660,
+          -3329,
+          -1151,
+          588,
+          -5569,
+          -1455,
+          -5431
+        ],
+        "synaptic_additions": 10724,
+        "compute_cycles": 36215,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55043",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 43,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -2456,
+          -7856,
+          -1817,
+          -2679,
+          -5045,
+          -3870,
+          -6841,
+          -6395,
+          2942,
+          -4502
+        ],
+        "synaptic_additions": 10172,
+        "compute_cycles": 34205,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55044",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 44,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -4373,
+          396,
+          3113,
+          -517,
+          -9402,
+          -5130,
+          -6628,
+          -3620,
+          -1649,
+          -6723
+        ],
+        "synaptic_additions": 7332,
+        "compute_cycles": 26517,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55045",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 45,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          1865,
+          -15218,
+          -743,
+          -5470,
+          -10705,
+          -5148,
+          -6112,
+          -7807,
+          -7272,
+          -5616
+        ],
+        "synaptic_additions": 14832,
+        "compute_cycles": 46417,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55046",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 46,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -4797,
+          5756,
+          -2090,
+          -2156,
+          -1919,
+          -3883,
+          -3634,
+          -465,
+          -2789,
+          -2148
+        ],
+        "synaptic_additions": 5498,
+        "compute_cycles": 21930,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55047",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 47,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -3010,
+          3377,
+          -1739,
+          -2048,
+          -1031,
+          -2943,
+          -1362,
+          -1668,
+          -906,
+          -2323
+        ],
+        "synaptic_additions": 4772,
+        "compute_cycles": 19855,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55048",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 48,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          5037,
+          -19991,
+          -3710,
+          -10180,
+          -13337,
+          -6718,
+          -2963,
+          -10005,
+          -5810,
+          -6366
+        ],
+        "synaptic_additions": 15690,
+        "compute_cycles": 48718,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55049",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 49,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -5661,
+          -7945,
+          3749,
+          -2095,
+          -7298,
+          -4379,
+          -5385,
+          -6589,
+          -3211,
+          -8546
+        ],
+        "synaptic_additions": 12534,
+        "compute_cycles": 39544,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55050",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 50,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -7440,
+          -8708,
+          -3032,
+          3814,
+          -8738,
+          -1529,
+          -9914,
+          -4396,
+          -2350,
+          -4591
+        ],
+        "synaptic_additions": 11506,
+        "compute_cycles": 38968,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55051",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 51,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -7994,
+          -7023,
+          -1882,
+          3548,
+          -6844,
+          -3980,
+          -9767,
+          -4797,
+          -2677,
+          -3788
+        ],
+        "synaptic_additions": 11012,
+        "compute_cycles": 37346,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55052",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 52,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -6006,
+          -1175,
+          -2922,
+          -1574,
+          -1452,
+          -2406,
+          -5526,
+          1127,
+          -2047,
+          -791
+        ],
+        "synaptic_additions": 7756,
+        "compute_cycles": 27195,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55053",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 53,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -6388,
+          -6083,
+          -2747,
+          -3390,
+          5423,
+          -2924,
+          -3186,
+          -3345,
+          -3388,
+          -1853
+        ],
+        "synaptic_additions": 9748,
+        "compute_cycles": 31873,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55054",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 54,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -3515,
+          -3616,
+          -2230,
+          627,
+          -6137,
+          -916,
+          -5795,
+          -3410,
+          -2670,
+          -3703
+        ],
+        "synaptic_additions": 9052,
+        "compute_cycles": 31394,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55055",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 55,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -5479,
+          -6743,
+          -4809,
+          -965,
+          -4959,
+          1261,
+          -8318,
+          -2757,
+          -1461,
+          -3984
+        ],
+        "synaptic_additions": 9562,
+        "compute_cycles": 32413,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55056",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 56,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          4031,
+          -14146,
+          -2899,
+          -5043,
+          -8582,
+          -4604,
+          -2800,
+          -8749,
+          -3214,
+          -3855
+        ],
+        "synaptic_additions": 12090,
+        "compute_cycles": 38957,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55057",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 57,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -3703,
+          -10419,
+          -1721,
+          -6230,
+          -467,
+          -3770,
+          3864,
+          -7173,
+          -6538,
+          -5086
+        ],
+        "synaptic_additions": 11084,
+        "compute_cycles": 35914,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55058",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 58,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -6768,
+          -7674,
+          -4930,
+          -2537,
+          -4080,
+          2967,
+          -3166,
+          -8813,
+          -2823,
+          -1846
+        ],
+        "synaptic_additions": 10248,
+        "compute_cycles": 34816,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55059",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 59,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -3986,
+          -8018,
+          -4163,
+          -1549,
+          -3150,
+          -2659,
+          -11453,
+          4132,
+          -5032,
+          -196
+        ],
+        "synaptic_additions": 9118,
+        "compute_cycles": 30292,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55060",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 60,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -435,
+          -4114,
+          -2217,
+          289,
+          -5013,
+          408,
+          -2159,
+          -3663,
+          -706,
+          -2373
+        ],
+        "synaptic_additions": 7502,
+        "compute_cycles": 28086,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55061",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 61,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -5391,
+          -6930,
+          -2382,
+          -1562,
+          -8129,
+          -5052,
+          -9874,
+          -6016,
+          1909,
+          -5605
+        ],
+        "synaptic_additions": 10802,
+        "compute_cycles": 35413,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55062",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 62,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -6856,
+          -9240,
+          -3134,
+          3458,
+          -7617,
+          -974,
+          -10013,
+          -6486,
+          -1941,
+          -5660
+        ],
+        "synaptic_additions": 12946,
+        "compute_cycles": 42934,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55063",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 63,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -5728,
+          -6905,
+          -4772,
+          -1213,
+          -2366,
+          -1889,
+          -10389,
+          234,
+          -2478,
+          2183
+        ],
+        "synaptic_additions": 7902,
+        "compute_cycles": 26993,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55064",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 64,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -6826,
+          -16150,
+          -4729,
+          -4236,
+          -3693,
+          -3170,
+          -10491,
+          -2720,
+          -3789,
+          -50
+        ],
+        "synaptic_additions": 13588,
+        "compute_cycles": 42331,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55065",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 65,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          1144,
+          -14986,
+          -1345,
+          -4086,
+          -10303,
+          -2989,
+          -4456,
+          -8335,
+          -6099,
+          -6182
+        ],
+        "synaptic_additions": 14076,
+        "compute_cycles": 44021,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55066",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 66,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -2101,
+          -6327,
+          -2972,
+          -2959,
+          -799,
+          -2993,
+          682,
+          -2642,
+          -1190,
+          -1521
+        ],
+        "synaptic_additions": 8290,
+        "compute_cycles": 29153,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55067",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 67,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -2731,
+          2494,
+          -797,
+          -1728,
+          -2244,
+          -1823,
+          -1339,
+          -2221,
+          -644,
+          -3255
+        ],
+        "synaptic_additions": 5440,
+        "compute_cycles": 21656,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55068",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 68,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -5351,
+          -10693,
+          -5071,
+          -2134,
+          -662,
+          -1754,
+          -8155,
+          -614,
+          -3341,
+          2782
+        ],
+        "synaptic_additions": 9706,
+        "compute_cycles": 32703,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55069",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 69,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -6033,
+          -4213,
+          3765,
+          -2944,
+          -10137,
+          -4383,
+          -5491,
+          -10075,
+          -2602,
+          -7850
+        ],
+        "synaptic_additions": 13004,
+        "compute_cycles": 41991,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55070",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 70,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -5539,
+          -6455,
+          4409,
+          -1537,
+          -7871,
+          -7043,
+          -6453,
+          -5242,
+          -2936,
+          -5593
+        ],
+        "synaptic_additions": 11826,
+        "compute_cycles": 38680,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55071",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 71,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -6475,
+          -8728,
+          -2071,
+          2058,
+          -9976,
+          -2493,
+          -13053,
+          -6733,
+          -1335,
+          -2682
+        ],
+        "synaptic_additions": 11670,
+        "compute_cycles": 39311,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55072",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 72,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -4241,
+          -9208,
+          -3263,
+          -5591,
+          35,
+          -5852,
+          -6920,
+          -2164,
+          -3053,
+          1826
+        ],
+        "synaptic_additions": 11086,
+        "compute_cycles": 36370,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55073",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 73,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -3859,
+          -5792,
+          -5562,
+          -3911,
+          2939,
+          -2413,
+          -2760,
+          -1165,
+          -3663,
+          -1487
+        ],
+        "synaptic_additions": 10268,
+        "compute_cycles": 32784,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55074",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 74,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -4723,
+          -7469,
+          -4214,
+          -3306,
+          3486,
+          -1337,
+          -466,
+          -4122,
+          -1841,
+          1093
+        ],
+        "synaptic_additions": 7422,
+        "compute_cycles": 26729,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55075",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 75,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -2374,
+          -7683,
+          -4467,
+          -2810,
+          -5135,
+          3306,
+          -5574,
+          -3495,
+          -794,
+          -4731
+        ],
+        "synaptic_additions": 9840,
+        "compute_cycles": 34250,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55076",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 76,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -5782,
+          -8542,
+          -4674,
+          -1675,
+          -5257,
+          4851,
+          -7385,
+          -5452,
+          -2619,
+          -3661
+        ],
+        "synaptic_additions": 10152,
+        "compute_cycles": 34935,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55077",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 77,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -5350,
+          -12577,
+          -1132,
+          -6448,
+          -714,
+          -3038,
+          3140,
+          -9918,
+          -6037,
+          -6252
+        ],
+        "synaptic_additions": 12084,
+        "compute_cycles": 38823,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55078",
+      "label": 7,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 78,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -2431,
+          -4546,
+          -2970,
+          -1168,
+          11,
+          -1751,
+          -2583,
+          -830,
+          -3986,
+          -960
+        ],
+        "synaptic_additions": 7782,
+        "compute_cycles": 27584,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55079",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 79,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -3058,
+          -11557,
+          -2677,
+          796,
+          -7976,
+          -5544,
+          -13640,
+          5017,
+          -5343,
+          -3068
+        ],
+        "synaptic_additions": 11058,
+        "compute_cycles": 37058,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55080",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 80,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -2344,
+          3165,
+          -1884,
+          -989,
+          -1170,
+          -2549,
+          -921,
+          -1851,
+          -854,
+          -1947
+        ],
+        "synaptic_additions": 4654,
+        "compute_cycles": 19577,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55081",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 81,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -4577,
+          -9383,
+          -2663,
+          -1720,
+          -9729,
+          -5758,
+          -9087,
+          -7412,
+          1239,
+          -4712
+        ],
+        "synaptic_additions": 12700,
+        "compute_cycles": 41589,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55082",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 82,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -4360,
+          -4010,
+          -1918,
+          -1606,
+          -2043,
+          -5685,
+          -7201,
+          1875,
+          -2175,
+          -279
+        ],
+        "synaptic_additions": 7372,
+        "compute_cycles": 26184,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55083",
+      "label": 1,
+      "golden_class": 1,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 83,
+        "status": 0,
+        "prediction": 1,
+        "scores": [
+          -3311,
+          3774,
+          -1224,
+          -2069,
+          -731,
+          -2872,
+          -1926,
+          212,
+          -2087,
+          -1148
+        ],
+        "synaptic_additions": 4004,
+        "compute_cycles": 18522,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55084",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 84,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -6098,
+          -7296,
+          -4250,
+          -1481,
+          -4440,
+          -4260,
+          -12306,
+          4652,
+          -2015,
+          697
+        ],
+        "synaptic_additions": 8354,
+        "compute_cycles": 28926,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55085",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 85,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -5249,
+          -4289,
+          -1845,
+          -2766,
+          3973,
+          -3594,
+          -3556,
+          -3612,
+          -2055,
+          -550
+        ],
+        "synaptic_additions": 8128,
+        "compute_cycles": 28318,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55086",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 86,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -5132,
+          -3588,
+          -2463,
+          -381,
+          -3744,
+          -3122,
+          -8160,
+          3655,
+          -2186,
+          -555
+        ],
+        "synaptic_additions": 6516,
+        "compute_cycles": 24807,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55087",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 87,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -4391,
+          -3103,
+          -3830,
+          -2112,
+          3827,
+          -2058,
+          -4257,
+          -3505,
+          -1833,
+          -313
+        ],
+        "synaptic_additions": 6914,
+        "compute_cycles": 25564,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55088",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 88,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -8337,
+          -8021,
+          -1552,
+          -1071,
+          -10930,
+          -5651,
+          -10867,
+          1441,
+          -3416,
+          -7344
+        ],
+        "synaptic_additions": 12512,
+        "compute_cycles": 40308,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55089",
+      "label": 2,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 89,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -3579,
+          -6324,
+          2921,
+          -888,
+          -7124,
+          -5487,
+          -6631,
+          -5666,
+          -2641,
+          -5376
+        ],
+        "synaptic_additions": 10076,
+        "compute_cycles": 33713,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55090",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 90,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -3830,
+          -4329,
+          -906,
+          -3092,
+          -4012,
+          -4246,
+          -6684,
+          2850,
+          -636,
+          -2149
+        ],
+        "synaptic_additions": 7744,
+        "compute_cycles": 28518,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55091",
+      "label": 3,
+      "golden_class": 2,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 91,
+        "status": 0,
+        "prediction": 2,
+        "scores": [
+          -2055,
+          -5193,
+          1252,
+          1242,
+          -7684,
+          -3766,
+          -6204,
+          -3541,
+          -2157,
+          -3512
+        ],
+        "synaptic_additions": 8368,
+        "compute_cycles": 28984,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55092",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 92,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -6357,
+          -2983,
+          -3359,
+          -2008,
+          1222,
+          -1781,
+          -5433,
+          -2031,
+          -577,
+          2209
+        ],
+        "synaptic_additions": 6764,
+        "compute_cycles": 25197,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55093",
+      "label": 3,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 93,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -5937,
+          -3858,
+          -866,
+          3081,
+          -10072,
+          -2643,
+          -9667,
+          -4125,
+          -3425,
+          -5490
+        ],
+        "synaptic_additions": 10134,
+        "compute_cycles": 33811,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55094",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 94,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -5457,
+          -3779,
+          -2840,
+          -964,
+          -4742,
+          -3839,
+          -9651,
+          3645,
+          -2269,
+          -1395
+        ],
+        "synaptic_additions": 8820,
+        "compute_cycles": 30828,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55095",
+      "label": 0,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 95,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          1588,
+          -14487,
+          -2621,
+          -7128,
+          -10066,
+          -2817,
+          -3091,
+          -10083,
+          -6534,
+          -6701
+        ],
+        "synaptic_additions": 14440,
+        "compute_cycles": 44753,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55096",
+      "label": 6,
+      "golden_class": 6,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 96,
+        "status": 0,
+        "prediction": 6,
+        "scores": [
+          -3672,
+          -7257,
+          -3397,
+          -6674,
+          757,
+          -258,
+          2892,
+          -8437,
+          -4770,
+          -3783
+        ],
+        "synaptic_additions": 10088,
+        "compute_cycles": 34126,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55097",
+      "label": 9,
+      "golden_class": 9,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 97,
+        "status": 0,
+        "prediction": 9,
+        "scores": [
+          -5214,
+          -11002,
+          -3382,
+          -2543,
+          -915,
+          -2783,
+          -9279,
+          -344,
+          -2157,
+          3022
+        ],
+        "synaptic_additions": 8220,
+        "compute_cycles": 27894,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55098",
+      "label": 4,
+      "golden_class": 4,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 98,
+        "status": 0,
+        "prediction": 4,
+        "scores": [
+          -7990,
+          -7912,
+          -5348,
+          -3608,
+          3224,
+          -3331,
+          -3570,
+          -2522,
+          -2795,
+          333
+        ],
+        "synaptic_additions": 9830,
+        "compute_cycles": 32681,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55099",
+      "label": 5,
+      "golden_class": 5,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 99,
+        "status": 0,
+        "prediction": 5,
+        "scores": [
+          -4279,
+          -8499,
+          -4446,
+          -1329,
+          -8456,
+          2040,
+          -6928,
+          -7298,
+          1124,
+          -4626
+        ],
+        "synaptic_additions": 9532,
+        "compute_cycles": 32381,
+        "debug_counts": []
+      }
+    }
+  ],
+  "fpga_accuracy": 0.95,
+  "mock_accuracy": null,
+  "reference_accuracy": 0.95
+}

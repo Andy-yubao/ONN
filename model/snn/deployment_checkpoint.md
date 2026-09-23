@@ -16,5 +16,8 @@ current，以及时间系数 `[5,4,3,2]`。可重复导出入口为 `python -m m
 防止静默导出错误模型。
 
 当前 checkpoint 和导出参数已被事件驱动稀疏 SNN RTL 使用，并通过 Python integer reference
-到 RTL 的逐层与端到端仿真对拍。尚未创建最终 Vivado 工程，也未进行 synthesis、
-implementation、资源/时序分析或 FPGA 板级验证。
+到 RTL 的逐层与端到端仿真对拍。Basys3 UART wrapper、PC host、约束与脚本化 Vivado
+流程位于 [`../../fpga/basys3/`](../../fpga/basys3/)；资源/时序结论以该目录的正式报告为准。
+首次真实 Basys3 验证已完成 4 个人工输入和 100 张 validation 样本的逐项对拍；
+结果见 [`../../fpga/basys3/verification_record.md`](../../fpga/basys3/verification_record.md)。
+真实器件输入与实测功耗仍未运行。

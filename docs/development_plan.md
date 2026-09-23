@@ -54,21 +54,25 @@ validation 损失不超过 0.5 pct 的候选中选择事件成本最低的 lambd
 本阶段冻结的是最终 SNN 研究候选；CNN 仍有 3.90 pct mean accuracy 优势，真实器件行为、
 FPGA 资源/功耗和总体 trade-off 尚未验证，因此未将任一方案 promote 为 production champion。
 
-## 阶段 4：正式模型与量化
+## 阶段 4：冻结部署候选与量化（已完成）
 
-Frozen SNN 的 PTQ、动态范围分析和 fixed-point/integer reference 已先行建立在 `model/`，
+Frozen SNN 的 PTQ、动态范围分析和 fixed-point/integer reference 已建立在 `model/`，
 作为 deployment candidate 验证；三 seed INT8 mean 为 93.24%，详见
-[`quantization_record.md`](../model/snn/quantization_record.md)。production champion、供 RTL
-使用的单一 checkpoint 和 hardware export 仍未冻结。
+[`quantization_record.md`](../model/snn/quantization_record.md)。seed 17 部署 checkpoint、
+INT8/guard-4 数值契约和 `.mem`/`params.svh` 导出已冻结。production champion 尚未选定。
 
-## 阶段 5：Basys3 / Artix-7 硬件实现
+## 阶段 5：Basys3 / Artix-7 下板前实现（已完成）
 
-仅在模型、位宽、状态存储和资源预算冻结后，在 `fpga/` 建立 RTL、仿真和 Vivado 工程，
-再进行综合、实现与板级验证。当前仅保留规划说明，全部标记为 planned / not implemented。
+`fpga/` 已完成 sparse RTL、逐层与整帧 golden-vector 仿真、USB-UART wrapper/host、
+48 帧确定性差分回归和脚本化 Vivado 综合/实现。Basys3 板载 100 MHz 经 MMCM
+生成 25 MHz 内部时钟；布线后 setup WNS +16.128 ns，DRC 零项，bitstream 已生成。
+资源、时序和边界见 [`Basys3 验证记录`](../fpga/basys3/verification_record.md)。
+2026-09-23 已完成真实 Basys3 编程、USB-UART 通信和 4 个人工输入及 100 张
+validation 样本的逐项对拍，见同一验证记录；实测功耗仍未完成。
 
 ## 当前范围边界
 
-旧 CNN / AC620 不作为当前主线重做；模拟单调器件曲线迁移和 frozen SNN 多 seed 稳健性已经
-完成，Frozen SNN 的首轮 PTQ 与整数 reference 也已完成。反色输入、真实器件迁移、
-RTL/Vivado 工程、综合、实现、bitstream、功耗和板级测试均未开始，不应在 champion 和
-资源预算冻结前提前宣称已完成。是否执行其中某项以当前任务的明确范围为准。
+旧 CNN / AC620 不作为当前主线重做；模拟单调器件曲线迁移、frozen SNN 多 seed
+稳健性、seed 17 部署候选的整数参考及 Basys3 下板前软件链已完成。反色输入、
+真实器件迁移和实测功耗仍未完成。当前板级测试验证的是 seed 17
+部署候选，不代表 production champion 已选定。

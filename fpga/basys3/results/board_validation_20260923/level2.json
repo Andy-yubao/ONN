@@ -1,0 +1,76 @@
+{
+  "backend": "serial",
+  "split": "validation",
+  "total_samples": 2,
+  "prediction_mismatch": 0,
+  "score_mismatch": 0,
+  "counter_mismatch": 0,
+  "communication_error": 0,
+  "fpga_correct": 2,
+  "mock_correct": null,
+  "reference_correct": 2,
+  "labeled_samples": 2,
+  "cases": [
+    {
+      "name": "validation_55002",
+      "label": 8,
+      "golden_class": 8,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 0,
+        "status": 0,
+        "prediction": 8,
+        "scores": [
+          -4242,
+          -2615,
+          -2770,
+          -2625,
+          -5575,
+          -553,
+          -4292,
+          -5351,
+          1371,
+          -5114
+        ],
+        "synaptic_additions": 9130,
+        "compute_cycles": 31603,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "validation_55003",
+      "label": 7,
+      "golden_class": 7,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 1,
+        "status": 0,
+        "prediction": 7,
+        "scores": [
+          -4456,
+          -5264,
+          -2915,
+          -3714,
+          -2590,
+          -1961,
+          -9324,
+          2092,
+          -3558,
+          -902
+        ],
+        "synaptic_additions": 8234,
+        "compute_cycles": 28360,
+        "debug_counts": []
+      }
+    }
+  ],
+  "fpga_accuracy": 1.0,
+  "mock_accuracy": null,
+  "reference_accuracy": 1.0
+}

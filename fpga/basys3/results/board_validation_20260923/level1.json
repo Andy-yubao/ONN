@@ -1,0 +1,134 @@
+{
+  "backend": "serial",
+  "split": null,
+  "total_samples": 4,
+  "prediction_mismatch": 0,
+  "score_mismatch": 0,
+  "counter_mismatch": 0,
+  "communication_error": 0,
+  "fpga_correct": 0,
+  "mock_correct": null,
+  "reference_correct": 0,
+  "labeled_samples": 0,
+  "cases": [
+    {
+      "name": "all_zero",
+      "label": null,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 0,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "synaptic_additions": 0,
+        "compute_cycles": 7934,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "single_spike",
+      "label": null,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 1,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "synaptic_additions": 144,
+        "compute_cycles": 8079,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "corner_spike",
+      "label": null,
+      "golden_class": 0,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 2,
+        "status": 0,
+        "prediction": 0,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "synaptic_additions": 64,
+        "compute_cycles": 8079,
+        "debug_counts": []
+      }
+    },
+    {
+      "name": "dense",
+      "label": null,
+      "golden_class": 3,
+      "result": {
+        "pass": true,
+        "errors": []
+      },
+      "fpga": {
+        "sequence": 3,
+        "status": 0,
+        "prediction": 3,
+        "scores": [
+          -6025,
+          -7222,
+          -5870,
+          554,
+          -12424,
+          -2931,
+          -8132,
+          -5237,
+          -3482,
+          -8026
+        ],
+        "synaptic_additions": 11972,
+        "compute_cycles": 36650,
+        "debug_counts": []
+      }
+    }
+  ],
+  "fpga_accuracy": null,
+  "mock_accuracy": null,
+  "reference_accuracy": null
+}

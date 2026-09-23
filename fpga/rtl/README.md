@@ -7,8 +7,10 @@
 → 512→10 readout → temporal weighted score → argmax
 ```
 
-部署顶层已经切换为 spike-driven sparse 架构；原 dense 模块保留为黄金基线。尚未冻结并行度，
-未创建最终 Vivado 工程，也未执行 synthesis / implementation。
+部署顶层已经切换为 spike-driven sparse 架构；原 dense 模块保留为黄金基线。
+当前为一条 scatter lane。Basys3 wrapper、脚本化 Vivado 流程和资源评估见
+[`../basys3/`](../basys3/)；首次真实 FPGA 板级对拍已完成，结果见
+[`../basys3/verification_record.md`](../basys3/verification_record.md)。
 
 ## 冻结数值契约
 
@@ -95,5 +97,5 @@ MNIST validation 样本结果为：
 | train index 55003 | 8,234 | 28,360 | 12.5× fewer cycles |
 
 周期统计包含首步状态清零、事件提取、scatter slot、完整 IF barrier 和 readout 更新，
-不包含少量顶层交接周期。当前仍是一条 scatter lane；后续并行度需由综合资源和 BRAM
-端口约束决定。
+不包含少量顶层交接周期。当前仍是一条 scatter lane；首次 Basys3 实现选择保留
+此结构，资源和时序判断见 [`../basys3/synthesis_summary.md`](../basys3/synthesis_summary.md)。

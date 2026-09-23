@@ -133,6 +133,9 @@ threshold、位宽、时间系数、量化规则及导出文件映射；三个 `
 [`export_params.py`](export_params.py) 可重复生成，并由 [`test_export_params.py`](test_export_params.py)
 验证无损读回及与 `IntegerSNNReference` 的契约一致性。
 
-已知限制：encoder 仍为浮点软件边界；scale 不是 power-of-two；没有 QAT。当前仅完成参数
-导出，下一阶段才进入 RTL 和 Python reference ↔ RTL 的逐 timestep/逐层对拍；尚未开始
-Vivado、synthesis、资源/时序分析或 FPGA 板级验证。
+已知限制：encoder 仍为浮点软件边界；scale 不是 power-of-two；没有 QAT。
+参数导出后的 sparse RTL 已完成 Python integer reference ↔ RTL 的逐 timestep、逐层及
+端到端仿真对拍。Basys3 UART wrapper、PC host 和脚本化 Vivado 流程见
+[`../../fpga/basys3/`](../../fpga/basys3/)；首次真实 Basys3 板级对拍结果见
+[`../../fpga/basys3/verification_record.md`](../../fpga/basys3/verification_record.md)。
+真实器件输入与实测功耗仍未运行。

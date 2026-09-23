@@ -40,8 +40,8 @@ module onn_sparse_conv1_if1 #(
     logic [9:0] clear_index;
     logic [9:0] scan_index;
     logic signed [7:0] conv1_weights [0:CONV1_WEIGHT_COUNT-1];
-    logic signed [CONV1_RAW_ACC_BITS-1:0] current_accumulator [0:OUTPUT_COUNT-1];
-    logic signed [LIF1_MEM_BITS-1:0] membrane [0:OUTPUT_COUNT-1];
+    (* ram_style = "distributed" *) logic signed [CONV1_RAW_ACC_BITS-1:0] current_accumulator [0:OUTPUT_COUNT-1];
+    (* ram_style = "distributed" *) logic signed [LIF1_MEM_BITS-1:0] membrane [0:OUTPUT_COUNT-1];
 
     integer kernel_y;
     integer kernel_x;
@@ -51,11 +51,25 @@ module onn_sparse_conv1_if1 #(
     integer weight_address;
     logic scatter_is_valid;
     logic signed [CONV1_RAW_ACC_BITS-1:0] weight_extended;
-    logic signed [31:0] current_wide;
     logic signed [CONV1_CURRENT_BITS-1:0] current_comb;
     logic signed [LIF1_MEM_BITS-1:0] integrated_comb;
     logic signed [LIF1_MEM_BITS-1:0] membrane_next_comb;
     logic spike_comb;
+    logic signed [LIF1_MEM_BITS:0] integrated_wide;
+    logic positive_overflow, negative_overflow;
+
+    localparam logic signed [LIF1_MEM_BITS-1:0] LIF1_MAX =
+        {1'b0, {(LIF1_MEM_BITS-1){1'b1}}};
+    localparam logic signed [LIF1_MEM_BITS-1:0] LIF1_MIN =
+        {1'b1, {(LIF1_MEM_BITS-1){1'b0}}};
+    localparam logic signed [LIF1_MEM_BITS:0] LIF1_THRESHOLD_SIGNED =
+        $signed(LIF1_THRESHOLD);
+    initial begin
+        if (CONV1_RAW_ACC_BITS + SNN_STATE_GUARD_BITS != CONV1_CURRENT_BITS ||
+            LIF1_MEM_BITS < CONV1_CURRENT_BITS || LIF1_THRESHOLD <= 0 ||
+            LIF1_THRESHOLD >= LIF1_MAX)
+            $error("Conv1 IF fast path requires the frozen signed widths and positive threshold");
+    end
 
     initial $readmemh(CONV1_WEIGHT_FILE, conv1_weights);
 
@@ -81,21 +95,56 @@ module onn_sparse_conv1_if1 #(
                            (output_x >= 0) && (output_x < 8);
         weight_extended = {{(CONV1_RAW_ACC_BITS-8){conv1_weights[weight_address][7]}},
                            conv1_weights[weight_address]};
-        current_wide =
-            $signed({{(32-CONV1_RAW_ACC_BITS){current_accumulator[scan_index][CONV1_RAW_ACC_BITS-1]}},
-                     current_accumulator[scan_index]}) <<< SNN_STATE_GUARD_BITS;
     end
 
-    onn_if_unit #(
-        .CURRENT_IN_BITS(32), .CURRENT_BITS(CONV1_CURRENT_BITS),
-        .MEM_BITS(LIF1_MEM_BITS), .THRESHOLD(LIF1_THRESHOLD)
-    ) if1_update (
-        .current_in(current_wide), .membrane_in(membrane[scan_index]),
-        .current_saturated(current_comb), .integrated(integrated_comb),
-        .spike(spike_comb), .membrane_next(membrane_next_comb)
-    );
+    // The frozen raw 12-bit current shifted by guard-4 fills exactly 16 bits,
+    // so current saturation cannot occur. A 19-bit sum detects both 18-bit
+    // overflow directions from its two most significant bits. The reset
+    // subtraction cannot overflow: it applies only to a positive integrated
+    // value and subtracts the positive threshold.
+    always_comb begin
+        current_comb = {current_accumulator[scan_index],
+                        {SNN_STATE_GUARD_BITS{1'b0}}};
+        integrated_wide =
+            $signed({membrane[scan_index][LIF1_MEM_BITS-1], membrane[scan_index]}) +
+            $signed({{(LIF1_MEM_BITS + 1 - CONV1_CURRENT_BITS){current_comb[CONV1_CURRENT_BITS-1]}},
+                     current_comb});
+        positive_overflow = !integrated_wide[LIF1_MEM_BITS] &&
+                             integrated_wide[LIF1_MEM_BITS-1];
+        negative_overflow = integrated_wide[LIF1_MEM_BITS] &&
+                             !integrated_wide[LIF1_MEM_BITS-1];
+        if (positive_overflow) integrated_comb = LIF1_MAX;
+        else if (negative_overflow) integrated_comb = LIF1_MIN;
+        else integrated_comb = integrated_wide[LIF1_MEM_BITS-1:0];
+        spike_comb = positive_overflow ||
+                     (!negative_overflow && integrated_wide > LIF1_THRESHOLD_SIGNED);
+        if (positive_overflow) membrane_next_comb = LIF1_MAX - LIF1_THRESHOLD;
+        else if (spike_comb) membrane_next_comb = integrated_wide[LIF1_MEM_BITS-1:0] - LIF1_THRESHOLD;
+        else membrane_next_comb = integrated_comb;
+    end
 
     always_comb ready = (state == STATE_IDLE);
+
+    // A frame is cleared sequentially before use. Keep memories out of the
+    // asynchronous-reset process so Vivado can map them to LUT RAM.
+    always_ff @(posedge clk) begin
+        if (rst_n) begin
+            case (state)
+                STATE_CLEAR: begin
+                    membrane[clear_index] <= '0;
+                    current_accumulator[clear_index] <= '0;
+                end
+                STATE_SCATTER: if (scatter_is_valid)
+                    current_accumulator[output_address] <=
+                        current_accumulator[output_address] + weight_extended;
+                STATE_IF_SCAN: begin
+                    membrane[scan_index] <= membrane_next_comb;
+                    current_accumulator[scan_index] <= '0;
+                end
+                default: begin end
+            endcase
+        end
+    end
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -137,8 +186,6 @@ module onn_sparse_conv1_if1 #(
                     end
                 end
                 STATE_CLEAR: begin
-                    membrane[clear_index] <= '0;
-                    current_accumulator[clear_index] <= '0;
                     if (clear_index == OUTPUT_COUNT - 1) begin
                         event_mask <= spike_latched;
                         state <= STATE_FIND_EVENT;
@@ -161,8 +208,6 @@ module onn_sparse_conv1_if1 #(
                 end
                 STATE_SCATTER: begin
                     if (scatter_is_valid) begin
-                        current_accumulator[output_address] <=
-                            current_accumulator[output_address] + weight_extended;
                         synaptic_additions <= synaptic_additions + 1'b1;
                     end
                     if (kernel_index == 8) begin
@@ -178,8 +223,6 @@ module onn_sparse_conv1_if1 #(
                     end
                 end
                 STATE_IF_SCAN: begin
-                    membrane[scan_index] <= membrane_next_comb;
-                    current_accumulator[scan_index] <= '0;
                     result_valid <= 1'b1;
                     result_index <= scan_index;
                     current_out <= current_comb;
