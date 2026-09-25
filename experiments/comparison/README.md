@@ -1,4 +1,12 @@
-# CNN / SNN 公平比较（待开展）
+# CNN / SNN 比较
+
+已完成的软件准确率比较：
+
+- [8×8 冻结 SNN 与 matched CNN 三 seed 对照](../snn/conv_small/records/final_three_seed_record.md)；
+- [8×8 IF/LIF 泄露消融](../snn/lif_if/README.md)；
+- [28×28 同参数量 CNN/SNN 三 seed 对照](software_28/README.md)。
+
+28×28 的 IF 结果是在已接触同一测试集后进行的事后复核，解释范围见实验记录。
 
 最终比较至少报告：
 

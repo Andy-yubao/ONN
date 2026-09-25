@@ -1,0 +1,82 @@
+{
+  "experiment": "8x8 frozen conv_small IF versus hidden-membrane LIF",
+  "screening_seed": 17,
+  "screening": {
+    "0.75": {
+      "best_validation_accuracy_percent": 94.48,
+      "validation_effective_synaptic_additions_per_image": 9446.2556,
+      "test_evaluations_during_screening": 0
+    },
+    "0.9": {
+      "best_validation_accuracy_percent": 94.8,
+      "validation_effective_synaptic_additions_per_image": 9212.9676,
+      "test_evaluations_during_screening": 0
+    },
+    "0.95": {
+      "best_validation_accuracy_percent": 94.74,
+      "validation_effective_synaptic_additions_per_image": 9216.616,
+      "test_evaluations_during_screening": 0
+    }
+  },
+  "selected_decay_by_validation_accuracy": 0.9,
+  "selected_seeds": [
+    7,
+    17,
+    27
+  ],
+  "test_evaluations_per_selected_seed": 1,
+  "parameters_each": 9872,
+  "lif_runs": {
+    "7": {
+      "best_epoch": 20,
+      "best_validation_accuracy_percent": 94.8,
+      "test_accuracy_percent": 93.26,
+      "effective_synaptic_additions_per_image": 9750.01,
+      "input_spikes_per_image": 19.3141,
+      "layer1_spikes_per_image": 69.688,
+      "layer2_spikes_per_image": 227.3346,
+      "hidden_spikes_per_image": 297.0226,
+      "checkpoint_sha256": "f7c70d4cfb97479648da32a9fa94201fb574c85236f5b8eb24c884293a7f52b7"
+    },
+    "17": {
+      "best_epoch": 15,
+      "best_validation_accuracy_percent": 94.8,
+      "test_accuracy_percent": 93.47,
+      "effective_synaptic_additions_per_image": 9260.9416,
+      "input_spikes_per_image": 19.3141,
+      "layer1_spikes_per_image": 63.401,
+      "layer2_spikes_per_image": 220.8428,
+      "hidden_spikes_per_image": 284.2438,
+      "checkpoint_sha256": "2517e9b6036e873e9e813b240835a9e3edbee6d4940274f8f6ef4d751bf1e59a"
+    },
+    "27": {
+      "best_epoch": 18,
+      "best_validation_accuracy_percent": 94.68,
+      "test_accuracy_percent": 92.9,
+      "effective_synaptic_additions_per_image": 9597.0874,
+      "input_spikes_per_image": 19.3141,
+      "layer1_spikes_per_image": 64.4201,
+      "layer2_spikes_per_image": 232.7105,
+      "hidden_spikes_per_image": 297.1306,
+      "checkpoint_sha256": "d85670179d74c2b193212d3e5756cd0f84857cf15546e3d9653f1a9234a959a9"
+    }
+  },
+  "lif_aggregate": {
+    "best_validation_accuracy_mean_percent": 94.76,
+    "best_validation_accuracy_sample_std_pct_points": 0.06928203230274951,
+    "test_accuracy_mean_percent": 93.21000000000001,
+    "test_accuracy_sample_std_pct_points": 0.2882707061079884,
+    "hidden_spikes_per_image_mean": 292.79900000000004,
+    "effective_synaptic_additions_per_image_mean": 9536.013
+  },
+  "if_frozen_reference": {
+    "source": "experiments/snn/conv_small/results/final_three_seed/summary.json",
+    "best_validation_accuracy_mean_percent": 94.97333333333333,
+    "test_accuracy_mean_percent": 93.46666666666667,
+    "test_accuracy_sample_std_pct_points": 0.135030860670192,
+    "hidden_spikes_per_image_mean": 301.4463333333333,
+    "effective_synaptic_additions_per_image_mean": 9921.361733333333
+  },
+  "lif_minus_if_test_accuracy_pct_points": -0.2566666666666606,
+  "lif_minus_if_effective_synaptic_additions_per_image": -385.34873333333235
+}

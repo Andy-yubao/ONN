@@ -1,0 +1,95 @@
+{
+  "protocol_id": "mnist28x28-sequential-v1",
+  "model": "snn",
+  "size": 28,
+  "seed": 27,
+  "membrane_decay": 0.5,
+  "parameters": 20432,
+  "epochs": 20,
+  "batch_size": 256,
+  "data_split": {
+    "train": [
+      0,
+      55000
+    ],
+    "validation": [
+      55000,
+      60000
+    ],
+    "test": "official 10000"
+  },
+  "preprocessing": "ToTensor original 28x28",
+  "optimizer": "Adam",
+  "learning_rates": [
+    0.001,
+    0.0003
+  ],
+  "drop_epoch": 11,
+  "gradient_clip": 1.0,
+  "weight_decay": 0.0,
+  "time_steps": 4,
+  "readout_beta": 0.5,
+  "event_lambda": 0.1,
+  "event_normalization": 63933.94203636364,
+  "event_normalization_origin": "8x8 reference scaled by hidden spatial area ratio 49/16",
+  "encoder_calibration": {
+    "g_threshold": 0.15775603237773356,
+    "source_time_steps": 24,
+    "time_steps": 4,
+    "time_mapping": "quantile",
+    "quantile_boundaries": [
+      0,
+      1,
+      2
+    ],
+    "training_split": [
+      0,
+      55000
+    ],
+    "training_pixels": 43120000,
+    "target_firing_ratio": 0.18,
+    "maximum_nonzero_firing_ratio": 0.1912018089053803,
+    "actual_firing_ratio": 0.17969121057513915,
+    "source_latency_histogram": [
+      6282050,
+      726409,
+      256622,
+      143836,
+      101562,
+      51237,
+      45432,
+      32602,
+      27404,
+      31379,
+      0,
+      24623,
+      0,
+      0,
+      0,
+      0,
+      25129,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "final_test_requested": true,
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5080 Laptop GPU",
+    "git_commit": "9bccefb7662d3c3c729cb05b789cf7aec2edebe3",
+    "git_dirty": true
+  },
+  "source_sha256": {
+    "experiments/comparison/software_28/train.py": "b5c45d485da3fef387b7f9501dfb5ae39a83477afee12b52b48888d725a32524",
+    "experiments/comparison/software_28/model.py": "a022a2af41639a0974cb9177125b58f3be4d9658c97b2cf85ffad7878f7741e7",
+    "experiments/common/device_latency_encoder.py": "cb4ca7026a5800ab177ac6b0b23450f19bb057532bb38ced3b7f9179de4207a9"
+  }
+}

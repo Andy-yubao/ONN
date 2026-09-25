@@ -1,0 +1,133 @@
+{
+  "protocol": "mnist28x28-sequential-v1",
+  "seeds": [
+    7,
+    17,
+    27
+  ],
+  "test_samples": 10000,
+  "operations_definition": {
+    "dense_equivalent_macs_per_image": "All dense convolutions and readout; SNN sums four time steps.",
+    "effective_synaptic_additions_per_image": "SNN test_workload_total.effective_synaptic_additions / 10000; CNN not applicable. This is not equivalent to a dense MAC."
+  },
+  "test_interpretation": "The decay=0.5 LIF and CNN tests were viewed before the beta/decay mistake was found; subsequent IF tests are post-test exploratory checks, not strictly independent held-out validation.",
+  "models": {
+    "cnn": {
+      "label": "matched CNN",
+      "runs": [
+        {
+          "seed": 7,
+          "best_epoch": 8,
+          "validation_accuracy_percent": 98.66,
+          "test_accuracy_percent": 98.48,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 269696,
+          "effective_synaptic_additions_per_image": null,
+          "result_directory": "experiments/comparison/software_28/results/cnn_seed7"
+        },
+        {
+          "seed": 17,
+          "best_epoch": 15,
+          "validation_accuracy_percent": 98.82,
+          "test_accuracy_percent": 98.46,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 269696,
+          "effective_synaptic_additions_per_image": null,
+          "result_directory": "experiments/comparison/software_28/results/cnn_seed17"
+        },
+        {
+          "seed": 27,
+          "best_epoch": 13,
+          "validation_accuracy_percent": 98.76,
+          "test_accuracy_percent": 98.57,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 269696,
+          "effective_synaptic_additions_per_image": null,
+          "result_directory": "experiments/comparison/software_28/results/cnn_seed27"
+        }
+      ],
+      "mean_validation_accuracy_percent": 98.74666666666667,
+      "mean_test_accuracy_percent": 98.50333333333333,
+      "dense_equivalent_macs_per_image": 269696,
+      "mean_effective_synaptic_additions_per_image": null
+    },
+    "if": {
+      "label": "IF SNN (decay=1.0)",
+      "runs": [
+        {
+          "seed": 7,
+          "best_epoch": 15,
+          "validation_accuracy_percent": 98.62,
+          "test_accuracy_percent": 97.96,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 1078784,
+          "effective_synaptic_additions_per_image": 18780.564,
+          "result_directory": "experiments/comparison/software_28/results/if_seed7"
+        },
+        {
+          "seed": 17,
+          "best_epoch": 20,
+          "validation_accuracy_percent": 98.12,
+          "test_accuracy_percent": 97.76,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 1078784,
+          "effective_synaptic_additions_per_image": 19757.4918,
+          "result_directory": "experiments/comparison/software_28/results/if_seed17"
+        },
+        {
+          "seed": 27,
+          "best_epoch": 20,
+          "validation_accuracy_percent": 98.5,
+          "test_accuracy_percent": 98.25,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 1078784,
+          "effective_synaptic_additions_per_image": 19068.8056,
+          "result_directory": "experiments/comparison/software_28/results/if_seed27"
+        }
+      ],
+      "mean_validation_accuracy_percent": 98.41333333333334,
+      "mean_test_accuracy_percent": 97.99,
+      "dense_equivalent_macs_per_image": 1078784,
+      "mean_effective_synaptic_additions_per_image": 19202.28713333333
+    },
+    "snn": {
+      "label": "exploratory LIF SNN (decay=0.5)",
+      "runs": [
+        {
+          "seed": 7,
+          "best_epoch": 17,
+          "validation_accuracy_percent": 98.14,
+          "test_accuracy_percent": 97.46,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 1078784,
+          "effective_synaptic_additions_per_image": 16990.3268,
+          "result_directory": "experiments/comparison/software_28/results/snn_seed7"
+        },
+        {
+          "seed": 17,
+          "best_epoch": 20,
+          "validation_accuracy_percent": 97.98,
+          "test_accuracy_percent": 97.51,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 1078784,
+          "effective_synaptic_additions_per_image": 16868.349,
+          "result_directory": "experiments/comparison/software_28/results/snn_seed17"
+        },
+        {
+          "seed": 27,
+          "best_epoch": 11,
+          "validation_accuracy_percent": 98.08,
+          "test_accuracy_percent": 97.5,
+          "parameters": 20432,
+          "dense_equivalent_macs_per_image": 1078784,
+          "effective_synaptic_additions_per_image": 15470.4484,
+          "result_directory": "experiments/comparison/software_28/results/snn_seed27"
+        }
+      ],
+      "mean_validation_accuracy_percent": 98.06666666666666,
+      "mean_test_accuracy_percent": 97.49,
+      "dense_equivalent_macs_per_image": 1078784,
+      "mean_effective_synaptic_additions_per_image": 16443.0414
+    }
+  }
+}

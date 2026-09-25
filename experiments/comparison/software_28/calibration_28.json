@@ -1,0 +1,45 @@
+{
+  "g_threshold": 0.15775603237773356,
+  "source_time_steps": 24,
+  "time_steps": 4,
+  "time_mapping": "quantile",
+  "quantile_boundaries": [
+    0,
+    1,
+    2
+  ],
+  "training_split": [
+    0,
+    55000
+  ],
+  "training_pixels": 43120000,
+  "target_firing_ratio": 0.18,
+  "maximum_nonzero_firing_ratio": 0.1912018089053803,
+  "actual_firing_ratio": 0.17969121057513915,
+  "source_latency_histogram": [
+    6282050,
+    726409,
+    256622,
+    143836,
+    101562,
+    51237,
+    45432,
+    32602,
+    27404,
+    31379,
+    0,
+    24623,
+    0,
+    0,
+    0,
+    0,
+    25129,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ]
+}

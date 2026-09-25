@@ -9,12 +9,13 @@ experiments/
 ├── snn/
 │   ├── mlp_latency_baseline/       # 原 snn_8x8_device_encoding
 │   ├── conv_large/                # 原 snn_8x8_conv_snn
-│   └── conv_small/                # 原 snn_8x8_device_if_conv_small, 最重要的基线
-├── cnn/                            # matched 8×8 CNN baseline 规划
-└── comparison/                     # 公平比较协议
+│   ├── conv_small/                # 原 snn_8x8_device_if_conv_small, 最重要的基线
+│   └── lif_if/                    # 冻结 8×8 SNN 的 IF/LIF 消融
+├── cnn/                            # matched 8×8 CNN baseline
+└── comparison/                     # 软件公平比较与 28×28 实验
 ```
 
-三个 SNN 实验保留原有 README、源码、`metrics.json`、`history.csv`、PNG 和小型测试。
+各 SNN 实验保留 README、源码和对应的实验结果记录。
 其中 `snn/conv_small/`（原 `snn_8x8_device_if_conv_small`）是当前最重要的 SNN 基线，
 后续 matched CNN 公平比较和 champion selection 优先以它为参考；若公平比较最终选择
 SNN，才将选定的 SNN promote 到 `model/`；
